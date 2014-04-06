@@ -9,6 +9,12 @@ Script to build environment
 
 Resource scheduling
 
+Task queue
+
+Worker
+
+Frontend UI
+
 Filesystem man
 
 tmpfs
