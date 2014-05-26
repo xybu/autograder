@@ -7,10 +7,10 @@
  * @author	Xiangyu Bu (xybu92@live.com)
  */
 
-$base = require(realpath('../app/lib/base.php'));
+$base = require('app/lib/base.php');
 
-$base->config(realpath('../app/config/globals.ini'));
-$base->config(realpath('../app/config/routes.ini'));
+$base->config('app/config/globals.ini');
+$base->config('app/config/routes.ini');
 
 /*$base->set('ONERROR', function($base){
 	echo \Template::instance()->render('error.html');
