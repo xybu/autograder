@@ -72,31 +72,10 @@ class Controller {
 		$this->base->clear("COOKIE.ugl_user");
 	}
 	
-	function json_printException(Exception $e){
-		$s = json_encode(
-			array(
-				"status" => "error",
-				"error" => $e->getCode(), 
-				"message" => $e->getMessage(), 
-				"file" => $e->getFile() . 
-				"line ". $e->getLine(), 
-				"trace" => $e->getTraceAsString()
-			) , JSON_PRETTY_PRINT);
-		//header('HTTP/1.0 403 Forbidden');
-		header("Content-Type: application/json");
-		header("Cache-Control: no-cache, must-revalidate");
-		header("Content-Length: " . strlen($s));
-		echo $s;
-		exit();
-	}
-	
-	function json_printResponse($data, $expiration = 0){
-		$s = json_encode(
-			array(
-				"status" => "success", 
-				"expiration" => date('c', strtotime("+" . $expiration . " hour")), 
-				"data" => $data
-			), JSON_PRETTY_PRINT);
+	function json_echo($array_data, $http_forbidden = false){
+		$s = json_encode($array_data , JSON_PRETTY_PRINT);
+		if ($http_forbidden)		
+			header('HTTP/1.0 403 Forbidden');
 		header("Content-Type: application/json");
 		header("Cache-Control: no-cache, must-revalidate");
 		header("Content-Length: " . strlen($s));

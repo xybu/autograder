@@ -1,0 +1,73 @@
+<?php
+$Base = \Base::instance();
+?><!DOCTYPE html>
+<html lang="en">
+	<head>
+		<base href="<?php echo $SCHEME.'://'.$HOST.':'.$PORT.$BASE.'/'; ?>" />
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="<?php echo $Base->get("HTML_META_DESCRIPTION")?>">
+		<link rel="dns-prefetch" href="//cdnjs.cloudflare.com/">
+		<link rel="stylesheet" href="assets/css/bootstrap.min.css" />
+		<link rel="stylesheet" href="assets/css/signin.css" />
+		<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.0/animate.min.css" />
+		<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.min.css" />
+		<!--[if lt IE 9]>
+			<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script>
+			<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+    	<title><?php echo $Base->get("HTML_TITLE")?></title>
+	</head>
+	<body>
+		<header class="navbar navbar-default navbar-fixed-top" role="navigation">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<button data-target=".navbar-responsive-collapse" data-toggle="collapse" class="navbar-toggle" type="button">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a href="#" class="navbar-brand"><?php echo $Base->get("COURSE_ID_DISPLAY")?></a>
+			</div>
+			<div class="navbar-collapse collapse navbar-responsive-collapse">
+				<ul class="nav navbar-nav">
+					<li><a href="<?php echo $Base->get("COURSE_HOME_URI")?>"><?php echo $Base->get("COURSE_HOME_TITLE")?></a></li>
+					<li><a href="<?php echo $Base->get("COURSE_BBS_URI")?>"><?php echo $Base->get("COURSE_BBS_TITLE")?></a></li>
+					<li class="active"><a href="#"><?php echo $Base->get("COURSE_TURNIN_TITLE")?></a></li>
+				</ul>
+				<ul class="nav navbar-nav navbar-right">
+					<li><a href="#">Sign in with Purdue Account</a></li>
+					<li><a href="#">Support</a>
+				</ul>
+			</div>
+		</div>
+		</header>
+		
+		<div class="container-fluid">
+			<form class="form-signin" role="form" method="post" action="/sign_in">
+				<h2 class="form-signin-heading">Sign in</h2>
+				<input type="text" class="form-control" placeholder="Purdue account" required autofocus>
+				<input type="password" class="form-control" placeholder="Turn-in Password" required>
+				<label class="checkbox">
+					<input type="checkbox" value="remember-me"> Remember me
+				</label>
+				<button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+			</form>
+		</div>
+		
+		<div id="footer">
+			<div class="container">
+				<p id="copyright" class="text-center">
+					Copyright &copy; Department of Computer Science, Purdue University
+					<br />
+					<?php 
+					echo Base::instance()->format('Execution time: {0} ms / Memory: {1} KiB', round(1e3*(microtime(TRUE)-$TIME),2), round(memory_get_usage(TRUE)/1e3,1)); ?>
+				</p>
+			</div>
+		</div>
+    	
+		<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/js/bootstrap.min.js"></script>
+	</body>
+</html>

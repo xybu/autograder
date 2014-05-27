@@ -2,11 +2,10 @@
 
 namespace controllers;
 
-class Home {
+class Home extends \Controller {
 
 	function showHomePage($base) {
-		echo "Hello World!";
+		$this->setView("signin.html");
 	}
-
+	
 }
-
