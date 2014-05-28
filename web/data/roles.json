@@ -1,0 +1,14 @@
+{
+	"admin": {
+		"submit": true,
+		"manage": true
+	},
+	"user": {
+		"submit": true,
+		"manage" : false
+	}
+	"guest": {
+		"submit": false,
+		"manage": false
+	}
+}

@@ -5,7 +5,7 @@ namespace controllers;
 class User extends \Controller {
 	
 	protected $User = null;
-
+	
 	function __construct() {
 		parent::__construct();
 		$this->User = \models\User::instance();
@@ -13,7 +13,14 @@ class User extends \Controller {
 	
 	function signIn($base) {
 		try {
-			throw new UserException("user_not_found", "The user was not found.");
+			$User = $this->User;
+			$userid = $base->get("POST.userid");
+			$password = $base->get("POST.password");
+			$remember = $base->get("POST.remember");
+			
+			$userinfo = $User->findByIdAndPassword($userid, $password);
+			var_dump($userinfo);
+			//throw new UserException("user_not_found", "The user was not found.");
 		} catch (UserException $e) {
 			$this->json_echo($e->toArray(), True);
 		}

@@ -47,10 +47,10 @@ $Base = \Base::instance();
 		<div class="container-fluid">
 			<form class="form-signin" role="form" method="post" action="/sign_in">
 				<h2 class="form-signin-heading">Sign in</h2>
-				<input type="text" class="form-control" placeholder="Purdue account" required autofocus>
-				<input type="password" class="form-control" placeholder="Turn-in Password" required>
+				<input type="text" class="form-control" placeholder="Purdue account" name="userid" id="userid" required autofocus>
+				<input type="password" class="form-control" placeholder="Turn-in Password" name="password" id="password" required>
 				<label class="checkbox">
-					<input type="checkbox" value="remember-me"> Remember me
+					<input type="checkbox" name="remember" id="remember" value="true"> Remember me
 				</label>
 				<button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
 			</form>
