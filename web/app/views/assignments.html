@@ -71,7 +71,7 @@ if ($me["role"]["permissions"]["manage"])
                 <?php
                 foreach ($assignments as $key => $data) {
                 	if (strtotime($data["start"]) > strtotime('now')) continue;
-                	echo "<tr><td>" . $data["display"] . "</td><td> - </td><td>" . date('D, d M Y H:i:s', strtotime($data["close"])) . "</td></tr>";
+                	echo "<tr><td><a role=\"button\" data-toggle=\"modal\" data-target=\"#myLargeModal\">" . $data["display"] . "</a></td><td> - </td><td>" . date('D, d M Y H:i:s', strtotime($data["close"])) . "</td></tr>";
                 }
                 ?>
               </tbody>
@@ -90,6 +90,14 @@ if ($me["role"]["permissions"]["manage"])
 			</article>
 		</div>
 		
+<div id="myLargeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      ...
+    </div>
+  </div>
+</div>
+
 		<div id="footer">
 			<div class="container">
 				<p id="copyright" class="text-center">
@@ -100,7 +108,6 @@ if ($me["role"]["permissions"]["manage"])
 				</p>
 			</div>
 		</div>
-    	
 		<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 		<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/js/bootstrap.min.js"></script>
 	</body>
