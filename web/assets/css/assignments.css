@@ -1,0 +1,36 @@
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+	padding-top: 40px;
+	padding-bottom: 40px;
+	background-color: #eee;
+	margin-bottom: 60px;
+}
+
+#footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  /* Set the fixed height of the footer here */
+  height: 60px;
+  background-color: #222;
+}
+
+#footer > .container {
+	padding-left: 15px;
+	padding-right: 15px;
+}
+
+#footer p {
+	margin: 1em;
+	color: #eee;
+}
+
+#footer p#copyright {
+	font-size: 0.8em;
+}
+
+/* assignments.html */

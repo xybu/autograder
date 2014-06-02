@@ -10,7 +10,7 @@ $Base = \Base::instance();
 		<meta name="description" content="<?php echo $Base->get("HTML_META_DESCRIPTION")?>">
 		<link rel="dns-prefetch" href="//cdnjs.cloudflare.com/">
 		<link rel="stylesheet" href="assets/css/bootstrap.min.css" />
-		<link rel="stylesheet" href="assets/css/signin.css" />
+		<link rel="stylesheet" href="assets/css/assignments.css" />
 		<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.0/animate.min.css" />
 		<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.min.css" />
 		<!--[if lt IE 9]>
@@ -37,6 +37,16 @@ $Base = \Base::instance();
 					<li class="active"><a href="#"><?php echo $Base->get("COURSE_TURNIN_TITLE")?></a></li>
 				</ul>
 				<ul class="nav navbar-nav navbar-right">
+					<li class="dropdown">
+						<a data-toggle="dropdown" class="dropdown-toggle" href="#"><?php echo $me["userid"]?>@purdue.edu <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+						<?php
+if ($me["role"]["permissions"]["manage"])
+	echo "<li><a href=\"/admin\">Manage</a></li><li class=\"divider\"></li>";
+?>
+							<li><a href="/logout">Log out</a></li>
+						</ul>
+					</li>
 					<li><a href="/support">Support</a></li>
 					<li><a href="/help">Help</a></li>
 				</ul>
@@ -45,15 +55,39 @@ $Base = \Base::instance();
 		</header>
 		
 		<div class="container-fluid">
-			<form class="form-signin" role="form" method="post" action="/sign_in">
-				<h2 class="form-signin-heading">Sign in</h2>
-				<input type="text" class="form-control" placeholder="Purdue account" name="userid" id="userid" required autofocus>
-				<input type="password" class="form-control" placeholder="Turn-in Password" name="password" id="password" required>
-				<label class="help-block">
-					<a href="/forgot_password">Forgot password?</a>
-				</label>
-				<button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
-			</form>
+			<article class="row">
+				<section id="content" class="col-md-12">
+					<h1>Assignments</h1>
+					<div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Grade</th>
+                  <th>Due</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php
+                foreach ($assignments as $key => $data) {
+                	if (strtotime($data["start"]) > strtotime('now')) continue;
+                	echo "<tr><td>" . $data["display"] . "</td><td> - </td><td>" . date('D, d M Y H:i:s', strtotime($data["close"])) . "</td></tr>";
+                }
+                ?>
+              </tbody>
+            </table>
+          </div>
+				</section>
+			</article>
+		</div>
+		
+		<div class="container-fluid">
+			<article class="row">
+				<section id="content" class="col-md-12">
+					<h1>Tasks</h1>
+					<p>Currently there are {123} submissions in the queue that needs grading.</p>
+				</section>
+			</article>
 		</div>
 		
 		<div id="footer">

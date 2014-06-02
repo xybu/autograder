@@ -8,10 +8,9 @@
  */
 
 class Controller {
-
-	// Cache is a singleton
-	protected $cache;
-	protected $base;
+	
+	protected $cache;	// Cache is a singleton
+	protected $base;	// Base is also a singleton
 	protected $user;
 	protected $view = null;
 	
@@ -45,31 +44,20 @@ class Controller {
 	}
 	
 	function getUserStatus(){
-		$this->user = \models\User::instance();
-		
-		if (!$this->base->exists("COOKIE.ugl_user"))
-			throw new \Exception("You should log in to perform the request", 1);
-		
-		$cookie_user = self::api_decrypt($this->base->get("COOKIE.ugl_user"), $this->base->get("API_SERVER_KEY"));
-		if (empty($cookie_user)) throw new \Exception("Unauthorized request", 2);
-		
-		$cookie_user = unserialize($cookie_user);
-		$user_id = $cookie_user["user_id"];
-		$token = $cookie_user["ugl_token"];
-		$user_info = $this->user->findById($user_id);
-		if (empty($user_info) or !$this->user->token_verify($user_info, $token, self::TOKEN_VALID_HRS))
-			throw new \Exception("Unauthorized request", 2);
-		
-		return array("user_id" => $user_id, "user_info" => $user_info, "ugl_token" => $token);
+		if ($this->base->exists("SESSION.user"))
+			return $this->base->get("SESSION.user");
+		return null;
 	}
 	
-	function setUserStatus($id, $token){
-		$user_creds = array("user_id" => $id, "ugl_token" => $token);
-		$this->base->set("COOKIE.ugl_user", self::api_encrypt(serialize($user_creds), $this->base->get("API_SERVER_KEY")), self::TOKEN_VALID_HRS * 3600);
+	// a SESSION-based login credential
+	// because of the nature of the project, 
+	// the goal is to save as little information on the client as possible
+	function setUserStatus($userData){
+		$this->base->set("SESSION.user", $userData);
 	}
 	
 	function voidUserStatus(){
-		$this->base->clear("COOKIE.ugl_user");
+		$this->base->clear("SESSION.user");
 	}
 	
 	function json_echo($array_data, $http_forbidden = false){
