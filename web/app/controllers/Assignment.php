@@ -23,4 +23,26 @@ class Assignment extends \Controller {
 		$this->setView("assignments.html");
 	}
 	
+	public function showDetailOf($base, $params) {
+		// verify user
+		$userInfo = $this->getUserStatus();
+		if ($userInfo == null) {
+			header('HTTP/1.0 403 Forbidden');
+			die();
+		}
+		
+		$Assignment = \models\Assignment::instance();
+		
+		// verify assignment
+		$assignmentInfo = $Assignment->findById($params["id"]);
+		if ($assignmentInfo == null) {
+			header('HTTP/1.0 404 Not Found');
+			die();
+		}
+		
+		$base->set("me", $userInfo);
+		$base->set("assignment", $assignmentInfo);
+		$this->setView("assignment_detail.html");
+	}
+	
 }

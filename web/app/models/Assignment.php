@@ -15,5 +15,11 @@ class Assignment extends \Model {
 		return $this->assignments;
 	}
 	
+	function findById($key) {
+		if (array_key_exists($key, $this->assignments)) {
+			return $this->assignments[$key];
+		}
+		return null;
+	}
 }
 

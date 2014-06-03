@@ -30,4 +30,9 @@ class User extends \Controller {
 		}
 	}
 	
+	function logOut($base) {
+		$this->voidUserStatus();
+		$base->reroute('/');
+	}
+	
 }

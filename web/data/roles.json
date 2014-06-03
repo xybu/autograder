@@ -2,11 +2,13 @@
 	"admin": {
 		"display": "Instructor",
 		"submit": true,
+		"submit_overdue": true,
 		"manage": true
 	},
 	"user": {
 		"display": "Student",
 		"submit": true,
+		"submit_overdue": true,
 		"manage" : false
 	}
 }
