@@ -44,5 +44,9 @@ class Assignment extends \Controller {
 		$base->set("assignment", $assignmentInfo);
 		$this->setView("assignment_detail.html");
 	}
+		
 	
+	
+	public function submitFile($base, $params) {
+	}
 }
