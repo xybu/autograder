@@ -1,6 +1,11 @@
 Autograder-Grader
 =================
 
+Introduction
+============
+
+The essence of Autograder is to *run a command and process its output*.
+
 
 
 Notes
