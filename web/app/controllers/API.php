@@ -8,16 +8,12 @@ class API extends \Controller {
 		parent::__construct();
 	}
 	
-	// API reserved for active graders
-	function getTask($base) {
-	}
-
-	function sendTask() {
-	}
-	
 	function taskAccepted($base) {
 	}
 	
+	function taskStarted($base) {
+	}
+		
 	function taskCompleted($base) {
 	}
 	
