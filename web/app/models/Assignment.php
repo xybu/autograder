@@ -27,18 +27,12 @@ class Assignment extends \Model {
 		$this->baseDir = d;
 	}
 	
-	function getListOfSubmissions($user, $assignmentId) {
-		/*	
-		$fileList = scandir($dir);
-		if ($todayOnly == 1) $today = date("Y-m-d");
-		else $today = "";
-	
-		foreach($fileList as $fileName) {
-			if (strpos($fileName, "submission.archive." . $today) === 0) {
-				++$i;
-			}
-		}
-		*/
+	function getAllSubmissionsOf($user, $assignmentId) {
+		$result = $this->query("SELECT * FROM submissions WHERE user_id=:uid AND assignment_id=:aid", array(
+			':uid': $user,
+			':aid': $assignmentId
+		));
+		return $result;
 	}
 	
 	function saveSubmission($user, $assignmentId) {
