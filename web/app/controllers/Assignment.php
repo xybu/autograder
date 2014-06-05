@@ -40,8 +40,11 @@ class Assignment extends \Controller {
 			die();
 		}
 		
+		$submissionInfo = $Assignment->getAllSubmissionsOf($userInfo["userid"], $params["id"]);
+		
 		$base->set("me", $userInfo);
 		$base->set("assignment", $assignmentInfo);
+		$base->set("submissions", $submissionInfo);
 		$this->setView("assignment_detail.html");
 	}
 		

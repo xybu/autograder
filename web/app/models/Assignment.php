@@ -27,10 +27,10 @@ class Assignment extends \Model {
 		$this->baseDir = d;
 	}
 	
-	function getAllSubmissionsOf($user, $assignmentId) {
+	function getAllSubmissionsOf($userId, $assignmentId) {
 		$result = $this->query("SELECT * FROM submissions WHERE user_id=:uid AND assignment_id=:aid", array(
-			':uid': $user,
-			':aid': $assignmentId
+			':uid' => $userId,
+			':aid' => $assignmentId
 		));
 		return $result;
 	}
