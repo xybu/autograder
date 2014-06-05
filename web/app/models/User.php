@@ -9,8 +9,8 @@ class User extends \Model {
 	
 	function __construct() {
 		parent::__construct();
-		$this->users = json_decode(file_get_contents("data/users.json"), true);
-		$this->roles = json_decode(file_get_contents("data/roles.json"), true);
+		$this->users = json_decode(file_get_contents($this->Base->get("DATA_PATH") . "/users.json"), true);
+		$this->roles = json_decode(file_get_contents($this->Base->get("DATA_PATH") . "/roles.json"), true);
 	}
 	
 	function findById($id) {

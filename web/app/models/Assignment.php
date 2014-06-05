@@ -9,7 +9,7 @@ class Assignment extends \Model {
 	
 	function __construct() {
 		parent::__construct();
-		$this->assignments = json_decode(file_get_contents("data/assignments.json"), true);
+		$this->assignments = json_decode(file_get_contents($this->Base->get("DATA_PATH") . "/assignments.json"), true);
 	}
 	
 	function getAllAssignments() {

@@ -8,4 +8,16 @@ class Home extends \Controller {
 		$this->setView("signin.html");
 	}
 	
+	function showRetrievePasswordPage($base) {
+		
+	}
+	
+	function retrievePassword($base) {
+		
+	}
+	
+	function showSupportPage($base) {
+		
+	}	
+	
 }
