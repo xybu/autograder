@@ -27,8 +27,9 @@ class Assignment extends \Controller {
 		// verify user
 		$userInfo = $this->getUserStatus();
 		if ($userInfo == null) {
-			header('HTTP/1.0 403 Forbidden');
-			die();
+			// instead of raising a UserException, reroute the user
+			// to homepage
+			$base->reroute('/');
 		}
 		
 		$Assignment = \models\Assignment::instance();
@@ -39,13 +40,18 @@ class Assignment extends \Controller {
 			header('HTTP/1.0 404 Not Found');
 			die();
 		}
+		if ($assignmentInfo["start"] > time()) {
+			header('HTTP/1.0 403 Forbidden');
+			die();
+		}
+		
 		
 		$submissionInfo = $Assignment->getAllSubmissionsOf($userInfo["userid"], $params["id"]);
 		
 		$base->set("me", $userInfo);
 		$base->set("assignment", $assignmentInfo);
 		$base->set("submissions", $submissionInfo);
-		$this->setView("assignment_detail.html");
+		$this->setView("assignment.html");
 	}
 	
 	public function submitFile($base, $params) {

@@ -1,5 +1,8 @@
 <?php
 $Base = \Base::instance();
+$Assignment= \models\Assignment::instance();
+
+$count = $Assignment->countSubmissions($submissions, $assignment);
 ?><!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -58,26 +61,38 @@ if ($me["role"]["permissions"]["manage"])
 			<h1 class="page-header"><?php echo $assignment["display"]?></h1>
 			<h2 class="sub-header">Status</h2>
 			<article class="row">
-				<section class="col-xs-3 col-sm-4 col-md-4">
-				</section>
-				<section class="col-xs-9 col-sm-8 col-md-8">
-					<form method="post" enctype="multipart/form-data">
-						<div class="container-fluid">
-							<div class="row form-group">
-								<p class="bg-info" style="padding: 0.1em">You can upload a JPG, PNG, or GIF (only the first frame is saved) image whose size is no more than 100KiB.</p>
-								<div class="col-md-12">
-									<input type="file" id="avatar_file" name="avatar_file">
-								</div>
-							</div>
-							<div id="bar_wrapper" class="row form-group hidden">
-								<div class="col-md-12">
-									<div class="progress progress-striped active">
-										<div id="bar" class="progress-bar"  role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%"></div>
+				<section class="col-xs-4 col-sm-5 col-md-5">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+						    <h3 class="panel-title">Submit</h3>
+						</div>
+						<div class="panel-body">
+							<form method="post" enctype="multipart/form-data">
+							    	<input type="file" id="submit_file" name="submit_file"  data-filename-placement="outside">
+							    	<div id="bar_wrapper" class="row form-group hidden">
+									<div class="col-md-12">
+										<div class="progress progress-striped active">
+											<div id="bar" class="progress-bar"  role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%"></div>
+										</div>
 									</div>
 								</div>
-							</div>
+							</form>
 						</div>
-					</form>
+					</div>
+				</section>
+				<section class="col-xs-8 col-sm-7 col-md-7">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+						    <h3 class="panel-title">Notes</h3>
+						</div>
+						<div class="panel-body">
+						    <ul>
+							<li>The deadline for submission is <strong><?php echo date('D, d M Y H:i:s', strtotime($assignment["close"]))?></strong>.</li>
+							<li>You have <strong><?php echo $assignment["quota_amount"]?></strong> submission(s) <strong><?php echo $assignment["quota_strategy"]?></strong>.</li>
+							<li>You have <strong><?php echo $count["remaining"]?></strong> submission chances left for this period.</li>
+						    </ul>
+						</div>
+					</div>
 				</section>
 			</article>
 			<h2 class="sub-header">Submission History</h2>
@@ -91,6 +106,7 @@ if ($me["role"]["permissions"]["manage"])
 var_dump($me);
 var_dump($assignment);
 var_dump($submissions);
+var_dump($count);
 ?>
 		<div id="footer">
 			<div class="container">
@@ -103,6 +119,8 @@ var_dump($submissions);
 			</div>
 		</div>
 		<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+		<script src="/assets/js/bootstrap.file-input.js"></script>
 		<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/js/bootstrap.min.js"></script>
+		<script src="/assets/js/ag_web.js"></script>
 	</body>
 </html>
