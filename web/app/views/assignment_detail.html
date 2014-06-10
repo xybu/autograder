@@ -1,24 +1,108 @@
-<div class="modal-header">
-	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-	<h4 class="modal-title" id="myModalLabel"><?php echo $assignment["display"]?></h4>
-</div>
-<div class="modal-body">
-<article class="container-fluid">
-<section class="row">
-<h3>Status</h3>
-<p>Open for submission.</p>
-</section>
-<section class="row">
-<h3>Submission History</h3>
-<p>None.</p>
-</section>
-</article>
-	<?php
-	var_dump($me);
-	var_dump($assignment);
-	?>
-</div>
-<div class="modal-footer">
-	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary">Save changes</button>
-</div>
+<?php
+$Base = \Base::instance();
+?><!DOCTYPE html>
+<html lang="en">
+	<head>
+		<base href="<?php echo $SCHEME.'://'.$HOST.':'.$PORT.$BASE.'/'; ?>" />
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="<?php echo $Base->get("HTML_META_DESCRIPTION")?>">
+		<link rel="dns-prefetch" href="//cdnjs.cloudflare.com/">
+		<link rel="stylesheet" href="assets/css/bootstrap.min.css" />
+		<link rel="stylesheet" href="assets/css/assignments.css" />
+		<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.0/animate.min.css" />
+		<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.min.css" />
+		<!--[if lt IE 9]>
+			<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script>
+			<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+    	<title><?php echo $Base->get("HTML_TITLE")?></title>
+	</head>
+	<body>
+		<header class="navbar navbar-default navbar-fixed-top" role="navigation">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<button data-target=".navbar-responsive-collapse" data-toggle="collapse" class="navbar-toggle" type="button">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a href="#" class="navbar-brand"><?php echo $Base->get("COURSE_ID_DISPLAY")?></a>
+			</div>
+			<div class="navbar-collapse collapse navbar-responsive-collapse">
+				<ul class="nav navbar-nav">
+					<li><a href="<?php echo $Base->get("COURSE_HOME_URI")?>"><?php echo $Base->get("COURSE_HOME_TITLE")?></a></li>
+					<li><a href="<?php echo $Base->get("COURSE_BBS_URI")?>"><?php echo $Base->get("COURSE_BBS_TITLE")?></a></li>
+					<li class="active"><a href="#"><?php echo $Base->get("COURSE_TURNIN_TITLE")?></a></li>
+				</ul>
+				<ul class="nav navbar-nav navbar-right">
+					<li class="dropdown">
+						<a data-toggle="dropdown" class="dropdown-toggle" href="#"><?php echo $me["userid"]?>@purdue.edu <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+						<?php
+if ($me["role"]["permissions"]["manage"])
+	echo "<li><a href=\"/admin\">Manage</a></li><li class=\"divider\"></li>";
+?>
+							<li><a href="/logout">Log out</a></li>
+						</ul>
+					</li>
+					<li><a href="/support">Support</a></li>
+					<li><a href="/help">Help</a></li>
+				</ul>
+			</div>
+		</div>
+		</header>
+		
+		<div class="container-fluid">
+			<h1 class="page-header"><?php echo $assignment["display"]?></h1>
+			<h2 class="sub-header">Status</h2>
+			<article class="row">
+				<section class="col-xs-3 col-sm-4 col-md-4">
+				</section>
+				<section class="col-xs-9 col-sm-8 col-md-8">
+					<form method="post" enctype="multipart/form-data">
+						<div class="container-fluid">
+							<div class="row form-group">
+								<p class="bg-info" style="padding: 0.1em">You can upload a JPG, PNG, or GIF (only the first frame is saved) image whose size is no more than 100KiB.</p>
+								<div class="col-md-12">
+									<input type="file" id="avatar_file" name="avatar_file">
+								</div>
+							</div>
+							<div id="bar_wrapper" class="row form-group hidden">
+								<div class="col-md-12">
+									<div class="progress progress-striped active">
+										<div id="bar" class="progress-bar"  role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</form>
+				</section>
+			</article>
+			<h2 class="sub-header">Submission History</h2>
+			<article class="row">
+				<section class="col-md-12">
+					
+				</section>
+			</article>
+		</div>
+<?php
+var_dump($me);
+var_dump($assignment);
+var_dump($submissions);
+?>
+		<div id="footer">
+			<div class="container">
+				<p id="copyright" class="text-center">
+					Copyright &copy; Department of Computer Science, Purdue University
+					<br />
+					<?php 
+					echo Base::instance()->format('Execution time: {0} ms / Memory: {1} KiB', round(1e3*(microtime(TRUE)-$TIME),2), round(memory_get_usage(TRUE)/1e3,1)); ?>
+				</p>
+			</div>
+		</div>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/js/bootstrap.min.js"></script>
+	</body>
+</html>

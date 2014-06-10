@@ -59,24 +59,21 @@ if ($me["role"]["permissions"]["manage"])
 				<section id="content" class="col-md-12">
 					<h1>Assignments</h1>
 					<div class="table-responsive">
-            <table class="table table-bordered table-striped table-hover">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Grade</th>
-                  <th>Due</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php
-                foreach ($assignments as $key => $data) {
-                	if (strtotime($data["start"]) > strtotime('now')) continue;
-                	echo "<tr><td><a role=\"button\" data-toggle=\"modal\" data-target=\"#assignmentDetailModal\" href=\"/assignment/" . $key . "\">" . $data["display"] . "</a></td><td> - </td><td>" . date('D, d M Y H:i:s', strtotime($data["close"])) . "</td></tr>";
-                }
-                ?>
-              </tbody>
-            </table>
-          </div>
+						<table class="table table-bordered table-striped table-hover">
+							<thead>
+								<tr><th>Title</th><th>Grade</th><th>Due</th></tr>
+              						</thead>
+              						<tbody>
+<?php
+foreach ($assignments as $key => $data) {
+	if (strtotime($data["start"]) > strtotime('now')) continue;
+	// echo "<tr><td><a role=\"button\" data-toggle=\"modal\" data-target=\"#assignmentDetailModal\" href=\"/assignment/" . $key . "\">" . $data["display"] . "</a></td><td> - </td><td>" . date('D, d M Y H:i:s', strtotime($data["close"])) . "</td></tr>";
+	echo "<tr><td><a role=\"button\" href=\"/assignment/" . $key . "\">" . $data["display"] . "</a></td><td> - </td><td>" . date('D, d M Y H:i:s', strtotime($data["close"])) . "</td></tr>";
+}
+?>
+							</tbody>
+						</table>
+					</div>
 				</section>
 			</article>
 		</div>
@@ -89,14 +86,6 @@ if ($me["role"]["permissions"]["manage"])
 				</section>
 			</article>
 		</div>
-		
-<div id="assignmentDetailModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="assignmentDetailModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      Loading...
-    </div>
-  </div>
-</div>
 
 		<div id="footer">
 			<div class="container">

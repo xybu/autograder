@@ -47,9 +47,13 @@ class Assignment extends \Controller {
 		$base->set("submissions", $submissionInfo);
 		$this->setView("assignment_detail.html");
 	}
-		
-	
 	
 	public function submitFile($base, $params) {
+		
 	}
+
+	public function getFile($base, $params) {
+		
+	}
+	
 }

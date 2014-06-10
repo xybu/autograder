@@ -1,0 +1,25 @@
+<div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	<h4 class="modal-title" id="myModalLabel"><?php echo $assignment["display"]?></h4>
+</div>
+<div class="modal-body">
+<article class="container-fluid">
+<section class="row">
+<h3>Status</h3>
+<p>Open for submission.</p>
+</section>
+<section class="row">
+<h3>Submission History</h3>
+<p>None.</p>
+</section>
+</article>
+	<?php
+	var_dump($me);
+	var_dump($assignment);
+	var_dump($submissions);
+	?>
+</div>
+<div class="modal-footer">
+	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	<button type="button" class="btn btn-primary">Save changes</button>
+</div>
