@@ -7,7 +7,6 @@ class User extends \Controller {
 	protected $User = null;
 	
 	function __construct() {
-		parent::__construct();
 		$this->User = \models\User::instance();
 	}
 	

@@ -7,40 +7,45 @@
  * @author	Xiangyu Bu (xybu92@live.com)
  */
 
-class Controller {
+abstract class Controller {
 	
-	protected $cache;	// Cache is a singleton
 	protected $base;	// Base is also a singleton
 	protected $user;
 	protected $view = null;
 	
-	static function api_encrypt($str, $key){
+	function encrypt($str, $key){
 		return openssl_encrypt($str, "AES-256-ECB", $key);
 	}
 	
-	static function api_decrypt($str, $key){
+	function decrypt($str, $key){
 		$trial = openssl_decrypt($str, "AES-256-ECB", $key);
 		if (!$trial) return null;
 		return $trial;
 	}
 	
-	function __construct() {
-		$this->cache = \Cache::instance();
+	/**
+	 * Set the HTML view to render.
+	 *
+	 * @param	$viewName: the file name of the view to render
+	 */
+	function setView($viewName){
+		$this->view = $viewName;
 	}
 	
-	function setView($filename){
-		$this->view = $filename;
-	}
-	
-	//! HTTP route pre-processor
+	/**
+	 * HTTP route pre-processor function, executed before a page is routed.
+	 */
 	function beforeRoute($base) {
-		$this->base=$base;
+		$this->base = $base;
 	}
 
-	//! HTTP route post-processor
+	/**
+	 * HTTP route post-processor function, executed after a page is loaded
+	 */
 	function afterRoute($base) {
-		if ($this->view)
+		if ($this->view) {
 			echo View::instance()->render($this->view);
+		}
 	}
 	
 	function getUserStatus(){

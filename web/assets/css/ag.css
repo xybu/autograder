@@ -19,6 +19,21 @@ body {
   background-color: #222;
 }
 
+#footer > .container {
+	padding-left: 15px;
+	padding-right: 15px;
+}
+
+#footer p {
+	margin: 1em;
+	color: #eee;
+}
+
+#footer p#copyright {
+	font-size: 0.8em;
+}
+
+/* For signin.html */
 .form-signin {
   max-width: 330px;
   padding: 15px;
@@ -53,20 +68,4 @@ body {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
-
-#footer > .container {
-	padding-left: 15px;
-	padding-right: 15px;
-}
-
-#footer p {
-	margin: 1em;
-	color: #eee;
-}
-
-#footer p#copyright {
-	font-size: 0.8em;
-}
-
-/* assignments.html */
 

@@ -5,7 +5,6 @@ namespace controllers;
 class Assignment extends \Controller {
 	
 	function __construct() {
-		parent::__construct();
 		$this->User = \models\User::instance();
 	}
 	
@@ -40,16 +39,21 @@ class Assignment extends \Controller {
 			header('HTTP/1.0 404 Not Found');
 			die();
 		}
-		if ($assignmentInfo["start"] > time()) {
-			header('HTTP/1.0 403 Forbidden');
-			die();
-		}
 		
+		if (strtotime($assignmentInfo["start"]) > time()) {
+			$error = array(
+				"error" => "access_unopened_assignment",
+				"error_description" => "The assignment is not opened yet."
+			);
+			$base->set("error", $error);
+			$this->setView("error.html");
+			return;
+		}
 		
 		$submissionInfo = $Assignment->getAllSubmissionsOf($userInfo["userid"], $params["id"]);
 		
 		$base->set("me", $userInfo);
-		$base->set("assignment", $assignmentInfo);
+		$base->set("assignment_info", $assignmentInfo);
 		$base->set("submissions", $submissionInfo);
 		$this->setView("assignment.html");
 	}

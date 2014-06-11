@@ -23,6 +23,10 @@ body.modal-open, .modal-open .navbar-fixed-top, .modal-open .navbar-fixed-bottom
 .modal-title .close{line-height: 1.43;}
 .callout {margin: 20px 0;padding: 15px 30px 15px 15px;border-left: 5px solid #eee;}
 .callout-narrow {margin:5px 0 !important;}
+.callout-error-frame {
+	margin: 8em auto;
+	width: 70%;
+}
 .callout h4 {margin-top: 0;font-size: 1.5em;}
 .callout p {font-size: 1em;}
 .callout p:last-child {margin-bottom: 0;}

@@ -1,0 +1,15 @@
+<div id="footer">
+			<div class="container">
+				<p id="copyright" class="text-center">
+					Copyright &copy; Department of Computer Science, Purdue University
+					<br />
+					<?php echo $Base->format('Execution time: {0} ms / Memory: {1} KiB', round(1e3*(microtime(TRUE)-$TIME),2), round(memory_get_usage(TRUE)/1e3,1)); ?>
+				</p>
+			</div>
+		</div>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+		<script src="/assets/js/bootstrap.file-input.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/js/bootstrap.min.js"></script>
+		<script src="/assets/js/ag.js"></script>
+	</body>
+</html>

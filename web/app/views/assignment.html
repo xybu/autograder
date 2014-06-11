@@ -1,101 +1,38 @@
 <?php
+/**
+ * assignment.html
+ *
+ * The HTML view to render the assignment detail page.
+ * 
+ * 
+ * @author	Xiangyu Bu <xybu92@live.com>
+ */
+
 $Base = \Base::instance();
 $Assignment= \models\Assignment::instance();
 
-$count = $Assignment->countSubmissions($submissions, $assignment);
-?><!DOCTYPE html>
-<html lang="en">
-	<head>
-		<base href="<?php echo $SCHEME.'://'.$HOST.':'.$PORT.$BASE.'/'; ?>" />
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<meta name="description" content="<?php echo $Base->get("HTML_META_DESCRIPTION")?>">
-		<link rel="dns-prefetch" href="//cdnjs.cloudflare.com/">
-		<link rel="stylesheet" href="assets/css/bootstrap.min.css" />
-		<link rel="stylesheet" href="assets/css/assignments.css" />
-		<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.0/animate.min.css" />
-		<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.min.css" />
-		<!--[if lt IE 9]>
-			<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script>
-			<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
-		<![endif]-->
-    	<title><?php echo $Base->get("HTML_TITLE")?></title>
-	</head>
-	<body>
-		<header class="navbar navbar-default navbar-fixed-top" role="navigation">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<button data-target=".navbar-responsive-collapse" data-toggle="collapse" class="navbar-toggle" type="button">
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-				<a href="#" class="navbar-brand"><?php echo $Base->get("COURSE_ID_DISPLAY")?></a>
-			</div>
-			<div class="navbar-collapse collapse navbar-responsive-collapse">
-				<ul class="nav navbar-nav">
-					<li><a href="<?php echo $Base->get("COURSE_HOME_URI")?>"><?php echo $Base->get("COURSE_HOME_TITLE")?></a></li>
-					<li><a href="<?php echo $Base->get("COURSE_BBS_URI")?>"><?php echo $Base->get("COURSE_BBS_TITLE")?></a></li>
-					<li class="active"><a href="#"><?php echo $Base->get("COURSE_TURNIN_TITLE")?></a></li>
-				</ul>
-				<ul class="nav navbar-nav navbar-right">
-					<li class="dropdown">
-						<a data-toggle="dropdown" class="dropdown-toggle" href="#"><?php echo $me["userid"]?>@purdue.edu <b class="caret"></b></a>
-						<ul class="dropdown-menu">
-						<?php
-if ($me["role"]["permissions"]["manage"])
-	echo "<li><a href=\"/admin\">Manage</a></li><li class=\"divider\"></li>";
+$count = $Assignment->countSubmissions($submissions, $assignment_info);
+$page_title = $assignment_info["display"];
+
+require "header.html";
 ?>
-							<li><a href="/logout">Log out</a></li>
-						</ul>
-					</li>
-					<li><a href="/support">Support</a></li>
-					<li><a href="/help">Help</a></li>
-				</ul>
-			</div>
-		</div>
-		</header>
-		
 		<div class="container-fluid">
-			<h1 class="page-header"><?php echo $assignment["display"]?></h1>
+			<h1 class="page-header"><?php echo $assignment_info["display"]?></h1>
 			<h2 class="sub-header">Status</h2>
 			<article class="row">
-				<section class="col-xs-4 col-sm-5 col-md-5">
-					<div class="panel panel-default">
-						<div class="panel-heading">
-						    <h3 class="panel-title">Submit</h3>
-						</div>
-						<div class="panel-body">
-							<form method="post" enctype="multipart/form-data">
-							    	<input type="file" id="submit_file" name="submit_file"  data-filename-placement="outside">
-							    	<div id="bar_wrapper" class="row form-group hidden">
-									<div class="col-md-12">
-										<div class="progress progress-striped active">
-											<div id="bar" class="progress-bar"  role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%"></div>
-										</div>
-									</div>
-								</div>
-							</form>
-						</div>
-					</div>
-				</section>
-				<section class="col-xs-8 col-sm-7 col-md-7">
-					<div class="panel panel-default">
-						<div class="panel-heading">
-						    <h3 class="panel-title">Notes</h3>
-						</div>
-						<div class="panel-body">
+	
 						    <ul>
-							<li>The deadline for submission is <strong><?php echo date('D, d M Y H:i:s', strtotime($assignment["close"]))?></strong>.</li>
-							<li>You have <strong><?php echo $assignment["quota_amount"]?></strong> submission(s) <strong><?php echo $assignment["quota_strategy"]?></strong>.</li>
+							<li>The deadline for submission is <strong><?php echo date('D, d M Y H:i:s', strtotime($assignment_info["close"]))?></strong>.</li>
+							<li>You have <strong><?php echo $assignment_info["quota_amount"]?></strong> submission(s) <strong><?php echo $assignment_info["quota_strategy"]?></strong>.</li>
 							<li>You have <strong><?php echo $count["remaining"]?></strong> submission chances left for this period.</li>
 						    </ul>
-						</div>
-					</div>
-				</section>
+					
 			</article>
-			<h2 class="sub-header">Submission History</h2>
+			<h2 class="sub-header">Submission
+				<span class="pull-right">
+					<button type="button" data-toggle="modal" data-target="#create_group_modal" class="btn btn-primary"><i class="fa fa-plus-square fa-fw"></i> Create</button>
+				</span>
+			</h2>
 			<article class="row">
 				<section class="col-md-12">
 					
@@ -104,23 +41,9 @@ if ($me["role"]["permissions"]["manage"])
 		</div>
 <?php
 var_dump($me);
-var_dump($assignment);
+var_dump($assignment_info);
 var_dump($submissions);
 var_dump($count);
+
+require "footer.html";
 ?>
-		<div id="footer">
-			<div class="container">
-				<p id="copyright" class="text-center">
-					Copyright &copy; Department of Computer Science, Purdue University
-					<br />
-					<?php 
-					echo Base::instance()->format('Execution time: {0} ms / Memory: {1} KiB', round(1e3*(microtime(TRUE)-$TIME),2), round(memory_get_usage(TRUE)/1e3,1)); ?>
-				</p>
-			</div>
-		</div>
-		<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-		<script src="/assets/js/bootstrap.file-input.js"></script>
-		<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/js/bootstrap.min.js"></script>
-		<script src="/assets/js/ag_web.js"></script>
-	</body>
-</html>

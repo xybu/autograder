@@ -1,3 +1,32 @@
 <?php
-var_dump("error")
+/**
+ * error.html
+ *
+ * This view renders $error array, which contains keys
+ * 'error' for error code, 'error_description' for its description, and an
+ * optional key 'error_level' for a custom css style.
+ *
+ * @author	Xiangyu Bu <xybu92@live.com>
+ *
+ */
+
+$Base = \Base::instance();
+
+//error_level should be one of the stylesheet of callout css class
+if (!array_key_exists("error_level", $error)) {
+	// the default style
+	$error["error_level"] = "danger";
+}
+
+$page_title = "Oops";
+require "header.html";
 ?>
+<div class="container callout-error-frame">
+	<article class="callout callout-<?php echo $error["error_level"]?>">
+		<h4>Error: <?php echo $error["error"]?></h4>
+		<p><?php echo $error["error_description"]?></p>
+		<p><a href="#" onclick="window.history.back();">Go back</a></p>
+	</article>
+</div>
+<?php
+require "footer.html";
