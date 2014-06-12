@@ -39,7 +39,7 @@ $Base = \Base::instance();
 				<ul class="nav navbar-nav navbar-right">
 					<?php if (isset($me)) : ?>
 					<li class="dropdown">
-						<a data-toggle="dropdown" class="dropdown-toggle" href="#"><?php echo $me["userid"]?>@purdue.edu <b class="caret"></b></a>
+						<a data-toggle="dropdown" class="dropdown-toggle" href="#"><?php echo $me["user_id"]?>@purdue.edu <b class="caret"></b></a>
 						<ul class="dropdown-menu">
 						<?php
 if ($me["role"]["permissions"]["manage"])

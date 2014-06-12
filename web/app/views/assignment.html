@@ -50,7 +50,9 @@ if ($can_submit == 1) :
 ?>
 			<div class="panel panel-default">
 				<div class="panel-body">
-					<form role="form">
+					<form role="form" method="post" enctype="multipart/form-data" action="/submissions/post">
+						<input type="hidden" name="assignment_id" value="">
+						
 						<div class="col-sm-4">
 							<label for="sourceFile" class="sr-only">File</label>
 							<input type="file" name="sourceFile" id="sourceFile">
@@ -95,7 +97,6 @@ else echo '<tr class="warning">' .
 			<h3>Notes</h3>
 			<ul>
 				<li>The maximum grade for this assignment is <strong><?php echo $assignment_info["max_score"]?></strong>.</li>
-				<li>Each user can have at most one grading task of an assignment in the queue; that is, if you have a grading task pending for this assignment, submitting new files will have this task discarded.</li>
 			</ul>
 		</div>
 <?php

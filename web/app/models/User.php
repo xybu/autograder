@@ -17,7 +17,7 @@ class User extends \Model {
 		foreach ($this->users as $rolename => $members) {
 			if (array_key_exists($id, $members))
 				return array(
-					"userid" => $id,
+					"user_id" => $id,
 					"role" => array("name" => $rolename, "permissions" => $this->roles[$rolename]),
 					"password" => $members[$id]
 				);
