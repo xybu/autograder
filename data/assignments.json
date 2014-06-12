@@ -7,6 +7,7 @@
 		"quota_amount": 3,
 		"submit_filetype": ".c",
 		"submit_notes": "",
+		"max_score": 100,
 		"grader_script": "",
 		"grader_tar": ""
 	},
@@ -18,6 +19,7 @@
 		"quota_amount": 3,
 		"submit_filetype": ".c",
 		"submit_notes": "",
+		"max_score": 100,
 		"grader_script": "",
 		"grader_tar": ""
 	},
@@ -29,17 +31,7 @@
 		"quota_amount": 3,
 		"submit_filetype": ".c",
 		"submit_notes": "",
-		"grader_script": "",
-		"grader_tar": ""
-	},
-	"lab2_hasher": {
-		"display": "Lab 2: Hasher",
-		"start": "2014-06-01T00:00:00",
-		"close": "2015-06-02T00:00:00",
-		"quota_strategy": "daily",
-		"quota_amount": 3,
-		"submit_filetype": ".c",
-		"submit_notes": "",
+		"max_score": 100,
 		"grader_script": "",
 		"grader_tar": ""
 	}

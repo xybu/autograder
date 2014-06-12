@@ -18,26 +18,68 @@ require "header.html";
 ?>
 		<div class="container-fluid">
 			<h1 class="page-header"><?php echo $assignment_info["display"]?></h1>
-			<h2 class="sub-header">Status</h2>
-			<article class="row">
-	
-						    <ul>
-							<li>The deadline for submission is <strong><?php echo date('D, d M Y H:i:s', strtotime($assignment_info["close"]))?></strong>.</li>
-							<li>You have <strong><?php echo $assignment_info["quota_amount"]?></strong> submission(s) <strong><?php echo $assignment_info["quota_strategy"]?></strong>.</li>
-							<li>You have <strong><?php echo $count["remaining"]?></strong> submission chances left for this period.</li>
-						    </ul>
-					
-			</article>
-			<h2 class="sub-header">Submission
-				<span class="pull-right">
-					<button type="button" data-toggle="modal" data-target="#create_group_modal" class="btn btn-primary"><i class="fa fa-plus-square fa-fw"></i> Create</button>
-				</span>
-			</h2>
-			<article class="row">
-				<section class="col-md-12">
-					
-				</section>
-			</article>
+<?php
+if ($me["role"]["permissions"]["submit"])
+if (strtotime($assignment_info["close"]) > time()) {
+	echo '<p class="bg-success notification-bar">The deadline for submission is <strong>' . date('D, d M Y H:i:s', strtotime($assignment_info["close"])) . '</strong>.</p>';
+} else if ($me[") {
+	echo '<p class="bg-danger notification-bar">The assignment has closed at <strong>' . date('D, d M Y H:i:s', strtotime($assignment_info["close"])) . '</strong>.</p>';
+}
+
+if ($count["remaining"] > 0) {
+	echo '<p class="bg-success notification-bar">You can submit <strong>' . $assignment_info["quota_amount"] . '</strong> time(s) <em>' . $assignment_info["quota_strategy"] . '</em> and have <strong>' . $count["remaining"] . '</strong> submission chances left for this period.</p>';
+} else {
+	echo '<p class="bg-warning notification-bar">You can only submit <strong>' . $assignment_info["quota_amount"] . '</strong> time(s) <em>' . $assignment_info["quota_strategy"] . '</em> but have used up your quota. Please wait for next period.</p>';
+}
+?>	
+			<div class="panel panel-default">
+				<div class="panel-body">
+					<form role="form">
+						<div class="col-sm-4">
+							<label for="sourceFile" class="sr-only">File</label>
+							<input type="file" name="sourceFile" id="sourceFile">
+						</div>
+						<div class="col-sm-8">
+							<button type="submit" class="btn btn-primary">Submit</button>
+						</div>
+					</form>
+				</div>
+			</div>
+			<h2 class="sub-header">Submission History</h2>
+			<div class="table-responsive">
+				<table class="table table-bordered table-striped table-hover">
+					<thead>
+						<tr><th>Identification</th><th>Date Created</th><th>Status</th><th>Grade</th></tr>
+					</thead>
+					<tbody>
+<?php
+if (count($submissions) > 0)
+	foreach ($submissions as $key => $data) {
+		if ($data["grade"] == null) $data["grade"] = "N/A";
+		if ($data["grade_adjustment"] != null) {
+			$grade_str = $data["grade"] . " + " . $data["grade_adjustment"];
+		} else {
+			$grade_str = $data["grade"];
+		}
+		echo '<tr>' .
+			'<td><a href="/submissions/get/' . $data['id'] . '" title="Click to download this submission file.">Submission #' . $data['id'] . '</a></td>' .
+			'<td>' . date('D, d M Y H:i:s', strtotime($data["date_created"])) . '</td>' .
+			'<td>' . $data["status"] . ' at ' . date('D, d M Y H:i:s', strtotime($data["date_updated"])) . '</td>' .
+			'<td>' . $grade_str . '</td>' .
+			'</tr>';
+	}
+else echo '<tr class="warning">' .
+		'<td colspan="4" class="text-center">You have not submitted to this assignment yet.</td>' .
+		'</tr>';
+?>
+					</tbody>
+				</table>
+			</div>
+			<h3>Notes</h3>
+			<ul>
+				<li>The maximum grade for this assignment is <strong><?php echo $assignment_info["max_score"]?></strong>.</li>
+				<li>Each user can have at most one grading task of an assignment in the queue; that is, if you have a grading task pending for this assignment, submitting new files will have this task discarded.</li>
+			</ul>
 		</div>
 <?php
 var_dump($me);

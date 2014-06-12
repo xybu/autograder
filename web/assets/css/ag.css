@@ -69,3 +69,6 @@ body {
   border-top-right-radius: 0;
 }
 
+.notification-bar {
+	padding: 0.7em;
+}
