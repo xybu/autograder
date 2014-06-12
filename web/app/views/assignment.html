@@ -51,7 +51,7 @@ if ($can_submit == 1) :
 			<div class="panel panel-default">
 				<div class="panel-body">
 					<form role="form" method="post" enctype="multipart/form-data" action="/submissions/post">
-						<input type="hidden" name="assignment_id" value="">
+						<input type="hidden" name="assignment_id" value="<?php echo $assignment_info["id"]?>">
 						
 						<div class="col-sm-4">
 							<label for="sourceFile" class="sr-only">File</label>

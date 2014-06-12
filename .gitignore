@@ -37,3 +37,6 @@ nosetests.xml
 
 tmp
 trash
+submissions
+test.*
+test

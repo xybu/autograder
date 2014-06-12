@@ -79,7 +79,9 @@ class Assignment extends \Controller {
 			die();
 		}
 		
-		$result = $Assignment->saveSubmission($user_info, $assignment_info, $base->get("SUBMISSION_POOL_PATH"));
+		// change submission dir temporarily
+		$base->set("UPLOADS", $base->get("UPLOADS") . $assignment_info["id"] . "/" . $user_info["user_id"] . "/");
+		$result = $Assignment->saveSubmission($user_info, $assignment_info);
 		var_dump($result);
 	}
 	
