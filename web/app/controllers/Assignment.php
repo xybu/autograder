@@ -34,13 +34,13 @@ class Assignment extends \Controller {
 		$Assignment = \models\Assignment::instance();
 		
 		// verify assignment
-		$assignmentInfo = $Assignment->findById($params["id"]);
-		if ($assignmentInfo == null) {
+		$assignment_info = $Assignment->findById($params["id"]);
+		if ($assignment_info == null) {
 			header('HTTP/1.0 404 Not Found');
 			die();
 		}
 		
-		if (strtotime($assignmentInfo["start"]) > time()) {
+		if (strtotime($assignment_info["start"]) > time()) {
 			$error = array(
 				"error" => "access_unopened_assignment",
 				"error_description" => "The assignment is not opened yet."
@@ -53,13 +53,34 @@ class Assignment extends \Controller {
 		$submissionInfo = $Assignment->getAllSubmissionsOf($userInfo["user_id"], $params["id"]);
 		
 		$base->set("me", $userInfo);
-		$base->set("assignment_info", $assignmentInfo);
+		$base->set("assignment_info", $assignment_info);
 		$base->set("submissions", $submissionInfo);
 		$this->setView("assignment.html");
 	}
 	
-	public function submitFile($base, $params) {
+	/**
+	 * Save the submitted file of an assignment.
+	 */
+	public function submitFile($base) {
+		$user_info = $this->getUserStatus();
+		if ($user_info == null) {
+			die();
+		}
 		
+		$Assignment = \models\Assignment::instance();
+		
+		// verify assignment
+		$assignment_id = $base->get("POST.assignment_id");
+		$assignment_info = null;
+		if (!empty($assignment_id))
+			$assignment_info = $Assignment->findById($assignment_id);
+		if ($assignment_info == null) {
+			header('HTTP/1.0 404 Not Found');
+			die();
+		}
+		
+		$result = $Assignment->saveSubmission($user_info, $assignment_info, $base->get("SUBMISSION_POOL_PATH"));
+		var_dump($result);
 	}
 	
 	/**
@@ -87,18 +108,8 @@ class Assignment extends \Controller {
 			if (!file_exists($submission_info["file_path"]))
 				throw new AssignmentException("file_not_found", "The file you are requesting is not found in the repository. Please contact admin.", 404);
 			
-			// add necessary headers
-			header("Content-Description: File Transfer");
-			header("Content-Type: application/octet-stream");
-			header("Content-Disposition: attachment; filename=" . basename($submission_info["file_path"]));
-			header("Cache-Control: must-revalidate");
-			header("Expires: 0");
-			header("Content-Length: " . filesize($submission_info["file_path"]));
-			
-			ob_clean();
-			flush();
-			readfile($submission_info["file_path"]);
-			exit();
+			$speed_limit = 16; // in KBps
+			\Web::instance()->send($submission_info["file_path"], "application/octet-stream", $speed_limit);
 			
 		} catch (AssignmentException $ex) {
 			if ($ex->getCode() == 404) header("HTTP/1.0 404 Not Found");
