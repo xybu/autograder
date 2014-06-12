@@ -19,19 +19,35 @@ require "header.html";
 		<div class="container-fluid">
 			<h1 class="page-header"><?php echo $assignment_info["display"]?></h1>
 <?php
-if ($me["role"]["permissions"]["submit"])
-if (strtotime($assignment_info["close"]) > time()) {
+$can_submit = 0;
+
+if (!$me["role"]["permissions"]["submit"]) {
+	echo '<p class="bg-danger notification-bar">You does not have the permission to submit. Please contact the admin.</p>';
+} else if (strtotime($assignment_info["close"]) > time()) {
+	// the user must possess 'submit' permission
+	// and the assignment must be in 'open' state
 	echo '<p class="bg-success notification-bar">The deadline for submission is <strong>' . date('D, d M Y H:i:s', strtotime($assignment_info["close"])) . '</strong>.</p>';
-} else if ($me[") {
+	$can_submit = 1;
+} else if ($me["role"]["permissions"]["submit_overdue"]) {
+	// or the user must possess 'submit_overdue' permission to override the 'closed' state of the assignment
+	echo '<p class="bg-info notification-bar">The assignment has closed at <strong>' . date('D, d M Y H:i:s', strtotime($assignment_info["close"])) . '</strong>, but you have the permission to submit.</p>';
+	$can_submit = 1;
+} else {
+	// otherwise he cannot submit
 	echo '<p class="bg-danger notification-bar">The assignment has closed at <strong>' . date('D, d M Y H:i:s', strtotime($assignment_info["close"])) . '</strong>.</p>';
 }
 
-if ($count["remaining"] > 0) {
-	echo '<p class="bg-success notification-bar">You can submit <strong>' . $assignment_info["quota_amount"] . '</strong> time(s) <em>' . $assignment_info["quota_strategy"] . '</em> and have <strong>' . $count["remaining"] . '</strong> submission chances left for this period.</p>';
-} else {
-	echo '<p class="bg-warning notification-bar">You can only submit <strong>' . $assignment_info["quota_amount"] . '</strong> time(s) <em>' . $assignment_info["quota_strategy"] . '</em> but have used up your quota. Please wait for next period.</p>';
+if ($can_submit == 1) {
+	if ($count["remaining"] > 0) {
+		echo '<p class="bg-success notification-bar">You can submit <strong>' . $assignment_info["quota_amount"] . '</strong> time(s) <em>' . $assignment_info["quota_strategy"] . '</em> and have <strong>' . $count["remaining"] . '</strong> submission chances left for this period.</p>';
+	} else if (!$me["role"]["permissions"]["manage"]) {
+		echo '<p class="bg-warning notification-bar">You can only submit <strong>' . $assignment_info["quota_amount"] . '</strong> time(s) <em>' . $assignment_info["quota_strategy"] . '</em> but have used up your quota. Please wait for next period.</p>';
+		$can_submit = 0;
+	}
 }
-?>	
+
+if ($can_submit == 1) :
+?>
 			<div class="panel panel-default">
 				<div class="panel-body">
 					<form role="form">
@@ -45,6 +61,7 @@ if ($count["remaining"] > 0) {
 					</form>
 				</div>
 			</div>
+<?php endif ?>
 			<h2 class="sub-header">Submission History</h2>
 			<div class="table-responsive">
 				<table class="table table-bordered table-striped table-hover">
