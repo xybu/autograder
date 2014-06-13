@@ -56,6 +56,12 @@ class Assignment extends \Model {
 		return null;
 	}
 	
+	function findSubmissionByPath($p) {
+		$result = $this->query("SELECT * FROM submissions WHERE file_path=?", $p);
+		if (count($result) == 1) return $result[0];
+		return null;
+	}
+	
 	/**
 	 * Given a list of submissions (queried from db), count them by date, week, etc.
 	 *
@@ -105,7 +111,7 @@ class Assignment extends \Model {
 	 * @param	$user_info: the array of the submitter (returned by User::findById).
 	 * @param	$assignment_info: the data array of the assignment (returned by findById).
 	 * 
-	 * @return	string 'success' if the file is successfully saved to submission pool;
+	 * @return	an int value if the file is successfully saved to submission pool;
 	 * 		otherwise return one string of 'file_too_large', 'empty_ext_name', 'invalid_ext_name', and 'upload_error'
 	 * 		to indicate the reason.
 	 */
@@ -170,6 +176,7 @@ class Assignment extends \Model {
 		);
 		
 		// $files is an array of filename-status pairs
+		$record = null;
 		foreach ($files as $name => $status) {
 			if ($status) {
 				$path = dirname($name) . "/history/";
@@ -180,11 +187,20 @@ class Assignment extends \Model {
 				rename($name, $path . $file_name_new);
 				
 				// add to database
-				
+				$this->query(
+					"INSERT INTO submissions (user_id, assignment_id, file_path, status, date_created, date_updated) " .
+					"VALUES (:user_id, :assignment_id, :file_path, 'submitted', NOW(), NOW()); ",
+					array(
+						':user_id' => $user_info["user_id"],
+						':assignment_id' => $assignment_info["id"],
+						':file_path' => $path . $file_name_new
+					)
+				);
+				$record = $this->findSubmissionByPath($path . $file_name_new);
 			}
 		}
 		
-		if ($count == 1) return "success";
-		else return $error_description;
+		if ($count == 1) return $record;
+		return $error_description;
 	}
 }

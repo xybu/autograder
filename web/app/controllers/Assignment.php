@@ -9,8 +9,8 @@ class Assignment extends \Controller {
 	}
 	
 	public function listAll($base) {
-		$userInfo = $this->getUserStatus();
-		if ($userInfo == null) {
+		$user_info = $this->getUserStatus();
+		if ($user_info == null) {
 			// instead of raising a UserException, reroute the user
 			// to homepage
 			$base->reroute('/');
@@ -18,14 +18,15 @@ class Assignment extends \Controller {
 		
 		$Assignment = \models\Assignment::instance();
 		$base->set("assignments", $Assignment->getAllAssignments());
-		$base->set("me", $userInfo);
+		$base->set("me", $user_info);
 		$this->setView("assignments.html");
 	}
 	
 	public function showDetailOf($base, $params) {
 		// verify user
-		$userInfo = $this->getUserStatus();
-		if ($userInfo == null) {
+		$user_info = $this->getUserStatus();
+		
+		if ($user_info == null) {
 			// instead of raising a UserException, reroute the user
 			// to homepage
 			$base->reroute('/');
@@ -40,7 +41,7 @@ class Assignment extends \Controller {
 			die();
 		}
 		
-		if (strtotime($assignment_info["start"]) > time()) {
+		if (strtotime($assignment_info["start"]) > time() && !$user_info["role"]["permissions"]["manage"]) {
 			$error = array(
 				"error" => "access_unopened_assignment",
 				"error_description" => "The assignment is not opened yet."
@@ -50,9 +51,9 @@ class Assignment extends \Controller {
 			return;
 		}
 		
-		$submissionInfo = $Assignment->getAllSubmissionsOf($userInfo["user_id"], $params["id"]);
+		$submissionInfo = $Assignment->getAllSubmissionsOf($user_info["user_id"], $params["id"]);
 		
-		$base->set("me", $userInfo);
+		$base->set("me", $user_info);
 		$base->set("assignment_info", $assignment_info);
 		$base->set("submissions", $submissionInfo);
 		$this->setView("assignment.html");
@@ -60,6 +61,8 @@ class Assignment extends \Controller {
 	
 	/**
 	 * Save the submitted file of an assignment.
+	 * 
+	 * Return JSON object to HTTP client.
 	 */
 	public function submitFile($base) {
 		$user_info = $this->getUserStatus();
@@ -76,17 +79,73 @@ class Assignment extends \Controller {
 			$assignment_info = $Assignment->findById($assignment_id);
 		if ($assignment_info == null) {
 			header('HTTP/1.0 404 Not Found');
-			die();
+			return;
 		}
 		
-		// change submission dir temporarily
-		$base->set("UPLOADS", $base->get("UPLOADS") . $assignment_info["id"] . "/" . $user_info["user_id"] . "/");
-		$result = $Assignment->saveSubmission($user_info, $assignment_info);
-		var_dump($result);
+		// this is very inefficient, needs improving.
+		$submission_info = $Assignment->getAllSubmissionsOf($user_info["user_id"], $assignment_id);
+		$count = $Assignment->countSubmissions($submission_info, $assignment_info);
+		$submission_record = null;
+		if (!$user_info["role"]["permissions"]["submit"]) {
+			$result = "permission_denied";
+		} else if (strtotime($assignment_info["close"]) <= time() && !$user_info["role"]["permissions"]["submit_overdue"]) {
+			$result = "assignment_closed";
+		} else if ($count["remaining"] <= 0 && !$user_info["role"]["permissions"]["manage"]) {
+			$result = "insufficient_quota";
+		} else if (strtotime($assignment_info["start"]) > time() && !$user_info["role"]["permissions"]["submit_prestart"]) {
+			$result = "assignment_unavailable";
+		} else {
+			// change submission dir temporarily
+			$base->set("UPLOADS", $base->get("UPLOADS") . $assignment_info["id"] . "/" . $user_info["user_id"] . "/");
+			$result = $Assignment->saveSubmission($user_info, $assignment_info);
+			if (is_array($result)) {
+				$submission_record = $result;
+				$result = "success";
+			} else if (empty($result)) {
+				// what if $result is null?
+			}
+		}
+		
+		$data = array("error" => $result);
+		switch ($result) {
+			case "success":
+				// call grader daemon
+				var_dump($submission_record);
+				die();
+				break;
+			case "permission_denied":
+				$data["error_description"] = "You do not have the permission to submit.";
+				break;
+			case "assignment_closed":
+				$data["error_description"] = "The assignment has closed.";
+				break;
+			case "insufficient_quota":
+				$data["error_description"] = "You have run out of submission chances for this period.";
+				break;
+			case "assignment_unavailable":
+				$data["error_description"] = "The assignment is not available for submission.";
+				break;
+			case "invalid_ext_name":
+				$data["error_description"] = "The submitted file has a wrong extension name.";
+				break;
+			case "empty_ext_name":
+				$data["error_description"] = "The submitted file does not have an extension name.";
+				break;
+			case "file_too_large":
+				$data["error_description"] = "The submitted file is too large.";
+				break;
+			case "upload_error":
+				$data["error_description"] = "An error occurred uploading this file. Please retry or contact admin.";
+				break;
+			default:
+				$data["error_description"] = "An unknown error occured.";
+				break;
+		}
+		$this->json_echo($data);
 	}
 	
 	/**
-	 * Get the source file of a submission record.
+	 * Print the source file of a submission record to HTTP client.
 	 * 
 	 */
 	public function getFile($base, $params) {

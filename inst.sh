@@ -12,7 +12,9 @@ sudo apt-get install python-pip
 # the submission dir must correspond to the UPLOADS parameter in web/app/config/globals.ini
 # and php process must be able to mkdir and r+w files in it
 mkdir submissions
-chmod 777 submissions
+sudo usermod -a -G www-data $(whoami)
+sudo chgrp www-data submissions
+chmod 770 submissions
 
 cd web
 # create tmp dir for the web program

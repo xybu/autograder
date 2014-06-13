@@ -22,7 +22,7 @@ require "header.html";
 $can_submit = 0;
 
 if (!$me["role"]["permissions"]["submit"]) {
-	echo '<p class="bg-danger notification-bar">You does not have the permission to submit. Please contact the admin.</p>';
+	echo '<p class="bg-danger notification-bar">You do not have the permission to submit. Please contact the admin.</p>';
 } else if (strtotime($assignment_info["close"]) > time()) {
 	// the user must possess 'submit' permission
 	// and the assignment must be in 'open' state
