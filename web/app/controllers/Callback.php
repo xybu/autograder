@@ -2,7 +2,7 @@
 
 namespace controllers;
 
-class API extends \Controller {
+class Callback extends \Controller {
 
 	function __construct() {
 	}
