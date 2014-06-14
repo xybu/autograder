@@ -17,7 +17,11 @@ $page_title = $assignment_info["display"];
 require "header.html";
 ?>
 		<div class="container-fluid">
-			<h1 class="page-header"><?php echo $assignment_info["display"]?></h1>
+	
+			<h1 class="page-header"><?php echo $assignment_info["display"]?>
+				<small class="pull-right"><a href="/assignments">Back to Assignments</a></small>
+			</h1>
+			
 <?php
 $can_submit = 0;
 
@@ -38,7 +42,9 @@ if (!$me["role"]["permissions"]["submit"]) {
 }
 
 if ($can_submit == 1) {
-	if ($count["remaining"] > 0) {
+	if ($me["role"]["permissions"]["manage"]) {
+		echo '<p class="bg-info notification-bar">You have admin privilege and are not restricted by submission quota.</p>';
+	} else if ($count["remaining"] > 0) {
 		echo '<p class="bg-success notification-bar">You can submit <strong>' . $assignment_info["quota_amount"] . '</strong> time(s) <em>' . $assignment_info["quota_strategy"] . '</em> and have <strong>' . $count["remaining"] . '</strong> submission chances left for this period.</p>';
 	} else if (!$me["role"]["permissions"]["manage"]) {
 		echo '<p class="bg-warning notification-bar">You can only submit <strong>' . $assignment_info["quota_amount"] . '</strong> time(s) <em>' . $assignment_info["quota_strategy"] . '</em> but have used up your quota. Please wait for next period.</p>';
@@ -50,15 +56,29 @@ if ($can_submit == 1) :
 ?>
 			<div class="panel panel-default">
 				<div class="panel-body">
-					<form role="form" method="post" enctype="multipart/form-data" action="/submissions/post">
+					<form id="submit_form" role="form" method="post" enctype="multipart/form-data" class="form-horizontal">
 						<input type="hidden" name="assignment_id" value="<?php echo $assignment_info["id"]?>">
-						
-						<div class="col-sm-4">
-							<label for="sourceFile" class="sr-only">File</label>
-							<input type="file" name="sourceFile" id="sourceFile">
+						<div class="form-group">
+							<label for="sourceFile" class="col-sm-2 control-label">File</label>
+							<div class="col-sm-10">
+								<input type="file" name="sourceFile" id="sourceFileSelector">
+								<div id="help_block" class="help-block" data-typelimit="<?php echo array_key_exists("submit_filetype", $assignment_info) ? $assignment_info["submit_filetype"] : '.' ?>" data-sizelimit="<?php echo array_key_exists("submit_filesize", $assignment_info) ? $assignment_info["submit_filesize"] : -1 ?>">
+									<?php
+									if (array_key_exists("submit_filetype", $assignment_info))
+										echo 'You can submit a file with extension name <em>' . $assignment_info["submit_filetype"] . '</em>. ';
+									else
+										echo 'There is no limit on file extension name. ';
+									if (array_key_exists("submit_filesize", $assignment_info))
+										echo 'The file size must not exceed <em>' . number_format($assignment_info["submit_filesize"] / 1024, 2) . ' KiB</em>.';
+									?>
+								</div>
+							</div>
 						</div>
-						<div class="col-sm-8">
-							<button type="submit" class="btn btn-primary">Submit</button>
+						<div class="form-group">
+							<div class="col-sm-offset-2 col-sm-10">
+								<button type="submit" class="btn btn-primary">Submit</button>
+								<span id="action_feedback"></span>
+							</div>
 						</div>
 					</form>
 				</div>
@@ -68,9 +88,9 @@ if ($can_submit == 1) :
 			<div class="table-responsive">
 				<table class="table table-bordered table-striped table-hover">
 					<thead>
-						<tr><th>Identification</th><th>Date Created</th><th>Status</th><th>Grade</th></tr>
+						<tr><th>Identifier</th><th>Date Created</th><th>Status</th><th>Grade</th></tr>
 					</thead>
-					<tbody>
+					<tbody id="history_body">
 <?php
 if (count($submissions) > 0)
 	foreach ($submissions as $key => $data) {
@@ -80,16 +100,8 @@ if (count($submissions) > 0)
 		} else {
 			$grade_str = $data["grade"];
 		}
-		echo '<tr>' .
-			'<td><a href="/submissions/get/' . $data['id'] . '" title="Click to download this submission file.">Submission #' . $data['id'] . '</a></td>' .
-			'<td>' . date('D, d M Y H:i:s', strtotime($data["date_created"])) . '</td>' .
-			'<td>' . $data["status"] . ' at ' . date('D, d M Y H:i:s', strtotime($data["date_updated"])) . '</td>' .
-			'<td>' . $grade_str . '</td>' .
-			'</tr>';
+		require "submission_record.html";
 	}
-else echo '<tr class="warning">' .
-		'<td colspan="4" class="text-center">You have not submitted to this assignment yet.</td>' .
-		'</tr>';
 ?>
 					</tbody>
 				</table>
@@ -100,10 +112,4 @@ else echo '<tr class="warning">' .
 			</ul>
 		</div>
 <?php
-var_dump($me);
-var_dump($assignment_info);
-var_dump($submissions);
-var_dump($count);
-
 require "footer.html";
-?>

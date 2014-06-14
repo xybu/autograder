@@ -35,7 +35,7 @@ class Assignment extends \Model {
 	 * 
 	 */
 	function getAllSubmissionsOf($userId, $assignmentId) {
-		$result = $this->query("SELECT * FROM submissions WHERE user_id=:uid AND assignment_id=:aid", array(
+		$result = $this->query("SELECT * FROM submissions WHERE user_id=:uid AND assignment_id=:aid ORDER BY date_created DESC", array(
 			':uid' => $userId,
 			':aid' => $assignmentId
 		));
