@@ -4,6 +4,7 @@
 		"submit": true,
 		"submit_prestart": true,
 		"submit_overdue": true,
+		"submit_priority": 100,
 		"manage": true
 	},
 	"user": {
@@ -11,6 +12,7 @@
 		"submit": true,
 		"submit_prestart": false,
 		"submit_overdue": false,
+		"submit_priority": 50,
 		"manage" : false
 	}
 }

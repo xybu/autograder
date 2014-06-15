@@ -116,6 +116,12 @@ class Assignment extends \Controller {
 				
 				// for debug
 				$data["raw"] = $submission_record;
+				
+				$Connector = \models\Connector::instance();
+				$assign_result = $Connector->assignTask($submission_record, $user_info, $assignment_info);
+				var_dump($assign_result);
+				die();
+				
 				break;
 			case "permission_denied":
 				$data["error_description"] = "You do not have the permission to submit.";
