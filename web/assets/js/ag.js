@@ -27,7 +27,9 @@ $(document).ready(function() {
 		},
 		complete: function(xhr) {
 			if (xhr.responseJSON.error == "success") {
-				$("#action_feedback").html("<span class=\"text-success\">You have successfully submitted to this assignment. (Refresh the page to update quota information.)</span>");
+				$("#action_feedback").html("<span class=\"text-success\">Successfully submitted the file.</span>");
+				if (xhr.responseJSON.more_status == "error")
+					$("#action_feedback").append("<p class=\"text-warning\">However, system failed to add the grading task to queue; will retry later.</p>");
 				$("#history_body").prepend(xhr.responseJSON.new_record_data);
 			} else {
 				$("#action_feedback").html("<span class=\"text-danger\">" + xhr.responseJSON.error_description + "</span>");

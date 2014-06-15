@@ -25,17 +25,16 @@ DROP TABLE IF EXISTS `queue`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `queue` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `submission_id` int(11) NOT NULL,
   `user_id` varchar(64) NOT NULL,
-  `assignment_id` varchar(128) NOT NULL,
-  `priority` int(11) DEFAULT NULL,
-  `status` varchar(45) DEFAULT NULL,
-  `file_path` varchar(255) DEFAULT NULL,
+  `priority` int(11) NOT NULL DEFAULT '10',
+  `file_path` varchar(384) DEFAULT NULL,
   `api_key` varchar(128) DEFAULT NULL,
-  `assignment_detail` tinytext,
-  `date_created` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`submission_id`),
-  UNIQUE KEY `submission_id_UNIQUE` (`submission_id`)
+  `assignment` tinytext,
+  `date_created` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`,`submission_id`),
+  UNIQUE KEY `id_UNIQUE` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -48,4 +47,4 @@ CREATE TABLE `queue` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-06-05  0:30:54
+-- Dump completed on 2014-06-15  1:13:24

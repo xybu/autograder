@@ -114,14 +114,11 @@ class Assignment extends \Controller {
 				$base->set("data", $submission_record);
 				$data["new_record_data"] = \View::instance()->render("submission_record.html");
 				
-				// for debug
-				$data["raw"] = $submission_record;
-				
 				$Connector = \models\Connector::instance();
 				$assign_result = $Connector->assignTask($submission_record, $user_info, $assignment_info);
-				var_dump($assign_result);
-				die();
-				
+				if ($assign_result["result"] == "queued")
+					$data["more_status"] = "queued";
+				else $data["more_status"] = "error";
 				break;
 			case "permission_denied":
 				$data["error_description"] = "You do not have the permission to submit.";

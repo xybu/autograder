@@ -185,6 +185,7 @@ class Assignment extends \Model {
 				// 'history' is safe because $name must have a '.' in the file name
 				if (!file_exists($path)) mkdir($path, 0777);
 				rename($name, $path . $file_name_new);
+				copy($path . $file_name_new, $path . "../latest.archive");
 				
 				// add to database
 				$this->query(

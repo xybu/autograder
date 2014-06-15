@@ -29,6 +29,7 @@ EXCEPTION_LIST = {
 	'unimplemented_function':	"The request involves unimplemented function.",
 }
 
+import gc
 import json
 import datetime
 import threading
@@ -36,25 +37,44 @@ import SocketServer
 import mysql.connector
 
 IncomingTaskEvent = threading.Event()
-
-class LockedConnection():
-	_conn_lock = threading.RLock()
-	_conn = None
-	
-	def get_conn():
-		LockedConnection._conn_lock.acquire()
-		return LockedConnection._conn
-	
-	def release_conn():
-		LockedConnection._conn_lock.release()
+ConnectionLock = threading.RLock()
 
 class GraderWorker(threading.Thread):
+	
+	_conn = None	
+	
 	def __init__(self):
 		threading.Thread.__init__(self)
 		self.daemon = True
 	
 	def run(self):
-		print "hi!"
+		while True:
+			ConnectionLock.acquire()
+			IncomingTaskEvent.clear()
+			self._conn = mysql.connector.connect(**MYSQL_PARAMS)
+			print "Worker is fetching new tasks."
+			cursor = self._conn.cursor()
+			query = ("SELECT id, submission_id, user_id, priority, file_path, api_key, assignment, date_created FROM queue ORDER BY priority DESC, date_created ASC LIMIT 1")
+			cursor.execute(query)
+			row = cursor.fetchone()
+			cursor.close()
+			if row != None:
+				task_id, task_submission_id, task_user_id, task_priority, task_file_path, task_api_key, task_assignment, task_date_created = row
+				print task_id
+				cursor = self._conn.cursor()
+				query = ("DELETE FROM queue WHERE id = %s")
+				cursor.execute(query, [task_id])
+				self._conn.commit()
+				cursor.close()
+				self._conn.close()
+				ConnectionLock.release()
+				print row
+				gc.collect()
+			else:
+				print "There is no new task in the queue. Sleep."
+				self._conn.close()
+				ConnectionLock.release()
+				IncomingTaskEvent.wait()
 
 class DaemonTCPHandler(SocketServer.StreamRequestHandler):
 	
@@ -81,6 +101,7 @@ class DaemonTCPHandler(SocketServer.StreamRequestHandler):
 			self.json_data = json.loads(data)
 			if ('api_key' not in self.json_data or self.json_data['api_key'] not in VALID_SOURCES or cli_addr not in VALID_SOURCES[self.json_data['api_key']]):
 				self.send_json_obj(self.get_error('unauthenticated_request'))
+				return
 		except ValueError:
 			self.send_json_obj(self.get_error('invalid_json_request'))
 			return
@@ -89,7 +110,33 @@ class DaemonTCPHandler(SocketServer.StreamRequestHandler):
 			self.send_json_obj(self.get_error('invalid_request'))
 			return
 		elif self.json_data['protocol_type'] == 'path':
-			pass
+			# add task to database
+			# assume the json_data has valid data structure
+			add_task = ("INSERT INTO queue (submission_id, user_id, priority, file_path, api_key, assignment, date_created)"
+					"VALUES (%(submission_id)s, %(user_id)s, %(priority)s, %(file_path)s, %(api_key)s, %(assignment)s, NOW())")
+			data_task = {
+				'submission_id': self.json_data['submission_id'],
+				'user_id': self.json_data['user_id'],
+				'priority': self.json_data['priority'],
+				'assignment': json.dumps(self.json_data['assignment']),
+				'api_key': self.json_data['api_key'],
+				'file_path': self.json_data['src_file'],
+			}
+			cursor = DaemonTCPHandler._conn.cursor()
+			cursor.execute(add_task, data_task)
+			queued_id = cursor.lastrowid
+			DaemonTCPHandler._conn.commit()
+			cursor.close()
+			
+			IncomingTaskEvent.set()
+			
+			response = {
+				'status': 'queued',
+				'queued_id': queued_id
+			}
+			
+			self.wfile.write(json.dumps(response) + "\r\n")
+			
 		elif self.json_data['protocol_type'] == 'base64':
 			self.send_json_obj(self.get_error('unimplemented_function'))
 			return
@@ -98,7 +145,7 @@ class DaemonTCPHandler(SocketServer.StreamRequestHandler):
 			self.send_json_obj(self.get_error('invalid_request'))
 			return
         	
-		self.wfile.write("done.")
+		# self.wfile.write("done.")
 
 class DaemonTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
 	pass
@@ -107,7 +154,6 @@ if __name__ == "__main__":
 	
 	try: 
 		DaemonTCPHandler._conn = mysql.connector.connect(**MYSQL_PARAMS)
-		LockedConnection._conn = mysql.connector.connect(**MYSQL_PARAMS)
 	except mysql.connector.Error as err:
 		if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
 			print "Daemon database access denied."
