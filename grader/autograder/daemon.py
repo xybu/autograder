@@ -3,6 +3,11 @@
 """The daemon host and port"""
 DAEMON_ADDRESS = ('127.0.0.1', 8080)
 
+"""Temporary path"""
+TEMP_PATH = "/tmp/autograder/"
+TEMP_FILE_NAME = "submission.archive"
+GRADEBOOK_FILE_NAME = "grades.json"
+
 """The trusted API keys and their hosts"""
 VALID_SOURCES = {
 	'aaaaaa': ['127.0.0.1']
@@ -29,16 +34,93 @@ EXCEPTION_LIST = {
 	'unimplemented_function':	"The request involves unimplemented function.",
 }
 
+import os
 import gc
 import json
+import errno
+import shutil
+import tarfile
 import datetime
 import threading
+import subprocess
 import SocketServer
 import mysql.connector
 
 IncomingTaskEvent = threading.Event()
 ConnectionLock = threading.RLock()
 
+def finishGradingWithPath_callBack(grade_result):
+	print json.dumps(grade_result, indent = 4)
+
+def handleTaskWithPath(submission_row):
+	# cwd = os.getcwd()
+	task_id, task_submission_id, task_user_id, task_priority, task_file_path, task_api_key, task_assignment, task_date_created = submission_row
+	task_assignment = json.loads(task_assignment)
+	
+	submission_temp_path = TEMP_PATH + str(task_id) + "/"
+	try:
+		# mkdir -p
+		os.makedirs(submission_temp_path, 0777)
+		# os.chdir(submission_temp_path)
+	except OSError as ex:
+		if ex.errno == errno.EEXIST and os.path.isdir(submission_temp_path):
+			pass
+		else:
+			raise
+	
+	shutil.copyfile(task_file_path, submission_temp_path + TEMP_FILE_NAME)
+	
+	if 'grader_tar' in task_assignment and task_assignment['grader_tar'] != '':
+		try:
+			t = tarfile.open(task_assignment['grader_tar'])
+			t.extractall(path = submission_temp_path)
+		except:
+			# TODO: what if the file fails to be extracted?
+			print "Failed to extract the grader tar file."
+			pass
+	
+	# if it is a tar, try to decompress it
+	if 'submit_filetype' in task_assignment and ('gz' in task_assignment['submit_filetype'] or 'tar' in task_assignment['submit_filetype'] or 'zip' in task_assignment['submit_filetype']):
+		# WARNING: the tar ball may contain files with name having '/' or '..'
+		try:
+			t = tarfile.open(submission_temp_path + TEMP_FILE_NAME)
+			t.extractall(path = submission_temp_path)
+		except:
+			# TODO: what if the file fails to be extracted?
+			print "Failed to extract the submission tar file."
+			pass
+	
+	# execute the grading script
+	if 'grader_script' not in task_assignment:
+		print "Grading cannot proceed. Grader script not specified."
+	else:
+		try:
+			subp = subprocess.Popen([task_assignment['grader_script']], stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd = submission_temp_path)
+			result = subp.communicate()
+			print result
+		except OSError as e:
+			print "Grading script is not executable."
+	
+	# assemble the grading result and send it to callback function
+	if os.path.isfile(submission_temp_path + GRADEBOOK_FILE_NAME):
+		grade_detail = "{total: 0}"
+		with open(submission_temp_path + GRADEBOOK_FILE_NAME, "r") as f:
+			grade_detail = f.read()
+		with tarfile.open(submission_temp_path + "../dump_" + str(task_id) + ".tar.gz", "w:gz") as t:
+			t.add(submission_temp_path, arcname = "dump")
+		cb_data = {
+			'grade': grade_detail,
+			'protocol_type': 'path',
+			'dump_file': os.path.normpath(submission_temp_path + "../dump_" + str(task_id) + ".tar.gz"),
+			'internal_log': result[0],
+			'formal_log': result[1]
+		}
+		shutil.rmtree(submission_temp_path)
+		finishGradingWithPath_callBack(cb_data)
+	else:
+		print "Grade book file \"" + submission_temp_path + GRADEBOOK_FILE_NAME + "\" was not generated."
+		
+	
 class GraderWorker(threading.Thread):
 	
 	_conn = None	
@@ -59,16 +141,14 @@ class GraderWorker(threading.Thread):
 			row = cursor.fetchone()
 			cursor.close()
 			if row != None:
-				task_id, task_submission_id, task_user_id, task_priority, task_file_path, task_api_key, task_assignment, task_date_created = row
-				print task_id
 				cursor = self._conn.cursor()
 				query = ("DELETE FROM queue WHERE id = %s")
-				cursor.execute(query, [task_id])
+				cursor.execute(query, [row[0]])
 				self._conn.commit()
 				cursor.close()
 				self._conn.close()
 				ConnectionLock.release()
-				print row
+				handleTaskWithPath(row)
 				gc.collect()
 			else:
 				print "There is no new task in the queue. Sleep."

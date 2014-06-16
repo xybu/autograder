@@ -1,27 +1,243 @@
 #!/usr/bin/python
 
+import os, sys, time, json
 import unittest
+import subprocess
 
-class GraderTestSuite:
-	def __init__(self):
-		pass	
+DEFAULT_RAM_LIMIT = "48m"
+DEFAULT_TIMEOUT = 30
 
+"""
+The arguments used to initiate the sandbox.
+"""
+SandboxArguments = []
+
+def SandboxedArgs(cmd_args, ram_limit = DEFAULT_RAM_LIMIT, timeout = DEFAULT_TIMEOUT):
+	"""
+	Modify the command-line args so that it will run inside the sandbox.
+	
+	@param ram_limit: the maximum amount of memory that the sandboxed process can use.
+	@param timeout: the sandboxed process will be killed if it does not exit after the specified number of seconds.
+	"""
+	return SandboxArguments + cmd_args
+	
+def execvp(cmd_args, input_data = None):
+	"""
+	An execvp-like function to execute a command.
+	Returns a 3-tuple of return value, stdout data, stderr data, of the command.
+	"""
+	try:
+		subp = subprocess.Popen(args = cmd_args, bufsize = 0, executable = None, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		oe = subp.communicate(input_data)
+		return (subp.wait(), oe[0], oe[1])
+	except (OSError, IOError) as e:
+		assert False, "System Error: {1} ({0}).".format(e.errno, e.strerror)
+
+def WriteFormalLog(s):
+	"""
+	Write the string s to formal log (held by stderr).
+	Formal log is the log that will be parsed to student-viewable grade report.
+	"""
+	sys.stderr.write(s + "\n")
+
+def WriteInternalLog(s):
+	"""
+	Write the string s to the internal log (held by stdout).
+	Internal log is the log that only admin can read (and understand).
+	"""
+	sys.stdout.write(s + "\n")
+
+class GraderTestCase(unittest.TestCase):
+	"""
+	The test suite will be run under current working directory.
+	This class should be seen as abstract; each assignment will need its own grading script.
+	"""
+	
+	def grade(self):
+		return self._grade
+	
+	def make(self, makefile_name = "", sandboxed = True, file_target = [], handler = lambda r,o,e,t:r):
+		"""
+		A shortcut function for executing Makefile to make target `all`.
+		
+		@param	makefile_name: optional. Use the default Makefile name (aka. "Makefile") if not set; otherwise execute the specific Makefile.
+		@param	sandboxed: optional. If set True, `make` will run inside the sandbox.
+		@param	file_target: optional. A LIST of files that will be removed before running `make`, and whose existence will be checked after running `make`.
+		@param	handler: required. It determines how to deal with the result of running `make` command.
+		"""
+		
+		# remove all file targets
+		if len(file_target) > 0:
+			for name in file_target:
+				try:
+					os.remove("./" + name)
+				except:
+					pass
+		
+		# prepare command-line args for `make`
+		make_args = ["make"]
+		if makefile_name != "":
+			make_args += ["-f", makefile_name]
+		
+		# execute `make` command with arguments
+		if sandboxed:
+			make_args = SandboxedArgs(make_args)
+		
+		roe = execvp(make_args)
+		
+		# pass the result to handler
+		handler(roe[0], roe[1], roe[2], file_target)
+	
+	def clean(self, makefile_name = "", sandboxed = True):
+		"""
+		A shortcut function for executing `make clean`.
+		"""
+		
+		make_args = ["make", "clean"]
+		if makefile_name != "":
+			make_args += ["-f", makefile_name]
+		
+		# execute `make` command with arguments
+		if sandboxed:
+			make_args = SandboxedArgs(make_args)
+		
+		roe = execvp(make_args)
+	
+	def execvp(self, cmd = [], sandboxed = True, stdin = None, handler = lambda r,o,e:r, ram_limit = None, timeout = None):
+		
+		if type(cmd) != list:
+			assert False, "Configuration Error: cmd argument must be a list."
+		elif len(cmd) == 0:
+			assert False, "Configuration Error: cmd argument is empty."
+		elif cmd[0][:2] == "./":
+			assert os.path.exists(cmd[0]), "Executable \"{0}\" not found.".format(cmd[0])
+		
+		if sandboxed:
+			if ram_limit == None: ram_limit = DEFAULT_RAM_LIMIT
+			if timeout == None: timeout = DEFAULT_TIMEOUT
+			cmd = SandboxedArgs(cmd, ram_limit, timeout)
+		
+		roe = execvp(cmd, stdin)
+		handler(roe[0], roe[1], roe[2])
+	
+	def abort_test(self):
+		"""
+		Discard all pending (un-executed) test cases but do the post-work.
+		
+		But this will make the overall gradebooks have items of various length; different
+		submissions may run different number of test cases.
+		"""
+		self._test_runner.stop()
+	
 class HandlerFactory:
-	pass
+	def DefaultMakefileHandler(r, o, e, t):
+		"""
+		The default `make` handler.
+		
+		@param r: return value
+		@param o: the stdout of `make` process
+		@param e: the stderr of `make` process
+		@param t: the file targets to check for existence.
+		"""
+		# print make commands to stdout
+		WriteFormalLog(o)
+		
+		# the return value of `
+		if r != 0:
+			assert False, "Makefile did not build target `all` successfully.\nstderr contains data: \n" + e
+		
+		if t != []:
+			f_t = []
+			for name in t:
+				if not os.path.exists("./" + name): f_t.append(name)
+			assert f_t == [], "Makefile did not build the following files: " + ", ".join(f_t)	
+
+class Grade:
+	
+	def __init__(self, max_score = 100):
+		self.max_score = max_score
+		self.current_score = 0
+	
+	def set_max_score(self, m):
+		self.max_score = m
+	
+	def plus(self, p):
+		self.current_score += p
+	
+	def times(self, t):
+		self.current_score *= t
+	
+	def zero(self):
+		self.current_score = 0
 
 class GraderResult(unittest.TextTestResult):
-"""A Python UnitTest test runner implementation"""
-
+	"""
+	A Python UnitTest test runner implementation.
+	There is an internal grade tracker to generate gradebook by TEST CASES.
+	
+	http://code.nabla.net/doc/unittest/api/unittest/unittest.TextTestResult.html
+	"""
+	
 	def __init__(self, stream=sys.stderr, descriptions=1, verbosity=1):
-		unittest.TextTestResult.__init__(self, stream, descriptions, verbosity)
+		unittest.TextTestResult.__init__(self, FileWrapper(stream), descriptions, verbosity)
+		self.prev_score = 0
+		self.grade_history = {}
 	
 	def startTest(self, test):
 		"""The function is called every time when the test case test is about to run."""
-		pass
+		unittest.TextTestResult.startTest(self, test)
+		self.prev_score = self._grade.current_score
 	
 	def stopTest(self, test):
 		"""The function is called every time when the test case is done."""
-		pass
+		unittest.TextTestResult.stopTest(self, test)
+		self.grade_history[test.id().split('.')[-1]] = self._grade.current_score - self.prev_score
 	
-class GraderRunner:
-	pass
+	def getGradebook(self):
+		self.grade_history['total'] = self._grade.current_score
+		return self.grade_history
+
+class FileWrapper(object):
+	"""
+	Wrap a file object so that GraderResult can write to it.
+	"""
+	
+	def __init__(self, stream):
+		self.stream = stream
+	
+	def __getattr__(self, attr):
+		if attr in ('stream', '__getstate__'):
+			raise AttributeError(attr)
+		return getattr(self.stream,attr)
+	
+	def writeln(self, data = None):
+		if data: self.write(data)
+		self.write('\n')
+
+def main(testSuiteClass):
+	"""
+	The main function to assemble unittest parts and execute the test.
+	"""
+	
+	suite = unittest.makeSuite(testSuiteClass, "test_")
+	runner = GraderResult()
+	grade = Grade()
+	runner._grade = grade
+	GraderTestCase._test_runner = runner
+	GraderTestCase._grade = grade
+	
+	start_time = time.time()
+	suite.run(runner)	
+	elapsed_time = time.time() - start_time # in seconds
+	gradebook = runner.getGradebook()
+	
+	# print the header
+	WriteFormalLog('\nRan {0:d} test(s) in {1:.2f} second(s)'.format(len(gradebook) - 1, elapsed_time))
+	
+	# print all errors
+	runner.printErrors()
+	
+	# generate gradebook
+	with open("grades.json", "w") as f:
+		f.write(json.dumps(runner.getGradebook()))
+	
