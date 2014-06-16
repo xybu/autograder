@@ -34,11 +34,10 @@ EXCEPTION_LIST = {
 	'unimplemented_function':	"The request involves unimplemented function.",
 }
 
-import os
-import gc
-import json
+import os, sys, gc, json, time
 import errno
 import shutil
+# import logging
 import tarfile
 import datetime
 import threading
@@ -49,12 +48,20 @@ import mysql.connector
 IncomingTaskEvent = threading.Event()
 ConnectionLock = threading.RLock()
 
-def finishGradingWithPath_callBack(grade_result):
+def writeLog(s, lvl = "INFO"):
+	"""
+	Write a line to daemon log.
+	Daemon log is used to monitor the execution of the daemon process.
+	Log for handling a request should be written to a handler log.
+	"""
+	print '[{0}] ({1}) {2}'.format(time.strftime('%Y-%m-%dT%H:%M:%S'), threading.current_thread().name, s)
+
+def finishGrading_callBack(grade_result):
 	print json.dumps(grade_result, indent = 4)
 
-def handleTaskWithPath(submission_row):
+def handleTask(submission_row):
 	# cwd = os.getcwd()
-	task_id, task_submission_id, task_user_id, task_priority, task_file_path, task_api_key, task_assignment, task_date_created = submission_row
+	task_id, task_submission_id, task_user_id, task_priority, task_file_path, task_api_key, task_assignment, task_date_created, task_response_type = submission_row
 	task_assignment = json.loads(task_assignment)
 	
 	submission_temp_path = TEMP_PATH + str(task_id) + "/"
@@ -116,14 +123,12 @@ def handleTaskWithPath(submission_row):
 			'formal_log': result[1]
 		}
 		shutil.rmtree(submission_temp_path)
-		finishGradingWithPath_callBack(cb_data)
+		finishGrading_callBack(cb_data)
 	else:
 		print "Grade book file \"" + submission_temp_path + GRADEBOOK_FILE_NAME + "\" was not generated."
 		
 	
 class GraderWorker(threading.Thread):
-	
-	_conn = None	
 	
 	def __init__(self):
 		threading.Thread.__init__(self)
@@ -134,9 +139,9 @@ class GraderWorker(threading.Thread):
 			ConnectionLock.acquire()
 			IncomingTaskEvent.clear()
 			self._conn = mysql.connector.connect(**MYSQL_PARAMS)
-			print "Worker is fetching new tasks."
+			writeLog("Querying new tasks.", lvl = "INFO")
 			cursor = self._conn.cursor()
-			query = ("SELECT id, submission_id, user_id, priority, file_path, api_key, assignment, date_created FROM queue ORDER BY priority DESC, date_created ASC LIMIT 1")
+			query = ("SELECT id, submission_id, user_id, priority, file_path, api_key, assignment, date_created, response_type FROM queue ORDER BY priority DESC, date_created ASC LIMIT 1")
 			cursor.execute(query)
 			row = cursor.fetchone()
 			cursor.close()
@@ -144,38 +149,50 @@ class GraderWorker(threading.Thread):
 				cursor = self._conn.cursor()
 				query = ("DELETE FROM queue WHERE id = %s")
 				cursor.execute(query, [row[0]])
+				time.sleep(3)	# TODO: remove this
 				self._conn.commit()
 				cursor.close()
 				self._conn.close()
 				ConnectionLock.release()
-				handleTaskWithPath(row)
+				handleTask(row)
 				gc.collect()
 			else:
-				print "There is no new task in the queue. Sleep."
+				writeLog("Queue is empty. Sleep.", lvl = "INFO")
 				self._conn.close()
 				ConnectionLock.release()
 				IncomingTaskEvent.wait()
 
 class DaemonTCPHandler(SocketServer.StreamRequestHandler):
+	"""
+	This TCP handler processes requests sent from PHP socket side.
+	When a socket is created between PHP process and the daemon server, this handler gets and processes the request from the socket,
+	and write the response or error to the socket to inform PHP process of the result.
 	
-	_conn = None
+	It adds valid requests to the queue which the worker threads will parse and run, and 
+	refuses invalid or malformed requests.
+	"""
 	
 	def get_error(self, err_id):
+		"""
+		Return a dict for the error, which will be encoded to JSON object and sent back to web callback side.
+		"""
 		return {
 			'error': err_id,
 			'error_description': EXCEPTION_LIST[err_id]
 		}
 	
 	def send_json_obj(self, response):
-		self.wfile.write(json.dumps(response, indent = 4))
+		"""
+		Dump the response to a JSON object and write it to the socket.
+		"""
+		self.wfile.write(json.dumps(response, indent = 4) + "\r\n")
 	
 	def handle(self):
 		cli_addr = self.client_address[0]
 		# verify data source
 		
 		data = self.rfile.readline().strip()
-		print "{} wrote:".format(cli_addr)
-		print data
+		writeLog('Received request from client {0}: \n{1}'.format(cli_addr, data), lvl = "DEBUG")
         	
 		try:
 			self.json_data = json.loads(data)
@@ -189,59 +206,64 @@ class DaemonTCPHandler(SocketServer.StreamRequestHandler):
         	if 'protocol_type' not in self.json_data:
 			self.send_json_obj(self.get_error('invalid_request'))
 			return
-		elif self.json_data['protocol_type'] == 'path':
-			# add task to database
-			# assume the json_data has valid data structure
-			add_task = ("INSERT INTO queue (submission_id, user_id, priority, file_path, api_key, assignment, date_created)"
-					"VALUES (%(submission_id)s, %(user_id)s, %(priority)s, %(file_path)s, %(api_key)s, %(assignment)s, NOW())")
-			data_task = {
-				'submission_id': self.json_data['submission_id'],
-				'user_id': self.json_data['user_id'],
-				'priority': self.json_data['priority'],
-				'assignment': json.dumps(self.json_data['assignment']),
-				'api_key': self.json_data['api_key'],
-				'file_path': self.json_data['src_file'],
-			}
-			cursor = DaemonTCPHandler._conn.cursor()
-			cursor.execute(add_task, data_task)
-			queued_id = cursor.lastrowid
-			DaemonTCPHandler._conn.commit()
-			cursor.close()
-			
-			IncomingTaskEvent.set()
-			
-			response = {
-				'status': 'queued',
-				'queued_id': queued_id
-			}
-			
-			self.wfile.write(json.dumps(response) + "\r\n")
-			
-		elif self.json_data['protocol_type'] == 'base64':
+		if self.json_data['protocol_type'] == 'base64':
+			# TODO: should bsae64_decode the file(s) and transform the request to a path-compatible one
+			response_type = 'base64'
 			self.send_json_obj(self.get_error('unimplemented_function'))
 			return
+		elif self.json_data['protocol_type'] == 'path':
+			response_type = 'path'
 		else:
-			# unknown prococol type
 			self.send_json_obj(self.get_error('invalid_request'))
 			return
-        	
-		# self.wfile.write("done.")
+		
+		# add task to database
+		# assume the json_data has valid data structure
+		add_task = ("INSERT INTO queue (submission_id, user_id, priority, file_path, api_key, assignment, date_created, response_type)"
+				"VALUES (%(submission_id)s, %(user_id)s, %(priority)s, %(file_path)s, %(api_key)s, %(assignment)s, NOW(), %(response_type)s)")
+		
+		data_task = {
+			'submission_id': self.json_data['submission_id'],
+			'user_id': self.json_data['user_id'],
+			'priority': self.json_data['priority'],
+			'assignment': json.dumps(self.json_data['assignment']),
+			'api_key': self.json_data['api_key'],
+			'file_path': self.json_data['src_file'],
+			'response_type': response_type
+		}
+		
+		# TODO: should handle connection failure here?
+		conn = mysql.connector.connect(**MYSQL_PARAMS)
+		cursor = conn.cursor()
+		cursor.execute(add_task, data_task)
+		queued_id = cursor.lastrowid
+		conn.commit()
+		cursor.close()
+		conn.close()
+		
+		# wake up the worker
+		IncomingTaskEvent.set()
+		
+		response = {
+			'status': 'queued',
+			'queued_id': queued_id
+		}
+		writeLog(s = "Request got queued with id {}".format(queued_id), lvl = "DEBUG")
+		self.send_json_obj(response)
 
 class DaemonTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
 	pass
 
 if __name__ == "__main__":
 	
+	gc.enable()
+	
+	# test database connection
 	try: 
-		DaemonTCPHandler._conn = mysql.connector.connect(**MYSQL_PARAMS)
+		_conn = mysql.connector.connect(**MYSQL_PARAMS)
+		_conn.close()
 	except mysql.connector.Error as err:
-		if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-			print "Daemon database access denied."
-		elif err.errno == errorcode.ER_BAD_DB_ERROR:
-			print "Daemon database \"" + MYSQL_PARAMS["database"] + "\" does not exist."
-		else:
-			print "Some error occurred connecting to the database."
-		import sys
+		writeLog(s = "mysql error: {}.".format(err), lvl = "CRITICAL")
 		sys.exit(1)
 	
 	for x in range(MAX_WORKER_NUM):
@@ -249,4 +271,10 @@ if __name__ == "__main__":
 	
 	SocketServer.TCPServer.allow_reuse_address = True
 	server = DaemonTCPServer(DAEMON_ADDRESS, DaemonTCPHandler)
-	server.serve_forever()
+	try:
+		server.serve_forever()
+	except KeyboardInterrupt:
+		writeLog(s = "Shutting down.", lvl = "INFO")
+		server.shutdown()
+		writeLog(s = "Daemon server exited successfully.", lvl = "INFO")
+		sys.exit(0)
