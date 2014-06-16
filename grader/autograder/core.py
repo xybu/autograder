@@ -6,19 +6,27 @@ import subprocess
 
 DEFAULT_RAM_LIMIT = "48m"
 DEFAULT_TIMEOUT = 30
+GRADEBOOK_FILE_NAME = "grades.json"
 
 """
 The arguments used to initiate the sandbox.
 """
 SandboxArguments = []
 
-def SandboxedArgs(cmd_args, ram_limit = DEFAULT_RAM_LIMIT, timeout = DEFAULT_TIMEOUT):
+def SandboxedArgs(cmd_args, ram_limit = DEFAULT_RAM_LIMIT, timeout = DEFAULT_TIMEOUT, sb_args = None):
 	"""
 	Modify the command-line args so that it will run inside the sandbox.
 	
 	@param ram_limit: the maximum amount of memory that the sandboxed process can use.
 	@param timeout: the sandboxed process will be killed if it does not exit after the specified number of seconds.
+	@param sb_args: the additional args to append to the sandbox command.
 	"""
+	if ram_limit != None:
+		pass
+	if timeout != None:
+		pass
+	if sb_args != None:
+		return SandboxArguments + sb_args + cmd_args
 	return SandboxArguments + cmd_args
 	
 def execvp(cmd_args, input_data = None):
@@ -37,6 +45,7 @@ def WriteFormalLog(s):
 	"""
 	Write the string s to formal log (held by stderr).
 	Formal log is the log that will be parsed to student-viewable grade report.
+	WARNING: one should leave formal log as it is; do not write to it.
 	"""
 	sys.stderr.write(s + "\n")
 
@@ -56,14 +65,17 @@ class GraderTestCase(unittest.TestCase):
 	def grade(self):
 		return self._grade
 	
-	def make(self, makefile_name = "", sandboxed = True, file_target = [], handler = lambda r,o,e,t:r):
+	def make(self, makefile_name = "", sandboxed = True, file_target = [], handler = lambda r,o,e,t:r, ram_limit = None, timeout = None, sb_args = None):
 		"""
 		A shortcut function for executing Makefile to make target `all`.
 		
-		@param	makefile_name: optional. Use the default Makefile name (aka. "Makefile") if not set; otherwise execute the specific Makefile.
-		@param	sandboxed: optional. If set True, `make` will run inside the sandbox.
-		@param	file_target: optional. A LIST of files that will be removed before running `make`, and whose existence will be checked after running `make`.
-		@param	handler: required. It determines how to deal with the result of running `make` command.
+		@param	makefile_name (optional): Use the default Makefile name (aka. "Makefile") if not set; otherwise execute the specific Makefile.
+		@param	sandboxed (optional): If set True, `make` will run inside the sandbox.
+		@param	ram_limit: the RAM limit for the sandbox; only effective when sandboxed is set True.
+		@param	timeout: the timeout limit for the sandbox; only effective when sandbox is set True.
+		@param	sb_args: the additional args for the sandbox.
+		@param	file_target (optional): A LIST of files that will be removed before running `make`, and whose existence will be checked after running `make`.
+		@param	handler (required): It determines how to deal with the result of running `make` command.
 		"""
 		
 		# remove all file targets
@@ -88,9 +100,15 @@ class GraderTestCase(unittest.TestCase):
 		# pass the result to handler
 		handler(roe[0], roe[1], roe[2], file_target)
 	
-	def clean(self, makefile_name = "", sandboxed = True):
+	def clean(self, makefile_name = "", sandboxed = True, ram_limit = None, timeout = None, sb_args = None):
 		"""
 		A shortcut function for executing `make clean`.
+		
+		@param	makefile_name (optional): Use the default Makefile name (aka. "Makefile") if not set; otherwise execute the specific Makefile.
+		@param	sandboxed (optional): If set True, `make clean` will run inside the sandbox.
+		@param	ram_limit: the RAM limit for the sandbox; only effective when sandboxed is set True.
+		@param	timeout: the timeout limit for the sandbox; only effective when sandbox is set True.
+		@param	sb_args: the additional args for the sandbox.
 		"""
 		
 		make_args = ["make", "clean"]
@@ -103,8 +121,19 @@ class GraderTestCase(unittest.TestCase):
 		
 		roe = execvp(make_args)
 	
-	def execvp(self, cmd = [], sandboxed = True, stdin = None, handler = lambda r,o,e:r, ram_limit = None, timeout = None):
+	def execvp(self, cmd = [], sandboxed = True, stdin = None, handler = lambda r,o,e,a:r, handler_args = None, ram_limit = None, timeout = None, sb_args = None):
+		"""
+		An execvp-like function to execute commands.
 		
+		@param cmd (required): a LIST of arguments. e.g., ['ls', '-asl']
+		@param sandboxed: if set True, cmd will run inside the sandbox
+		@param stdin: the data to feed to cmd process's stdin
+		@param handler (required): the handler to process the output of cmd
+		@param handler_args: the additional args for the handler function
+		@param ram_limit: the RAM limit for the sandbox; only effective when sandboxed is set True
+		@param timeout: the timeout limit for the sandbox; only effective when sandbox is set True
+		@param sb_args: the additional args for the sandbox
+		"""
 		if type(cmd) != list:
 			assert False, "Configuration Error: cmd argument must be a list."
 		elif len(cmd) == 0:
@@ -115,10 +144,10 @@ class GraderTestCase(unittest.TestCase):
 		if sandboxed:
 			if ram_limit == None: ram_limit = DEFAULT_RAM_LIMIT
 			if timeout == None: timeout = DEFAULT_TIMEOUT
-			cmd = SandboxedArgs(cmd, ram_limit, timeout)
+			cmd = SandboxedArgs(cmd, ram_limit, timeout, sb_args)
 		
 		roe = execvp(cmd, stdin)
-		handler(roe[0], roe[1], roe[2])
+		handler(roe[0], roe[1], roe[2], handler_args)
 	
 	def abort_test(self):
 		"""
@@ -130,7 +159,8 @@ class GraderTestCase(unittest.TestCase):
 		self._test_runner.stop()
 	
 class HandlerFactory:
-	def DefaultMakefileHandler(r, o, e, t):
+	@staticmethod
+	def DefaultMakeHandler(r, o, e, t = []):
 		"""
 		The default `make` handler.
 		
@@ -139,19 +169,36 @@ class HandlerFactory:
 		@param e: the stderr of `make` process
 		@param t: the file targets to check for existence.
 		"""
-		# print make commands to stdout
-		WriteFormalLog(o)
-		
-		# the return value of `
-		if r != 0:
-			assert False, "Makefile did not build target `all` successfully.\nstderr contains data: \n" + e
+		WriteFormalLog(o)	# print make commands to stdout
+		if r != 0:		# if return value of `make` is not 0
+			assert False, "Makefile did not build target `all` successfully.\nstderr data: \n" + e
 		
 		if t != []:
 			f_t = []
 			for name in t:
 				if not os.path.exists("./" + name): f_t.append(name)
 			assert f_t == [], "Makefile did not build the following files: " + ", ".join(f_t)	
-
+	
+	@staticmethod
+	def SimpleMakeHandler(r, o, e, t = []):
+		"""
+		This `make` handler does not reveal stderr data to formal log.
+		
+		@param r: return value
+		@param o: the stdout of `make` process
+		@param e: the stderr of `make` process
+		@param t: the file targets to check for existence.
+		"""
+		WriteFormalLog(o)	# print make commands to stdout
+		if r != 0:		# if return value of `make` is not 0
+			assert False, "Makefile did not build target `all` successfully."
+		
+		if t != []:
+			f_t = []
+			for name in t:
+				if not os.path.exists("./" + name): f_t.append(name)
+			assert f_t == [], "Makefile did not build the following files: " + ", ".join(f_t)	
+	
 class Grade:
 	
 	def __init__(self, max_score = 100):
@@ -194,6 +241,7 @@ class GraderResult(unittest.TextTestResult):
 		self.grade_history[test.id().split('.')[-1]] = self._grade.current_score - self.prev_score
 	
 	def getGradebook(self):
+		self.grade_history['max'] = self._grade.max_score
 		self.grade_history['total'] = self._grade.current_score
 		return self.grade_history
 
@@ -217,6 +265,8 @@ class FileWrapper(object):
 def main(testSuiteClass):
 	"""
 	The main function to assemble unittest parts and execute the test.
+	
+	@param	testSuiteClass: the specific test case class, whose test_* functions will form a test suite.
 	"""
 	
 	suite = unittest.makeSuite(testSuiteClass, "test_")
@@ -232,12 +282,14 @@ def main(testSuiteClass):
 	gradebook = runner.getGradebook()
 	
 	# print the header
-	WriteFormalLog('\nRan {0:d} test(s) in {1:.2f} second(s)'.format(len(gradebook) - 1, elapsed_time))
+	WriteFormalLog('')
+	WriteFormalLog('Ran {0:d} test(s) in {1:.2f} second(s)'.format(len(gradebook) - 1, elapsed_time))
+	WriteFormalLog('Grade: {0:d} / {1:d}'.format(gradebook['total'], gradebook['max']))
 	
 	# print all errors
 	runner.printErrors()
 	
 	# generate gradebook
-	with open("grades.json", "w") as f:
+	with open(GRADEBOOK_FILE_NAME, "w") as f:
 		f.write(json.dumps(runner.getGradebook()))
 	
