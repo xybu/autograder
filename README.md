@@ -38,6 +38,13 @@ The file hierarchy of the project is as below:
 
 Most directories have a specific **README.md** that gives more details.
 
+Supplements
+===========
+
+To ensure fair and transparent grading of C/C++ assignments, it is better to define the 
+reference environment the same as the one that hosts the grader and provide students the 
+reference environment (without installing AutoGrader), probably in the form of a VM.
+
 Support
 =======
 
