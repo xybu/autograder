@@ -1,22 +1,44 @@
-Autograder
+AutoGrader
 ============
 
-A system that is used to grade student code automatically.
+**AutoGrader** is a project that aims to 
 
-Web/Grader API
-==============
+ * accept submissions from student code online, and 
+ * raise and queue the grading tasks
+ * grade them automatically given a set of instructor-defined test cases.
 
-The web client has a list of graders to communicate with.
+The three functions are designed as three separate modules which are connected by APIs. 
+Each module can be used separately.
 
-Each grader has a list of accepted IP addresses and public keys to distinguish valid tasks requests
-from invalid ones.
+Advantages
+==========C/C++ assignments, especially those involving systems programming.
 
-Todo
-====
 
- - Script to build environment
- - Resource scheduling API
- - Task queue
- - Grader Worker
- - Web front-end UI
- - Filesystem man (where to save submissions, where to execute testing script, etc.)
+Compared to Web-CAT (http://web-cat.org/), this AutoGrader has several notable advantages:
+
+ * virtually no influence on student code
+ * easier to access OS kernel and control system calls when needed
+ * more flexible APIs to design test cases
+ * distributed grader hosts
+
+And thus it is better used for grading 
+File Structures
+===============
+
+The file hierarchy of the project is as below:
+
+ * **conf** stores all the configuration files for the project
+ * **database** the SQL dump files that will be used to import to mysqld in the future
+ * **grader** the grader daemon and worker parts and the superclass of grader test cases.
+ * **log** is the default directory to store log files. Excluded from Git and will be created by **inst.sh**.
+ * **submissions** the default directory to save submissions that are sent to the web. Excluded from Git and will be created by **inst.sh**.
+ * **utils** has some handy utility programs that will ease instructors' life.
+ * **web** stores the web application. The root dir of the web server should be pointed here.
+ * **inst.sh** is the installation script.
+
+Most directories have a specific **README.md** that gives more details.
+
+Support
+=======
+
+For technical support, contact Xiangyu Bu (https://github.com/xybu92).
