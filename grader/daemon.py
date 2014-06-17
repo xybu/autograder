@@ -9,7 +9,7 @@ The daemon and worker layers for the Autograder project.
  * The workers monitor the queue and process those requests by executing the grading script.
  * The queue is built on mysql database.
 
-The settings for daemon are stored at ../data/grader.json
+The settings for daemon are stored at ../conf/grader.json
 
 @author	Xiangyu Bu <xybu92@live.com>
 
@@ -40,7 +40,7 @@ import subprocess
 import SocketServer
 import mysql.connector
 
-with open('../data/grader.json', 'r') as s_f:
+with open('../conf/grader.json', 'r') as s_f:
 	Settings = json.load(s_f)
 
 # this event is used to wake up sleeping workers
