@@ -1,7 +1,13 @@
 AutoGrader/conf
 ===============
 
-All configuration files are saved here.
+This is the default path to store configuration files.
+
+`assignments.json`, `daemons.json`, `roles.json`, and `users.json`, 
+are used for the *web* component only, and must be put in the same directory
+defined by `DATA_PATH` variable in `/web/app/config/globals.ini` file.
+
+There is no need to move `grader.json`.
 
 assignments.json
 ================
@@ -44,4 +50,4 @@ The format for this file is
 
 ```
 
-where `role` and `role2` are the roles set in `roles.json`, and inside them are username-password pairs.
+where `role` and `role2` are the roles defined in `roles.json`, and inside them are username-password pairs.
