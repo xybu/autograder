@@ -17,7 +17,7 @@ Compared to Web-CAT (http://web-cat.org/), this AutoGrader has several notable a
 
  * virtually no influence on student code
  * easier to access OS kernel and control system calls when needed
- * more flexible APIs to design test cases
+ * more flexible (and extensible) APIs to design test cases
  * distributed grader hosts
 
 And thus it is better used for grading C/C++ assignments, especially those involving systems programming.
