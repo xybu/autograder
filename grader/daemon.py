@@ -1,29 +1,24 @@
 #!/usr/bin/python
 
-"""The daemon host and port"""
-DAEMON_ADDRESS = ('127.0.0.1', 8080)
+"""
+
+daemon.py
+
+The daemon and worker layers for the Autograder project.
+ * The daemon listens to a TCP socket and queues incoming requests.
+ * The workers monitor the queue and process those requests by executing the grading script.
+ * The queue is built on mysql database.
+
+The settings for daemon are stored at ../data/grader.json
+
+@author	Xiangyu Bu <xybu92@live.com>
+
+"""
 
 """Temporary path"""
 TEMP_PATH = "/tmp/autograder/"
 TEMP_FILE_NAME = "submission.archive"
 GRADEBOOK_FILE_NAME = "grades.json"
-
-"""The trusted API keys and their hosts"""
-VALID_SOURCES = {
-	'aaaaaa': ['127.0.0.1']
-}
-
-"""MySQL database connector params"""
-MYSQL_PARAMS = {
-	'host': '127.0.0.1',
-	'user': 'root',
-	'password': '123456',
-	'port': 3306,
-	'database': 'ag_daemon'
-}
-
-"""The number of grader workers that can run simultaneously."""
-MAX_WORKER_NUM = 2
 
 """The exception codes and their descriptions"""
 EXCEPTION_LIST = {
@@ -37,7 +32,7 @@ EXCEPTION_LIST = {
 import os, sys, gc, json, time
 import errno
 import shutil
-# import logging
+import logger
 import tarfile
 import datetime
 import threading
@@ -45,16 +40,23 @@ import subprocess
 import SocketServer
 import mysql.connector
 
+with open('../data/grader.json', 'r') as s_f:
+	Settings = json.load(s_f)
+
+# this event is used to wake up sleeping workers
 IncomingTaskEvent = threading.Event()
+
+# just in case more than one worker gets the same task
 ConnectionLock = threading.RLock()
 
-def writeLog(s, lvl = "INFO"):
-	"""
-	Write a line to daemon log.
-	Daemon log is used to monitor the execution of the daemon process.
-	Log for handling a request should be written to a handler log.
-	"""
-	print '[{0}] ({1}) {2}'.format(time.strftime('%Y-%m-%dT%H:%M:%S'), threading.current_thread().name, s)
+# used to hold the daemon log
+Logger = logger.Logger()
+
+def getSenderInfo(key, cli_addr):
+	lst = Settings['TRUSTED_KEY_LIST']
+	if key in lst and cli_addr in lst[key]:
+		return lst[key][cli_addr]
+	return None
 
 def finishGrading_callBack(grade_result):
 	print json.dumps(grade_result, indent = 4)
@@ -138,8 +140,8 @@ class GraderWorker(threading.Thread):
 		while True:
 			ConnectionLock.acquire()
 			IncomingTaskEvent.clear()
-			self._conn = mysql.connector.connect(**MYSQL_PARAMS)
-			writeLog("Querying new tasks.", lvl = "INFO")
+			self._conn = mysql.connector.connect(**Settings['DATABASE_CONN_PARAM'])
+			Logger.info('Querying new tasks.')
 			cursor = self._conn.cursor()
 			query = ("SELECT id, submission_id, user_id, priority, file_path, api_key, assignment, date_created, response_type FROM queue ORDER BY priority DESC, date_created ASC LIMIT 1")
 			cursor.execute(query)
@@ -157,7 +159,7 @@ class GraderWorker(threading.Thread):
 				handleTask(row)
 				gc.collect()
 			else:
-				writeLog("Queue is empty. Sleep.", lvl = "INFO")
+				Logger.info('Queue is empty. Put thread to sleep.')
 				self._conn.close()
 				ConnectionLock.release()
 				IncomingTaskEvent.wait()
@@ -192,11 +194,12 @@ class DaemonTCPHandler(SocketServer.StreamRequestHandler):
 		# verify data source
 		
 		data = self.rfile.readline().strip()
-		writeLog('Received request from client {0}: \n{1}'.format(cli_addr, data), lvl = "DEBUG")
-        	
+		Logger.debug('Received request from client ' + cli_addr + ': \n' + data)
+		
+		sender = None
 		try:
 			self.json_data = json.loads(data)
-			if ('api_key' not in self.json_data or self.json_data['api_key'] not in VALID_SOURCES or cli_addr not in VALID_SOURCES[self.json_data['api_key']]):
+			if 'api_key' not in self.json_data or getSenderInfo(self.json_data['api_key'], cli_addr) == None:
 				self.send_json_obj(self.get_error('unauthenticated_request'))
 				return
 		except ValueError:
@@ -233,7 +236,7 @@ class DaemonTCPHandler(SocketServer.StreamRequestHandler):
 		}
 		
 		# TODO: should handle connection failure here?
-		conn = mysql.connector.connect(**MYSQL_PARAMS)
+		conn = mysql.connector.connect(**Settings['DATABASE_CONN_PARAM'])
 		cursor = conn.cursor()
 		cursor.execute(add_task, data_task)
 		queued_id = cursor.lastrowid
@@ -248,7 +251,7 @@ class DaemonTCPHandler(SocketServer.StreamRequestHandler):
 			'status': 'queued',
 			'queued_id': queued_id
 		}
-		writeLog(s = "Request got queued with id {}".format(queued_id), lvl = "DEBUG")
+		Logger.debug("Request got queued with id " + queued_id + ".")
 		self.send_json_obj(response)
 
 class DaemonTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
@@ -257,24 +260,25 @@ class DaemonTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
 if __name__ == "__main__":
 	
 	gc.enable()
+	print Settings
 	
 	# test database connection
 	try: 
-		_conn = mysql.connector.connect(**MYSQL_PARAMS)
+		_conn = mysql.connector.connect(**Settings['DATABASE_CONN_PARAM'])
 		_conn.close()
 	except mysql.connector.Error as err:
-		writeLog(s = "mysql error: {}.".format(err), lvl = "CRITICAL")
+		Logger.critical('mysql error {}.'.format(err))
 		sys.exit(1)
 	
-	for x in range(MAX_WORKER_NUM):
+	for x in range(Settings['NUM_OF_WORKERS']):
 		GraderWorker().start()
 	
 	SocketServer.TCPServer.allow_reuse_address = True
-	server = DaemonTCPServer(DAEMON_ADDRESS, DaemonTCPHandler)
+	server = DaemonTCPServer((Settings['DAEMON_HOST'], Settings['DAEMON_PORT']), DaemonTCPHandler)
 	try:
 		server.serve_forever()
 	except KeyboardInterrupt:
-		writeLog(s = "Shutting down.", lvl = "INFO")
+		Logger.info('Shutting down')
 		server.shutdown()
-		writeLog(s = "Daemon server exited successfully.", lvl = "INFO")
+		Logger.info('Daemon server exited successfully.')
 		sys.exit(0)

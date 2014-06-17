@@ -1,0 +1,21 @@
+{
+	"DAEMON_HOST": "127.0.0.1",
+	"DAEMON_PORT": 8080,
+	"TRUSTED_KEY_LIST": {
+		"aaaaaa": {
+			"127.0.0.1": "http://127.0.0.1/callback/finish_grading"
+		}
+	},
+	"DATABASE_CONN_PARAM": {
+		"host": "127.0.0.1",
+		"port": 3306,
+		"user": "root",
+		"password": "123456",
+		"database": "ag_daemon"
+	},
+	"NUM_OF_WORKERS": 2,
+	"LOG_FILE_PATH": null,
+	"TEMP_PATH": "/tmp/autograder/",
+	"SUBMISSION_FILE_NAME": "submission.archive",
+	"GRADEBOOK_FILE_NAME": "grades.json"
+}
