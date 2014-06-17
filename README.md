@@ -11,8 +11,7 @@ The three functions are designed as three separate modules which are connected b
 Each module can be used separately.
 
 Advantages
-==========C/C++ assignments, especially those involving systems programming.
-
+==========
 
 Compared to Web-CAT (http://web-cat.org/), this AutoGrader has several notable advantages:
 
@@ -21,7 +20,8 @@ Compared to Web-CAT (http://web-cat.org/), this AutoGrader has several notable a
  * more flexible APIs to design test cases
  * distributed grader hosts
 
-And thus it is better used for grading 
+And thus it is better used for grading C/C++ assignments, especially those involving systems programming.
+
 File Structures
 ===============
 
