@@ -38,6 +38,17 @@ The file hierarchy of the project is as below:
 
 Most directories have a specific **README.md** that gives more details.
 
+Set-up
+======
+
+## Installation
+
+Instructions TBA.
+
+## Tune the System
+
+Instructions TBA.
+
 Supplements
 ===========
 
