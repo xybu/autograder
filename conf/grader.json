@@ -1,9 +1,13 @@
 {
 	"DAEMON_HOST": "127.0.0.1",
 	"DAEMON_PORT": 8080,
+	"API_KEY": "abcdef",
 	"TRUSTED_KEY_LIST": {
 		"aaaaaa": {
-			"127.0.0.1": "http://127.0.0.1/callback/finish_grading"
+			"127.0.0.1": {
+				"url": "http://127.0.0.1/api/callback/",
+				"protocol_type": "path"
+			}
 		}
 	},
 	"DATABASE_CONN_PARAM": {

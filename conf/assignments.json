@@ -25,8 +25,8 @@
 		"grader_script": "",
 		"grader_tar": ""
 	},
-	"lab0_hello_world": {
-		"display": "Lab 0: Hello World",
+	"lab0_roe": {
+		"display": "Lab 0: ROE test",
 		"start": "2014-06-01T00:00:00",
 		"close": "2015-06-02T00:00:00",
 		"quota_strategy": "daily",
@@ -34,8 +34,8 @@
 		"submit_filetype": "c",
 		"submit_notes": "",
 		"max_score": 100,
-		"grader_script": "",
-		"grader_tar": ""
+		"grader_script": "/home/xb/projects/autograder/trash/test_roe_grader.py",
+		"grader_tar": "/home/xb/projects/autograder/trash/test.tar.gz"
 	},
 	"lab1_matcher": {
 		"display": "Lab 1: Matcher",

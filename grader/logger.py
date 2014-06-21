@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 """
-
 logger.py
 
 The behavior of python built-in module `logging` is 

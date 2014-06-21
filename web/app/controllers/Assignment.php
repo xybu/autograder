@@ -116,8 +116,11 @@ class Assignment extends \Controller {
 				
 				$Connector = \models\Connector::instance();
 				$assign_result = $Connector->assignTask($submission_record, $user_info, $assignment_info);
-				if ($assign_result["result"] == "queued")
+				if ($assign_result["result"] == "queued") {
 					$data["more_status"] = "queued";
+					$Assignment->addLog($submission_record, "Queued with id " . $assign_result["queued_id"] . ".");
+					$Assignment->updateSubmission($submission_record);
+				}
 				else $data["more_status"] = "error";
 				break;
 			case "permission_denied":

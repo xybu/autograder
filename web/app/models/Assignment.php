@@ -63,6 +63,47 @@ class Assignment extends \Model {
 	}
 	
 	/**
+	 * Update a submission record in database given the submission data array.
+	 * 
+	 * @param	$s: an array previously returned by a findSubmission* function.
+	 */
+	function updateSubmission(&$s) {
+		$s["date_updated"] = date("Y-m-d H:i:s");
+		$this->query("UPDATE submissions SET " . 
+				"user_id=:user_id, " . 
+				"assignment_id=:assignment_id, " .
+				"file_path=:file_path, " . 
+				"status=:status, " . 
+				"date_updated=:date_updated, " . 
+				"grade=:grade, " .
+				"grade_adjustment=:grade_adjustment, " .
+				"grade_detail=:grade_detail, " .
+				"grader_formal_log=:grader_formal_log, " . 
+				"grader_internal_log=:grader_internal_log, " . 
+				"web_internal_log=:web_internal_log " . 
+				"WHERE id=:id LIMIT 1;", 
+			array(
+				":id" => $s["id"],
+				":user_id" => $s["user_id"],
+				":assignment_id" => $s["assignment_id"],
+				":file_path" => $s["file_path"],
+				":status" => $s["status"],
+				":date_updated" => $s["date_updated"],
+				":grade" => $s["grade"],
+				":grade_adjustment" => $s["grade_adjustment"],
+				":grade_detail" => $s["grade_detail"],
+				":grader_formal_log" => $s["grader_formal_log"],
+				":grader_internal_log" => $s["grader_internal_log"],
+				":web_internal_log" => $s["web_internal_log"]
+			)
+		);
+	}
+	
+	function addLog(&$s, $log_str) {
+		$s["web_internal_log"] = $s["web_internal_log"] . "[" . date("Y-m-d H:i:s") . "] " . $log_str . "\n";
+	}
+	
+	/**
 	 * Given a list of submissions (queried from db), count them by date, week, etc.
 	 *
 	 * @param	$submissions: a query result from submission history. 
