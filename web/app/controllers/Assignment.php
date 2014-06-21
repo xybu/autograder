@@ -8,29 +8,12 @@ class Assignment extends \Controller {
 		$this->User = \models\User::instance();
 	}
 	
-	public function listAll($base) {
-		$user_info = $this->getUserStatus();
-		if ($user_info == null) {
-			// instead of raising a UserException, reroute the user
-			// to homepage
-			$base->reroute('/');
-		}
-		
-		$Assignment = \models\Assignment::instance();
-		$base->set("assignments", $Assignment->getAllAssignments());
-		$base->set("me", $user_info);
-		$this->setView("assignments.html");
-	}
-	
 	public function showDetailOf($base, $params) {
 		// verify user
 		$user_info = $this->getUserStatus();
 		
-		if ($user_info == null) {
-			// instead of raising a UserException, reroute the user
-			// to homepage
-			$base->reroute('/');
-		}
+		if ($user_info == null)
+			$this->json_echo(array("error" => "not_logged_in", "error_description" => "You need to log in to perform the request."), true);
 		
 		$Assignment = \models\Assignment::instance();
 		
@@ -51,12 +34,14 @@ class Assignment extends \Controller {
 			return;
 		}
 		
-		$submissionInfo = $Assignment->getAllSubmissionsOf($user_info["user_id"], $params["id"]);
+		$submission_info = $Assignment->getAllSubmissionsOf($user_info["user_id"], $params["id"]);
+		$count = $Assignment->countSubmissions($submission_info, $assignment_info);
 		
 		$base->set("me", $user_info);
+		$base->set("count", $count);
 		$base->set("assignment_info", $assignment_info);
-		$base->set("submissions", $submissionInfo);
-		$this->setView("assignment.html");
+		$base->set("submissions", $submission_info);
+		$this->setView("ajax_assignment.html");
 	}
 	
 	/**
@@ -158,7 +143,7 @@ class Assignment extends \Controller {
 	 * Print the source file of a submission record to HTTP client.
 	 * 
 	 */
-	public function getFile($base, $params) {
+	function getFile($base, $params) {
 		// verify user
 		$user_info = $this->getUserStatus();
 		try {
@@ -191,6 +176,9 @@ class Assignment extends \Controller {
 			$this->setView("error.html");
 		}
 		
+	}
+	
+	function getLog($base, $params) {
 	}
 	
 }

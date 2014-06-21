@@ -1,0 +1,15 @@
+<h2 class="page-header">Announcements
+<span class="pull-right"><a href="/announcements/rss" target="_blank"><i class="fa fa-rss"></i></a></span>
+</h2>
+<?php
+if (!isset($announcements) || count($announcements) == 0)
+	echo " <p class=\"bg-info notification-bar\">There is no announcement to display.</p>";
+else {
+	$i = 0;
+	foreach($announcements as $item) {
+		if ($i++ == $MAX_ANNOUNCEMENT_ITEM) break;
+		$title = $item->title;
+		if (strlen($item->link) > 0) $title = '<a href="' . $item->link . '" target="_blank">' . $title . '</a>';
+		echo " <article class=\"announcement-post\"><h3>" . $title . "</h3><p class=\"announcement-post-meta\">" . date('D, d M Y H:i:s', strtotime($item->pubDate)) . "</p><p class=\"announcement-post-body\">" . $item->description . "</p></article>"; 
+	}
+}

@@ -10,6 +10,15 @@ body {
 	margin-bottom: 60px;
 }
 
+#main {
+	margin-top: 2em;
+}
+
+#content > .page-header {
+	margin-top: 0 !important;
+	padding-top: 0 !important;
+}
+
 #footer {
   position: absolute;
   bottom: 0;
@@ -71,4 +80,36 @@ body {
 
 .notification-bar {
 	padding: 0.7em;
+}
+
+/* Announcement UI */
+.announcement-post {
+	background-color: #f8f8f8;
+	padding: 1em;
+	margin-bottom: 1em;
+}
+.announcement-post h3 {
+	margin-top: 0;
+}
+.announcement-post h3 a {
+}
+.announcement-post p {}
+.announcement-post-meta {
+	font-size: 85%;
+	font-style: italic;
+	color: #aaa;
+}
+.announcement-post-body {}
+
+/* Assignment Detail UI */
+#submit_panel{
+	padding-bottom: 0;
+}
+
+#submission_history_body {
+}
+
+#submission_history_body td small {
+	font-size: 80%;
+	font-style: italic;
 }

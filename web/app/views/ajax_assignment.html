@@ -1,0 +1,104 @@
+<?php
+/**
+ * ajax_assignment.html
+ *
+ * The ajax HTML view to render the assignment detail page.
+ * 
+ * 
+ * @author	Xiangyu Bu <xybu92@live.com>
+ */
+
+echo '<h2 class="page-header">' . $assignment_info["display"] . '</h2>';
+
+$can_submit = 0;
+
+if (!$me["role"]["permissions"]["submit"]) {
+	echo '<p class="bg-danger notification-bar">You do not have the permission to submit. Please contact the admin.</p>';
+} else if (strtotime($assignment_info["close"]) > time()) {
+	// the user must possess 'submit' permission
+	// and the assignment must be in 'open' state
+	echo '<p class="bg-success notification-bar">The deadline for submission is <strong>' . date('D, d M Y H:i:s', strtotime($assignment_info["close"])) . '</strong>.</p>';
+	$can_submit = 1;
+} else if ($me["role"]["permissions"]["submit_overdue"]) {
+	// or the user must possess 'submit_overdue' permission to override the 'closed' state of the assignment
+	echo '<p class="bg-info notification-bar">The assignment has closed at <strong>' . date('D, d M Y H:i:s', strtotime($assignment_info["close"])) . '</strong>, but you have the permission to submit.</p>';
+	$can_submit = 1;
+} else {
+	// otherwise he cannot submit
+	echo '<p class="bg-danger notification-bar">The assignment has closed at <strong>' . date('D, d M Y H:i:s', strtotime($assignment_info["close"])) . '</strong>.</p>';
+}
+
+if ($can_submit == 1) {
+	if ($me["role"]["permissions"]["manage"]) {
+		echo '<p class="bg-info notification-bar">You have admin privilege and are not restricted by submission quota.</p>';
+	} else if ($count["remaining"] > 0) {
+		echo '<p class="bg-success notification-bar">You can submit <strong>' . $assignment_info["quota_amount"] . '</strong> time(s) <em>' . $assignment_info["quota_strategy"] . '</em> and have <strong>' . $count["remaining"] . '</strong> submission chances left for this period.</p>';
+	} else if (!$me["role"]["permissions"]["manage"]) {
+		echo '<p class="bg-warning notification-bar">You can only submit <strong>' . $assignment_info["quota_amount"] . '</strong> time(s) <em>' . $assignment_info["quota_strategy"] . '</em> but have used up your quota. Please wait for next period.</p>';
+		$can_submit = 0;
+	}
+}
+
+if (array_key_exists('submit_notes', $assignment_info) && !empty($assignment_info['submit_notes'])) {
+	echo '<p class="bg-info notification-bar"><strong>Instructor Notes</strong><br />' . $assignment_info["submit_notes"] . '</p>';
+}
+
+if ($can_submit == 1) :
+?>
+<div class="panel panel-default">
+	<div class="panel-body" id="submit_panel">
+		<form id="submit_form" role="form" method="post" enctype="multipart/form-data" class="form-horizontal">
+			<input type="hidden" name="assignment_id" value="<?php echo $assignment_info["id"]?>">
+			<div class="form-group">
+				<label for="sourceFile" class="col-sm-2 control-label">File</label>
+				<div class="col-sm-10">
+					<input type="file" name="sourceFile" id="sourceFileSelector">
+					<div id="help_block" class="help-block" data-typelimit="<?php echo array_key_exists("submit_filetype", $assignment_info) ? $assignment_info["submit_filetype"] : '.' ?>" data-sizelimit="<?php echo array_key_exists("submit_filesize", $assignment_info) ? $assignment_info["submit_filesize"] : -1 ?>">
+						<?php
+						if (array_key_exists("submit_filetype", $assignment_info))
+							echo 'You can submit a file with extension name <em>' . $assignment_info["submit_filetype"] . '</em>. ';
+						else
+							echo 'There is no limit on file extension name. ';
+						if (array_key_exists("submit_filesize", $assignment_info))
+							echo 'The file size must not exceed <em>' . number_format($assignment_info["submit_filesize"] / 1024, 2) . ' KiB</em>.';
+						?>
+					</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-10">
+					<button type="submit" class="btn btn-primary">Submit</button>
+					<span id="action_feedback"></span>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+<?php endif ?>
+		<h2 class="sub-header">Submission History</h2>
+		<div class="table-responsive">
+			<table class="table table-bordered table-striped table-hover">
+				<thead>
+					<tr><th>Submission</th><th>Status</th><th class="text-center">Grade</th><th class="text-center">Actions</th></tr>
+				</thead>
+				<tbody id="submission_history_body">
+<?php
+if (count($submissions) > 0)
+foreach ($submissions as $key => $data) {
+	if ($data["grade"] == null) $data["grade"] = "N/A";
+	if ($data["grade_adjustment"] != null) {
+		$grade_str = $data["grade"] . " + " . $data["grade_adjustment"];
+	} else {
+		$grade_str = $data["grade"];
+	}
+	require "ajax_submission_record.html";
+}
+?>
+				</tbody>
+			</table>
+		</div>
+		<h3>Notes</h3>
+		<ul>
+			<li>The maximum grade for this assignment is <strong><?php echo $assignment_info["max_score"]?></strong>.</li>
+			<li>You may need to refresh the page to get updated grading result.</li>
+		</ul>

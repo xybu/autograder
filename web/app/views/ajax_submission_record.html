@@ -1,0 +1,8 @@
+<?php
+
+echo '<tr>' .
+	'<td>#' . $data['id'] . ' <small>at ' . date('D, d M Y H:i:s', strtotime($data["date_created"])) . '</small></td>' .
+	'<td>' . $data["status"] . ' <small>at ' . date('D, d M Y H:i:s', strtotime($data["date_updated"])) . '</small></td>' .
+	'<td class="text-center">' . $grade_str . '</td>' .
+	'<td class="text-center"><a href="/submissions/get/' . $data['id'] . '" title="Click to download this submission file."><i class="fa fa-download fa-lg fa-fw"></i></a>&nbsp;<a href="/submissions/get/' . $data['id'] . '" title="Click to read the grading log"><i class="fa fa-info-circle fa-lg fa-fw"></i></a></td>' . 
+	'</tr>';

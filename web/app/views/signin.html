@@ -7,6 +7,7 @@ require "header.html";
 		<div class="container-fluid">
 			<form class="form-signin" role="form" method="post" action="/sign_in">
 				<h2 class="form-signin-heading">Sign in</h2>
+				<input type="hidden" name="redirect_hash" id="redirect_hash" />
 				<input type="text" class="form-control" placeholder="Purdue account" name="userid" id="userid" required autofocus>
 				<input type="password" class="form-control" placeholder="Turn-in Password" name="password" id="password" required>
 				<label class="help-block">

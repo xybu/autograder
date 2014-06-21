@@ -7,7 +7,7 @@
 		"quota_amount": 3,
 		"submit_filetype": "c",
 		"submit_filesize": 10240,
-		"submit_notes": "",
+		"submit_notes": null,
 		"max_score": 100,
 		"grader_script": "",
 		"grader_tar": ""
@@ -32,7 +32,7 @@
 		"quota_strategy": "daily",
 		"quota_amount": 3,
 		"submit_filetype": "c",
-		"submit_notes": "",
+		"submit_notes": "Good luck!",
 		"max_score": 100,
 		"grader_script": "/home/xb/projects/autograder/trash/test_roe_grader.py",
 		"grader_tar": "/home/xb/projects/autograder/trash/test.tar.gz"

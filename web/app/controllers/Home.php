@@ -8,9 +8,33 @@ class Home extends \Controller {
 	const RETRIEVE_PASSWORD_INTERVAL = 60;
 	
 	function showHomePage($base) {
-		if ($base->exists("SESSION.user"))
-			$base->reroute("/assignments");
-		$this->setView("signin.html");
+		if ($base->exists("SESSION.user")) {
+			$user_info = $this->getUserStatus();
+			if ($user_info == null) {
+				// instead of raising a UserException, reroute the user
+				// to homepage
+				$base->clear("SESSION.user");
+				$base->reroute('/');
+			}
+			
+			$Assignment = \models\Assignment::instance();		
+			$base->set("assignments", $Assignment->getAllAssignments());
+			$base->set("me", $user_info);
+			$this->setView("usercp.html");
+		} else {
+			$this->setView("signin.html");
+		}
+	}
+	
+	function showAnnouncements($base, $param) {
+		$Rss = new \models\Rss("data/feed.xml");
+		if ($param['type'] == "rss") {
+			header('Content-Type: application/xml; charset=utf-8');
+			echo $Rss->get_raw();
+		} else {
+			$base->set("announcements", $Rss->get_items());
+			$this->setView("ajax_announcements.html");
+		}
 	}
 	
 	function showRetrievePasswordPage($base) {
