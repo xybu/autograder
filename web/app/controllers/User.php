@@ -22,6 +22,9 @@ class User extends \Controller {
 			
 			$this->setUserStatus($userInfo);
 			
+			if ($base->exists("SESSION.forgot_password"))
+				$base->clear("SESSION.forgot_password");
+			
 			$base->reroute('/assignments');
 			
 		} catch (UserException $e) {

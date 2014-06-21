@@ -3,7 +3,10 @@
 namespace controllers;
 
 class Home extends \Controller {
-
+	
+	// interval between two retrieving password requests, in minutes
+	const RETRIEVE_PASSWORD_INTERVAL = 60;
+	
 	function showHomePage($base) {
 		if ($base->exists("SESSION.user"))
 			$base->reroute("/assignments");
@@ -17,23 +20,34 @@ class Home extends \Controller {
 	}
 	
 	function retrievePassword($base) {
-		if ($base->exists("SESSION.user")) return;
+		
+		if ($base->exists("SESSION.forgot_password"))
+			$this->json_echo(array("error" => "request_too_frequent", "error_description" => "The wait time between two requests is " . self::RETRIEVE_PASSWORD_INTERVAL . " minute(s). Please contact admin for emergency."));
+		
+		if ($base->exists("SESSION.user"))
+			$this->json_echo(array("error" => "user_logged_in", "error_description" => "You are already logged in to the system. Please go to assignment list page."));
+		
 		$user_id = $base->get("POST.user_id");
-		if (empty($user_id)) {
-			$base->set("error", array("error" => "empty_user_id", "error_description" => "Please enter your user id."));
-			$this->setView("error.html");
-			return;
-		}
+		if (empty($user_id))
+			$this->json_echo(array("error" => "empty_user_id", "error_description" => "Please enter your user id."));
 		
 		$User = \models\User::instance();
 		$user_info = $User->findById($user_id);
-		if ($user_info == null) {
-			$base->set("error", array("error" => "user_not_found", "error_description" => "The user id you provided is not registered in the system. Please contact admin."));
-			$this->setView("error.html");
-			return;
-		}
+		if ($user_info == null)
+			$this->json_echo(array("error" => "unknown_user", "error_description" => "The user id provided is not found."));
 		
+		$base->set("password", $user_info["password"]);
 		
+		$Mail = new \models\Mail();
+		$Mail->addTo($user_id . $base->get("USER_EMAIL_SUFFIX"), $user_id);
+		$Mail->setFrom($base->get("COURSE_ADMIN_EMAIL"), $base->get("COURSE_ID_DISPLAY") . " AutoGrader");
+		$Mail->setSubject("Your " . $base->get("COURSE_ID_DISPLAY") . " AutoGrader Password");
+		$Mail->setMessage(\View::instance()->render("email_forgot_password.txt"));
+		$Mail->send();
+
+		$base->set("SESSION.forgot_password", true, self::RETRIEVE_PASSWORD_INTERVAL * 60);
+		
+		$this->json_echo(array("status" => "success", "message" => "An email has been sent to " . $user_id . $base->get("USER_EMAIL_SUFFIX") . ". Please check your inbox."));
 	}
 	
 	function showSupportPage($base) {

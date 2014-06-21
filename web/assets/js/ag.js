@@ -37,4 +37,25 @@ $(document).ready(function() {
 		}
 	});
 	
+	if ($("#forgot_password_form").length) {
+		$("#forgot_password_form").ajaxForm({
+			dataType: 'json',
+			beforeSubmit: function(formData, jqForm) {
+				// no need to check if user_id is empty since it is required.
+				$("#help_text").html("<p class=\"text-info\">Requesting...</p>")
+			},
+			complete: function(xhr) {
+				if (xhr.status == 200) {
+					if (xhr.responseJSON.error) {
+						$("#help_text").html("<p class=\"text-danger\">" + xhr.responseJSON.error_description + " (" + xhr.responseJSON.error + ")</p>");
+					} else {
+						$("#help_text").html("<p class=\"text-success\">" + xhr.responseJSON.message + "</p>");
+					}
+				} else {
+					$("#help_text").html("<p class=\"text-danger\">An error occurred performing the request. If it persists please contact admin.</p>");
+				}
+			}
+		});
+	}
+	
 });
