@@ -95,7 +95,7 @@ class Callback extends \Controller {
 			
 			$submission_info["status"] = "graded";
 			$submission_info["grade"] = $grade_detail_data["total"];
-			$submission_info["grade_detail"] = $grade_detail;
+			$submission_info["grade_detail"] = json_encode($grade_detail_data);
 			$submission_info["grader_formal_log"] = $grader_formal_log;
 			$submission_info["grader_internal_log"] = $grader_internal_log;
 			

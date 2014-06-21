@@ -16,7 +16,7 @@ body.modal-open, .modal-open .navbar-fixed-top, .modal-open .navbar-fixed-bottom
 .modal {
     overflow-y: auto;
 }
-
+.modal-xl {width: 90%;}
 .modal-adaptive {width:70%; min-width: 400px;}
 .modal-open {overflow: auto;}
 .modal-content {margin-top: 10%;}

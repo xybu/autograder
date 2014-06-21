@@ -1,0 +1,100 @@
+<?php
+$total = 0 + $submission_info["grade"];
+if (!$submission_info["grade_adjustment"]) {
+	$submission_info["grade_adjustment"] = "N/A";
+} else $total = $total + $submission_info["grade_adjustment"];
+?>
+<div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	<h4 class="modal-title">Grading Log #<?php echo $submission_info["id"];?></h4>
+</div>
+<div class="modal-body">
+	<ul class="nav nav-tabs" id="resultTab">
+		<li class="active"><a href="#basics" data-toggle="tab">Basic Info</a></li>
+		<li><a href="#report" data-toggle="tab">Report</a></li>
+		<li><a href="#events" data-toggle="tab">Event Log</a></li>
+		<?php if ($me["role"]["permissions"]["manage"])
+			echo '<li><a href="#internals" data-toggle="tab">Internal Log</a></li>';
+			echo '<li><a href="#raw" data-toggle="tab">Raw Log</a><li>';
+		?>
+	</ul>
+	
+	<div class="tab-content">
+		<div class="tab-pane active" id="basics">
+			<h4>Grade Information</h4>
+			<div class="form-horizontal">
+				<div class="form-group">
+					<label class="col-sm-2 control-label">Assignment</label>
+					<div class="col-sm-10">
+						<p class="form-control-static"><?php echo $assignment_info["display"]?></p>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 control-label">Date Created</label>
+					<div class="col-sm-10">
+						<p class="form-control-static"><em><?php echo $submission_info["date_created"]?></em></p>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 control-label">Last Update</label>
+					<div class="col-sm-10">
+						<p class="form-control-static"><?php echo $submission_info["status"]?> <em>at <?php echo $submission_info["date_updated"]?></em></p>
+					</div>
+				</div>
+				<?php if ($submission_info["grade_detail"]) : ?>
+				<div class="form-group">
+					<label class="col-sm-2 control-label">Base Grade</label>
+					<div class="col-sm-10">
+						<p class="form-control-static"><?php echo $submission_info["grade"]?></p>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 control-label">Grade Adjustment</label>
+					<div class="col-sm-10">
+						<p class="form-control-static"><?php echo $submission_info["grade_adjustment"]?></p>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 control-label">Total Grade</label>
+					<div class="col-sm-10">
+						<p class="form-control-static"><strong><?php echo $total . " / " . $assignment_info["max_score"] . "</strong> as of <em>" . strftime('%Y-%m-%d %T %z') . "</em>"?></p>
+					</div>
+				</div>
+				<?php endif?>
+			</div>
+		</div>
+		<div class="tab-pane" id="report">
+			<h4>Grading Result</h4>
+			<?php
+			if ($submission_info["status"] == "graded") {
+				echo '<pre>';
+				$formal_log = $submission_info["grader_formal_log"];
+				require "formatter_formal_log.html";
+				echo '</pre>';
+			} else echo "<p class=\"bg-info notification-bar\">This submission has not been graded yet.</p>";
+			?>
+		</div>
+		<div class="tab-pane" id="events">
+			<h4>Event Log</h4>
+			<pre><?php
+				$web_log = $submission_info["web_internal_log"];
+				require "formatter_web_log.html";
+			?></pre>
+		</div>
+		<?php if ($me["role"]["permissions"]["manage"]) : ?>
+		<div class="tab-pane" id="internals">
+			<h4>Raw Internal Log (Instructor Only)</h4>
+			<pre><?php echo $submission_info["grader_internal_log"]?></pre>
+		</div>
+		<div class="tab-pane" id="raw">
+			<h4>Raw Formal Log (Instructor Only)</h4>
+			<pre><?php echo $submission_info["grader_formal_log"]?></pre>
+			<h5>Grade Detail</h5>
+			<pre><?php echo str_replace(', ', "<br />", $submission_info["grade_detail"])?></pre>
+		</div>
+		<?php endif?>
+	</div>
+</div>
+<div class="modal-footer">
+	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+</div>

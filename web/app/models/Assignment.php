@@ -68,13 +68,12 @@ class Assignment extends \Model {
 	 * @param	$s: an array previously returned by a findSubmission* function.
 	 */
 	function updateSubmission(&$s) {
-		$s["date_updated"] = date("Y-m-d H:i:s");
 		$this->query("UPDATE submissions SET " . 
 				"user_id=:user_id, " . 
 				"assignment_id=:assignment_id, " .
 				"file_path=:file_path, " . 
 				"status=:status, " . 
-				"date_updated=:date_updated, " . 
+				"date_updated=NOW(), " . 
 				"grade=:grade, " .
 				"grade_adjustment=:grade_adjustment, " .
 				"grade_detail=:grade_detail, " .
@@ -88,7 +87,6 @@ class Assignment extends \Model {
 				":assignment_id" => $s["assignment_id"],
 				":file_path" => $s["file_path"],
 				":status" => $s["status"],
-				":date_updated" => $s["date_updated"],
 				":grade" => $s["grade"],
 				":grade_adjustment" => $s["grade_adjustment"],
 				":grade_detail" => $s["grade_detail"],
@@ -100,7 +98,7 @@ class Assignment extends \Model {
 	}
 	
 	function addLog(&$s, $log_str) {
-		$s["web_internal_log"] = $s["web_internal_log"] . "[" . date("Y-m-d H:i:s") . "] " . $log_str . "\n";
+		$s["web_internal_log"] = $s["web_internal_log"] . "[" . date("c") . "] " . $log_str . "\n";
 	}
 	
 	/**

@@ -4,6 +4,8 @@ namespace controllers;
 
 class Assignment extends \Controller {
 	
+	const MAX_DOWNLOAD_SPEED = 16; // in kBps
+	
 	function __construct() {
 		$this->User = \models\User::instance();
 	}
@@ -144,7 +146,6 @@ class Assignment extends \Controller {
 	 * 
 	 */
 	function getFile($base, $params) {
-		// verify user
 		$user_info = $this->getUserStatus();
 		try {
 			if ($user_info == null) throw new AssignmentException("not_logged_in", "You need to log in to perform this operation.", 403);
@@ -164,8 +165,7 @@ class Assignment extends \Controller {
 			if (!file_exists($submission_info["file_path"]))
 				throw new AssignmentException("file_not_found", "The file you are requesting is not found in the repository. Please contact admin.", 404);
 			
-			$speed_limit = 16; // in KBps
-			\Web::instance()->send($submission_info["file_path"], "application/octet-stream", $speed_limit);
+			\Web::instance()->send($submission_info["file_path"], "application/octet-stream", self::MAX_DOWNLOAD_SPEED);
 			
 		} catch (AssignmentException $ex) {
 			if ($ex->getCode() == 404) header("HTTP/1.0 404 Not Found");
@@ -175,10 +175,40 @@ class Assignment extends \Controller {
 			$base->set("error", $ex->toArray());
 			$this->setView("error.html");
 		}
-		
 	}
 	
 	function getLog($base, $params) {
+		$user_info = $this->getUserStatus();
+		try {
+			if ($user_info == null) throw new AssignmentException("not_logged_in", "You need to log in to perform this operation.", 403);
+			
+			$submission_id = $params["submission_id"];
+			if (!is_numeric($submission_id)) throw new AssignmentException("invalid_parameter", "Your request is refused because it contains invalid information.", 403);
+			
+			$Assignment = \models\Assignment::instance();
+			
+			$submission_info = $Assignment->findSubmissionById($submission_id);
+			if ($submission_info == null) throw new AssignmentException("submission_not_found", "There is no record for this submission.", 404);
+			
+			$assignment_info = $Assignment->findById($submission_info["assignment_id"]);
+			
+			// only the submitter and the admin can fetch the src file.
+			if ($submission_info["user_id"] != $user_info["user_id"] && !$user_info["role"]["permissions"]["manage"])
+				throw new AssignmentException("permission_denied", "You are not allowed to fetch this submission.", 403);
+			
+			$base->set("me", $user_info);
+			$base->set("assignment_info", $assignment_info);
+			$base->set("submission_info", $submission_info);
+			$this->setView("ajax_log.html");
+			
+		} catch (AssignmentException $ex) {
+			if ($ex->getCode() == 404) header("HTTP/1.0 404 Not Found");
+			else if ($ex->getCode() == 403) header("HTTP/1.0 403 Forbidden");
+			
+			if ($user_info != null) $base->set("me", $user_info);
+			$base->set("error", $ex->toArray());
+			$this->setView("ajax_error_modal.html");
+		}
 	}
 	
 }

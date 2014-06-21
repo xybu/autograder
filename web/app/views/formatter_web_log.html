@@ -1,0 +1,8 @@
+<?php
+
+$web_log = preg_replace("/(\[.*\])/", "<strong>$1</strong>", $web_log);
+
+// change EOL chars to HTML line breaks
+$web_log = str_replace(array("\r", "\n"), '<br />', $web_log);
+
+echo $web_log;

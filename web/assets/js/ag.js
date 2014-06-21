@@ -119,4 +119,8 @@ function init_assignment_detail_page() {
 			}
 		}
 	});
+	
+	$('body').on('hidden.bs.modal', '.modal', function () {
+		$(this).removeData('bs.modal');
+	});
 }

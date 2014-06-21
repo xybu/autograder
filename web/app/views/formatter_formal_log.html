@@ -1,0 +1,29 @@
+<?php
+/**
+ * Transform the raw formal log to human readable log.
+ *
+ * @author	Xiangyu Bu <xybu92@live.com>
+ *
+ */
+
+$formal_log = preg_replace("/\n[=]+\n/", "<hr />", $formal_log);
+
+// remove the test case function signature
+$formal_log = preg_replace("/: test([^ ]*)[\s]\([^\)]*\)/i", ": test$1", $formal_log);
+
+// remove the traceback header
+$formal_log = preg_replace("/Traceback[^\n]*\n/i", "", $formal_log);
+
+// remove all lines that start with a space (mostly Traceback lines)
+$formal_log = preg_replace("/\n[ ]+[^\n]+/i", "", $formal_log);
+
+// change EOL chars to html break
+$formal_log = str_replace(array("\r", "\n"), "<br />", $formal_log);
+
+// change chunks of line breaks to a horizontal line
+$formal_log = preg_replace("/(<br \/>){2,}/", "<hr />", $formal_log);
+
+// remove the horizontal line at the end of the string
+$formal_log = preg_replace("/<hr \/>$/", "", $formal_log);
+
+echo $formal_log;

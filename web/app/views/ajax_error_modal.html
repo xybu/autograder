@@ -1,0 +1,15 @@
+<div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	<h4 class="modal-title">Error</h4>
+</div>
+<div class="modal-body">
+	<div class="container callout-error-frame">
+		<article class="callout callout-<?php echo $error["error_level"]?>">
+			<h4>Error: <?php echo $error["error"]?></h4>
+			<p><?php echo $error["error_description"]?></p>
+		</article>
+	</div>
+</div>
+<div class="modal-footer">
+	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+</div>
