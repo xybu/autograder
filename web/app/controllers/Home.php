@@ -39,7 +39,7 @@ class Home extends \Controller {
 	
 	function showRetrievePasswordPage($base) {
 		if ($base->exists("SESSION.user"))
-			$base->reroute("/assignments");
+			$base->reroute("/");
 		$this->setView("forgot_password.html");
 	}
 	

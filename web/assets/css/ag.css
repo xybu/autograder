@@ -113,3 +113,10 @@ body {
 	font-size: 80%;
 	font-style: italic;
 }
+
+/* General white block */
+.content-block {
+	background-color: #f8f8f8;
+	padding: 0.5em;
+	margin-bottom: 0.4em;
+}

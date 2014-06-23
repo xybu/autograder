@@ -1,12 +1,9 @@
-<?php
-if (!isset($Base)) $Base = \Base::instance();
-?>
 		<div id="footer">
 			<div class="container">
 				<p id="copyright" class="text-center">
 					Copyright &copy; Department of Computer Science, Purdue University
 					<br />
-					<?php echo $Base->format('Execution time: {0} ms / Memory: {1} KiB', round(1e3*(microtime(TRUE)-$TIME),2), round(memory_get_usage(TRUE)/1e3,1)); ?>
+					<?php echo 'Execution time: ' . round(1e3*(microtime(TRUE)-$TIME),2) . ' ms / Memory: ' . round(memory_get_usage(TRUE)/1e3,1) . ' KiB';?>
 				</p>
 			</div>
 		</div>
