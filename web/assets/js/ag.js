@@ -1,3 +1,5 @@
+var current_path;
+
 $(document).ready(function() {
 	
 	if ($("#redirect_hash").length) {
@@ -66,6 +68,7 @@ $(document).ready(function() {
 });
 
 function load_content_dom(ajax_url) {
+	current_path = ajax_url;
 	if (ajax_url == "/") ajax_url = "/announcements/html";
 	$.ajax({
 		cache: false,
@@ -110,10 +113,11 @@ function init_assignment_detail_page() {
 		},
 		complete: function(xhr) {
 			if (xhr.responseJSON.error == "success") {
-				$("#action_feedback").html("<span class=\"text-success\">Successfully submitted the file.</span>");
-				if (xhr.responseJSON.more_status == "error")
-					$("#action_feedback").append("<p class=\"text-warning\">However, system failed to add the grading task to queue; will retry later.</p>");
-				$("#history_body").prepend(xhr.responseJSON.new_record_data);
+				var str = 'You have successfully submitted the file.';
+				if (xhr.responseJSON.more_status == 'error')
+					str += ' However, system failed to add the grading task to queue; will retry later.';
+				alert(str + ' Click "OK" to refresh the page.');
+				load_content_dom(current_path);
 			} else {
 				$("#action_feedback").html("<span class=\"text-danger\">" + xhr.responseJSON.error_description + "</span>");
 			}

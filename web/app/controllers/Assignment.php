@@ -97,10 +97,6 @@ class Assignment extends \Controller {
 		switch ($result) {
 			case "success":
 				// call grader daemon
-				$base->set("grade_str", "N/A");
-				$base->set("data", $submission_record);
-				$data["new_record_data"] = \View::instance()->render("submission_record.html");
-				
 				$Connector = \models\Connector::instance();
 				$assign_result = $Connector->assignTask($submission_record, $user_info, $assignment_info);
 				if ($assign_result["result"] == "queued") {
