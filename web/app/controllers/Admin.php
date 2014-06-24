@@ -20,6 +20,18 @@ class Admin extends \Controller {
 		$this->setView('admincp.html');
 	}
 	
+	function addAnnouncement($base) {
+		$user_info = $this->verifyAdminPermission(false);
+	}
+	
+	function editAnnouncement($base) {
+		
+	}
+	
+	function deleteAnnouncement($base) {
+		
+	}
+	
 	function showAnnouncementsPage($base) {
 		$user_info = $this->verifyAdminPermission();
 		$Rss = new \models\Rss("data/feed.xml");
@@ -34,10 +46,37 @@ class Admin extends \Controller {
 		$this->setView('admin/ajax_assignments.html');
 	}
 	
+	function addAssignment($base) {
+	}
+	
+	function editAssignment($base) {
+	}
+	
+	function deleteAssignment($base) {
+	}
+	
+	function regradeSubmission($base) {
+	}
+	
+	function querySubmission($base) {
+	}
+	
 	function showServerPage($base) {
 		$user_info = $this->verifyAdminPermission();
 		$base->set('me', $user_info);
 		$this->setView('admin/ajax_server.html');
+	}
+	
+	function addServer($base) {
+	}
+	
+	function editServer($base) {
+	}
+	
+	function deleteServer($base) {
+	}
+	
+	function checkServer($base) {
 	}
 	
 	function showStatusPage($base) {
@@ -50,6 +89,30 @@ class Admin extends \Controller {
 		$user_info = $this->verifyAdminPermission();
 		$base->set('me', $user_info);
 		$this->setView('admin/ajax_users.html');
+	}
+	
+	function addUsers($bsae) {
+	}
+	
+	function deleteUsers($base) {
+	}
+	
+	function editUser($base) {
+	}
+	
+	function queryUser($base) {
+	}
+	
+	function sendEmailToUsers($base) {
+	}
+	
+	function addRole($base) {
+	}
+	
+	function editRole($base) {
+	}
+	
+	function deleteRole($base) {
 	}
 	
 }
