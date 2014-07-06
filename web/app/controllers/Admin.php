@@ -118,10 +118,9 @@ class Admin extends \Controller {
 			$role_name = $base->get('POST.role');
 			if ($User->findRoleByName($role_name) == null)
 				$this->json_echo($this->getError('invalid_data', 'The role "' . $role_name . '" is not defined.'));
-			$user_list = $base->get('POST.user_list');
-			$user_list = str_replace("\r", "", $user_list);
+			$user_list = str_replace("\r", "", $base->get('POST.user_list'));
 			$users = explode("\n", $user_list);
-			$user_table = $User->getUserTable();
+			
 			//TODO: here we are assuming the length is large enough, which is bad.
 			$password_pool = $User->getPasswordPool(count($users), static::PASSWORD_LEN);
 			
@@ -133,18 +132,17 @@ class Admin extends \Controller {
 					// skip existing users
 					if ($User->findById($name) != null) {
 						$skip_list[] = $name;
-						continue;
+					} else {
+						$User->addUser($name, $role_name, $password_pool[$i]);
+						++$c;
 					}
-					$p = $password_pool[$i];
-					$user_table[$role_name][$name] = $p;
-					++$c;
 				}
 			}
 			
 			if (count($skip_list) > 0) $skip_str = ' Skipped existing users: ' . implode(', ', $skip_list) . '.';
 			else $skip_str = '';
 			
-			if ($User->saveUserTable($user_table) === false) {
+			if ($User->saveUserTable() === false) {
 				$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "users.json") . "\"."));
 			}
 			
@@ -180,7 +178,25 @@ class Admin extends \Controller {
 			
 			$this->json_echo($this->getSuccess('Successfully updated the role of the selected user(s).'));
 				
-		} else
+		} else if ($action == 'reset_password') {
+			$users = $base->get('POST.users');
+			$password_pool = $User->getPasswordPool(count($users), static::PASSWORD_LEN);
+			$i = 0;
+			foreach ($users as $name => $item) {
+				if (array_key_exists('selected', $item)) {
+					$user_info = $User->findById($name);
+					if ($user_info != null)
+						$User->editUser($user_info, null, null, $password_pool[$i++]);
+				}
+			}
+			
+			if ($User->saveUserTable() === false) {
+				$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "users.json") . "\"."));
+			}
+			
+			$this->json_echo($this->getSuccess('Successfully generated new password for the selected user(s).'));
+			
+		} else 
 			$this->json_echo($this->getError('undefined_action', 'The action you are performing is not defined.'));
 	}
 	

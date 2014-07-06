@@ -33,6 +33,10 @@ class User extends \Model {
 		return null;
 	}
 	
+	function addUser($id, $role, $password) {
+		$this->users[$role][$id] = $password;
+	}
+	
 	/**
 	 * Edit the user $old_user with the given new information.
 	 * Do not change the null fields.
