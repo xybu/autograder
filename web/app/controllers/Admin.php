@@ -160,7 +160,27 @@ class Admin extends \Controller {
 			}
 			
 			$this->json_echo($this->getSuccess('Successfully deleted the selected user(s).'));
-		} else 
+		} else if ($action == 'change_role') {
+			$role_name = $base->get('POST.role');
+			if ($User->findRoleByName($role_name) == null)
+				$this->json_echo($this->getError('invalid_data', 'The role "' . $role_name . '" is not defined.'));
+			
+			$users = $base->get('POST.users');
+			foreach ($users as $name => $item) {
+				if (array_key_exists('selected', $item)) {
+					$user_info = $User->findById($name);
+					if ($user_info == null || $user_info['role']['name'] == $role_name) continue;
+					$User->editUser($user_info, null, $role_name, null);
+				}
+			}
+			
+			if ($User->saveUserTable() === false) {
+				$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "users.json") . "\"."));
+			}
+			
+			$this->json_echo($this->getSuccess('Successfully updated the role of the selected user(s).'));
+				
+		} else
 			$this->json_echo($this->getError('undefined_action', 'The action you are performing is not defined.'));
 	}
 	

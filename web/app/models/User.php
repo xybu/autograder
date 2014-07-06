@@ -33,6 +33,19 @@ class User extends \Model {
 		return null;
 	}
 	
+	/**
+	 * Edit the user $old_user with the given new information.
+	 * Do not change the null fields.
+	 * The data source $old_user is not updated.
+	 */
+	function editUser($old_user, $new_id = null, $new_role = null, $new_pass = null) {
+		if ($new_id == null) $new_id = $old_user['user_id'];
+		if ($new_pass == null) $new_pass = $old_user['password'];
+		if ($new_role == null) $new_role = $old_user['role']['name'];
+		unset($this->users[$old_user['role']['name']][$old_user['user_id']]);
+		$this->users[$new_role][$new_id] = $new_pass;
+	}
+	
 	function deleteUserById($id) {
 		foreach ($this->users as $rolename => &$members) {
 			if (array_key_exists($id, $members)) {
