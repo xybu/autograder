@@ -195,6 +195,60 @@ class Admin extends \Controller {
 			}
 			
 			$this->json_echo($this->getSuccess('Successfully generated new password for the selected user(s).'));
+		} else if ($action == 'update') {
+			$users = $base->get('POST.users');
+			$skip_list = array();
+			$i = 0;
+			foreach ($users as $name => $item) {
+				if (array_key_exists('selected', $item) && array_key_exists('new_name', $item) && $item['new_name'] != $name) {
+					$user_info = $User->findById($name);
+					if ($user_info != null) {
+						$new_user_info = $User->findById($item['new_name']);
+						if ($new_user_info != null) $skip_list[] = $item['new_name'];
+						else {
+							$User->editUser($user_info, $item['new_name'], null, null);
+							++$i;
+						}
+					}
+				}
+			}
+			
+			if (count($skip_list) > 0) $skip_str = ' The following ids already exist and cannot be renamed to: ' . implode(', ', $skip_list) . '.';
+			else $skip_str = '';
+			
+			if ($User->saveUserTable() === false) {
+				$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "users.json") . "\"."));
+			}
+			
+			$this->json_echo($this->getSuccess('Successfully renamed ' . $i . ' users.' . $skip_str));
+			
+		} else if ($action == 'send_email') {
+			$subject = $base->get('POST.subject');
+			$body = $base->get('POST.body');
+			$users = $base->get('POST.users');
+			$i = 0;
+			
+			if (empty($subject) || empty($body))
+				$this->json_echo($this->getError('empty_fields', "Subject and body should not be empty."));
+			
+			foreach ($users as $name => $item) {
+				if (array_key_exists('selected', $item)) {
+					$user_info = $User->findById($name);
+					if ($user_info == null) continue;
+					$mail_subject = $User->replaceTokens($user_info, $subject);
+					$mail_body = $User->replaceTokens($user_info, $body);
+					
+					$mail = new \models\Mail();
+					$mail->addTo($name . $base->get('USER_EMAIL_DOMAIN'), $name);
+					$mail->setFrom($base->get('COURSE_ADMIN_EMAIL'), $base->get('COURSE_ID_DISPLAY') . ' No-Reply');
+					$mail->setSubject($mail_subject);
+					$mail->setMessage($mail_body);
+					$mail->send();
+					++$i;
+				}
+			}
+			
+			$this->json_echo($this->getSuccess('Successfully sent email to ' . $i . ' user(s).'));
 			
 		} else 
 			$this->json_echo($this->getError('undefined_action', 'The action you are performing is not defined.'));

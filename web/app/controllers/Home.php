@@ -63,7 +63,7 @@ class Home extends \Controller {
 		$base->set("password", $user_info["password"]);
 		
 		$Mail = new \models\Mail();
-		$Mail->addTo($user_id . $base->get("USER_EMAIL_SUFFIX"), $user_id);
+		$Mail->addTo($user_id . $base->get("USER_EMAIL_DOMAIN"), $user_id);
 		$Mail->setFrom($base->get("COURSE_ADMIN_EMAIL"), $base->get("COURSE_ID_DISPLAY") . " AutoGrader");
 		$Mail->setSubject("Your " . $base->get("COURSE_ID_DISPLAY") . " AutoGrader Password");
 		$Mail->setMessage(\View::instance()->render("email_forgot_password.txt"));
@@ -71,7 +71,7 @@ class Home extends \Controller {
 
 		$base->set("SESSION.forgot_password", true, self::RETRIEVE_PASSWORD_INTERVAL * 60);
 		
-		$this->json_echo(array("status" => "success", "message" => "An email has been sent to " . $user_id . $base->get("USER_EMAIL_SUFFIX") . ". Please check your inbox."));
+		$this->json_echo(array("status" => "success", "message" => "An email has been sent to " . $user_id . $base->get("USER_EMAIL_DOMAIN") . ". Please check your inbox."));
 	}
 	
 	function showSupportPage($base) {

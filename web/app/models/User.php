@@ -147,5 +147,17 @@ class User extends \Model {
 		if ($role_data == null) $role_data = $this->roles;
 		return @file_put_contents($this->Base->get("DATA_PATH") . "roles.json", json_encode($role_data), LOCK_EX);
 	}
+	
+	/**
+	 * Replace the tokens {user_id}, {password}, {role_id}, {role_name}
+	 * with the corresponding user data.
+	 */
+	function replaceTokens($user_info, $str) {
+		$str = str_replace('{user_id}', $user_info['user_id'], $str);
+		$str = str_replace('{password}', $user_info['password'], $str);
+		$str = str_replace('{role_id}', $user_info['role']['name'], $str);
+		$str = str_replace('{role_name}', $user_info['role']['permissions']['display'], $str);
+		return $str;
+	}
 }
 

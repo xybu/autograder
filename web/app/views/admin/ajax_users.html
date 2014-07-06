@@ -60,12 +60,12 @@ echo "<tr>" .
 			<input type="hidden" name="format" value="html" />
 			<input type="hidden" name="action" value="query" />
 			<div class="form-group">
-				<label for="name_pattern" class="sr-only">Username</label>
-				<input type="text" name="name_pattern" placeholder="Username (e.g., b*[123])" class="form-control" required />
+				<label for="name_pattern" class="control-label">Username</label>
+				<input type="text" name="name_pattern" value="*" class="form-control" title="Support wildcard expression." required />
 			</div>
 			<div class="form-group">
-				<label for="role_pattern" class="sr-only">Role</label>
-				<input type="text" name="role_pattern" placeholder="Role (e.g., use?)" class="form-control" required />
+				<label for="role_pattern" class="control-label">Role</label>
+				<input type="text" name="role_pattern" value="*" class="form-control" title="Support wildcard expression." required />
 			</div>
 			<div class="form-group pull-right">
 				<input type="submit" id="search-submit" class="btn btn-primary" value="Search" />
@@ -107,7 +107,7 @@ echo "<tr>" .
 		<div class="form-group">
 			<div class="col-sm-12">
 				<textarea name="body" id="email_body" class="form-control" rows="4" placeholder="Email body here."></textarea>
-				<div class="help-block">Use <tt>{user_id}</tt>, <tt>{password}</tt>, <tt>{role}</tt> to refer to the username, password, and role, of a user.</div>
+				<div class="help-block">Use <tt>{user_id}</tt>, <tt>{password}</tt>, <tt>{role_id}</tt>, <tt>{role_name}</tt> to refer to the username, password, role ID, and role name, of a user.</div>
 			</div>
 		</div>
 	</div>
