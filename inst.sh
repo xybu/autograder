@@ -25,3 +25,5 @@ mkdir tmp
 mkdir -p tmp/cache
 chmod 775 tmp
 chmod 755 tmp/cache
+
+sudo ln -s /etc/nginx/sites-enabled/autograder `pwd`/web/nginx.conf
