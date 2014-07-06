@@ -40,6 +40,8 @@ $(document).ready(function() {
 function load_content_dom(ajax_url) {
 	if (ajax_url == "/") ajax_url = "/status";
 	console.log(ajax_url);
+	$("#loading").removeClass("fadeOut");
+	$("#loading").addClass("slideInRight");
 	$.ajax({
 		cache: false,
 		complete: function(event) {
@@ -53,6 +55,8 @@ function load_content_dom(ajax_url) {
 					load_users_panel();
 					break;
 			}
+			$("#loading").removeClass("slideInRight");
+			$("#loading").addClass("fadeOut");
 		},
 		url: "/admin" + ajax_url
 	});
