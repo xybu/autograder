@@ -199,8 +199,9 @@ class Admin extends \Controller {
 			$users = $base->get('POST.users');
 			$skip_list = array();
 			$i = 0;
+			
 			foreach ($users as $name => $item) {
-				if (array_key_exists('selected', $item) && array_key_exists('new_name', $item) && $item['new_name'] != $name) {
+				if (array_key_exists('selected', $item) && array_key_exists('new_name', $item) && !empty($item['new_name']) && $item['new_name'] != $name) {
 					$user_info = $User->findById($name);
 					if ($user_info != null) {
 						$new_user_info = $User->findById($item['new_name']);
