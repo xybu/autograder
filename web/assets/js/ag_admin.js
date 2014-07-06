@@ -14,9 +14,6 @@ $(document).ready(function() {
 			}).concat(event.parameters.id ? event.parameters.id.split('.') : []);
 			var links = names.slice();
                 	
-                	console.log(names);
-                	console.log(links);
-                	
                 	// process the navigation link
                 	var marked = 0;
 			$('#sidebar a').each(function() {
@@ -41,7 +38,8 @@ $(document).ready(function() {
 });
 
 function load_content_dom(ajax_url) {
-	if (ajax_url == "/") ajax_url = "/admin/status";
+	if (ajax_url == "/") ajax_url = "/status";
+	console.log(ajax_url);
 	$.ajax({
 		cache: false,
 		complete: function(event) {
@@ -50,7 +48,32 @@ function load_content_dom(ajax_url) {
 			$('body').on('hidden.bs.modal', '.modal', function () {
 				$(this).removeData('bs.modal');
 			});
+			switch (ajax_url) {
+				case '/users':
+					load_users_panel();
+					break;
+			}
 		},
-		url: ajax_url
+		url: "/admin" + ajax_url
+	});
+}
+
+function load_users_panel() {
+	$('#roles-form').ajaxForm({
+		dataType: 'json',
+		beforeSubmit: function(formData, jqForm) {
+			$('#roles-form-response').html('');
+		},
+		complete: function(xhr) {
+			if (xhr.status == 200) {
+				if (xhr.responseJSON.error) {
+					$('#roles-form-response').html("<span class=\"text-danger\">" +  xhr.responseJSON.error_description+ " (error: " + xhr.responseJSON.error + ")</span>");
+				} else {
+					load_content_dom('/users');
+				}
+			} else {
+				$('#roles-form-response').text(xhr.responseText);
+			}
+		}
 	});
 }

@@ -120,3 +120,14 @@ body {
 	padding: 0.5em;
 	margin-bottom: 0.4em;
 }
+
+br.divider {
+}
+
+/* Role list table */
+#roles-table input[type="number"] {
+	width: 6em;
+}
+#roles-table td {
+	text-align: center;
+}

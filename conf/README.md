@@ -1,6 +1,8 @@
 AutoGrader/conf
 ===============
 
+**Deprecated.**
+
 This is the default path to store configuration files.
 
 `assignments.json`, `daemons.json`, `roles.json`, and `users.json`, 

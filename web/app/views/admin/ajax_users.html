@@ -1,14 +1,52 @@
 <h2 class="page-header">Roles</h2>
+<div class="help-block">
+	Delete the selected roles, update the existing roles, and create a new role if its <em>ID</em> is given.
+</div>
 <div class="table-responsive">
-	<table class="table table-hover table-bordered">
+	<form id="roles-form" method="post" action="/admin/roles/update">
+	<table id="roles-table" class="table table-hover table-bordered">
 		<thead>
-			<tr><td>Name</td><td>Display</td><td>Can submit</td><td>Submit overdue</td><td>Submit prior-start</td><td>Grading Priority</td><td>Manage</td></tr>
+			<tr><td></td><td>ID</td><td>Name</td><td>Can submit</td><td>Submit prior-start</td><td>Submit overdue</td><td>Grading Priority</td><td>Manage</td></tr>
 		</thead>
 		<tbody>
-			<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<?php
+$i = 0;
+$checked_str = ' checked="checked"';
+foreach ($roles_info as $id => $data) {
+	echo "<tr>" .
+		"<td><input type=\"checkbox\" name=\"current[$i][delete]\" value=\"true\" /></td>" .
+		"<td><input type=\"text\" name=\"current[$i][key]\" size=\"8\" value=\"$id\" /></td>" .
+		"<td><input type=\"text\" name=\"current[$i][display]\" size=\"12\" value=\"" . $data['display'] . "\" /></td>" .
+		"<td><input type=\"checkbox\" name=\"current[$i][submit]\" value=\"true\"" . ($data['submit'] ? $checked_str : '') . " /></td>" .
+		"<td><input type=\"checkbox\" name=\"current[$i][submit_prestart]\" value=\"true\"" . ($data['submit_prestart'] ? $checked_str : '') . " /></td>". 
+		"<td><input type=\"checkbox\" name=\"current[$i][submit_overdue]\" value=\"true\"" . ($data['submit_overdue'] ? $checked_str : '') . " /></td>" .
+		"<td><input type=\"number\" name=\"current[$i][submit_priority]\" value=\"" . $data['submit_priority'] . "\" max=\"255\" min=\"0\" step=\"1\" /></td>" .
+		"<td><input type=\"checkbox\" name=\"current[$i][manage]\" value=\"true\"" . ($data['manage'] ? $checked_str : '') . " /></td>" .
+		"</tr>";
+	++$i;
+}
+echo "<tr>" .
+	"<td></td>" .
+	"<td><input type=\"text\" name=\"new[key]\" size=\"8\" /></td>" .
+	"<td><input type=\"text\" name=\"new[display]\" size=\"12\" /></td>" .
+	"<td><input type=\"checkbox\" name=\"new[submit]\" value=\"true\" /></td>" .
+	"<td><input type=\"checkbox\" name=\"new[submit_prestart]\" value=\"true\" /></td>". 
+	"<td><input type=\"checkbox\" name=\"new[submit_overdue]\" value=\"true\" /></td>" .
+	"<td><input type=\"number\" name=\"new[submit_priority]\" max=\"255\" min=\"0\" step=\"1\" /></td>" .
+	"<td><input type=\"checkbox\" name=\"new[manage]\" /></td>" .
+	"</tr>";
+?>
 		</tbody>
 	</table>
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-sm-10 col-md-10" id="roles-form-response"></div>
+			<div class="col-sm-2 col-md-2"><input type="submit" class="btn btn-primary" value="Update" /></div>
+		</div>
+	</div>
+	</form>
 </div>
+<br class="divider" />
 <h2 class="page-header">Users</h2>
 <h3 class="sub-header">Search</h3>
 <h3 class="sub-header">Add</h3>

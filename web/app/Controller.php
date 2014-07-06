@@ -65,6 +65,14 @@ abstract class Controller {
 		$this->base->clear("SESSION.user");
 	}
 	
+	function getError($code, $msg) {
+		return array('error' => $code, 'error_description' => $msg);
+	}
+	
+	function getSuccess($msg) {
+		return array('status' => 'success', 'message' => $msg);
+	}
+	
 	function json_echo($array_data, $http_forbidden = false){
 		$s = json_encode($array_data , JSON_PRETTY_PRINT);
 		if ($http_forbidden)		
