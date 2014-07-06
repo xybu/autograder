@@ -33,11 +33,21 @@ class User extends \Model {
 		return null;
 	}
 	
+	function deleteUserById($id) {
+		foreach ($this->users as $rolename => &$members) {
+			if (array_key_exists($id, $members)) {
+				unset($members[$id]);
+				return;
+			}
+		}
+	}
+	
 	function getUserTable() {
 		return $this->users;
 	}
 	
-	function saveUserTable($user_data) {
+	function saveUserTable($user_data = null) {
+		if ($user_data == null) $user_data = $this->users;
 		return @file_put_contents($this->Base->get("DATA_PATH") . "users.json", json_encode($user_data), LOCK_EX);
 	}
 	
@@ -116,7 +126,8 @@ class User extends \Model {
 		return $this->roles;
 	}
 	
-	function saveRoleTable($role_data) {
+	function saveRoleTable($role_data = null) {
+		if ($role_data == null) $role_data = $this->roles;
 		return @file_put_contents($this->Base->get("DATA_PATH") . "roles.json", json_encode($role_data), LOCK_EX);
 	}
 }

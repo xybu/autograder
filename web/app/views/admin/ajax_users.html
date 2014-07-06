@@ -68,7 +68,7 @@ echo "<tr>" .
 				<input type="text" name="role_pattern" placeholder="Role (e.g., use?)" class="form-control" required />
 			</div>
 			<div class="form-group pull-right">
-				<input type="submit" class="btn btn-primary" value="Search" />
+				<input type="submit" id="search-submit" class="btn btn-primary" value="Search" />
 			</div>
 		</form>
 	</div>
@@ -77,7 +77,7 @@ echo "<tr>" .
 	<div class="table-responsive">
 		<table id="users-table" class="table table-hover table-bordered">
 			<thead>
-				<tr><td><input type="checkbox" onclick="selectAll('users-table-body')" /></td><td>Name</td><td>Role</td><td>Password</td></tr>
+				<tr><td><input type="checkbox" onclick="selectAll(this, 'users-table-body')" /></td><td>Name</td><td>Role</td><td>Password</td></tr>
 			</thead>
 			<tbody id="users-table-body">
 			</tbody>
@@ -111,7 +111,7 @@ echo "<tr>" .
 			</div>
 		</div>
 	</div>
-	<div id="update-user-response"></div>
+	<div id="update-user-response" class="text-center"></div>
 </form>
 
 <h3 class="sub-header">Batch add</h3>

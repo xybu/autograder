@@ -107,9 +107,13 @@ class Admin extends \Controller {
 			$id_pattern = $base->get('POST.name_pattern');
 			$role_pattern = $base->get('POST.role_pattern');
 			$result = $User->matchByPatterns($id_pattern, $role_pattern);
-			$base->set('user_list', $result);
-			$this->setView('admin/ajax_user_rows.html');
-			return;
+			if (count($result) == 0)
+				$this->json_echo($this->getError('empty_result', 'There is no user matching the given patterns.'));
+			else {
+				$base->set('user_list', $result);
+				$data = \View::instance()->render('admin/ajax_user_rows.html');
+				$this->json_echo($this->getSuccess($data));
+			}
 		} else if ($action == 'add') {
 			$role_name = $base->get('POST.role');
 			if ($User->findRoleByName($role_name) == null)
@@ -146,6 +150,16 @@ class Admin extends \Controller {
 			
 			$this->json_echo($this->getSuccess('Added ' . $c . ' user(s) to role "' . $role_name . '".' . $skip_str));
 		
+		} else if ($action == 'delete') {
+			$users = $base->get('POST.users');
+			foreach ($users as $name => $item)
+				if (array_key_exists('selected', $item)) $User->deleteUserById($name);
+			
+			if ($User->saveUserTable() === false) {
+				$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "users.json") . "\"."));
+			}
+			
+			$this->json_echo($this->getSuccess('Successfully deleted the selected user(s).'));
 		} else 
 			$this->json_echo($this->getError('undefined_action', 'The action you are performing is not defined.'));
 	}

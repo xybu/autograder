@@ -85,12 +85,12 @@ function load_users_panel() {
 	});
 	
 	$('#search-user-form').ajaxForm({
-		dataType: 'html',
+		dataType: 'json',
 		complete: function(xhr) {
-			if (xhr.status == 200) {
-				$('#users-table-body').html(xhr.responseText);
+			if (xhr.responseJSON.error) {
+				$('#users-table-body').html('<tr><td colspan="4"><span class="text-warning text-center">' + xhr.responseJSON.error_description + '</span></td></tr>');
 			} else {
-				$('#roles-form-response').text(xhr.responseJSON);
+				$('#users-table-body').html(xhr.responseJSON.message);
 			}
 		}
 	});
@@ -125,6 +125,22 @@ function load_users_panel() {
 		}
 	});
 	
+	$('#update-user-form').ajaxForm({
+		dataType: 'json',
+		complete: function(xhr) {
+			if (xhr.status == 200) {
+				if (xhr.responseJSON.error) {
+					$('#update-user-response').html("<span class=\"text-danger\">" +  xhr.responseJSON.error_description+ " (error: " + xhr.responseJSON.error + ")</span>");
+				} else {
+					$('#update-user-response').html("<span class=\"text-success\">" +  xhr.responseJSON.message + '</span>');
+					$('#search-submit').click();
+				}
+			} else {
+				$('#update-user-response').text(xhr.responseText);
+			}
+		}
+	});
+	
 	$('#add-user-form').ajaxForm({
 		dataType: 'json',
 		beforeSubmit: function(formData, jqForm) {
@@ -148,10 +164,8 @@ function load_users_panel() {
 	});
 }
 
-function selectAll(parent_id) {
+function selectAll(ref, parent_id) {
 	$('#' + parent_id + " tr td:first-child input").each(function(name, obj){
-		var o = $(obj)
-		if (o.attr('checked')) o.removeAttr('checked');
-		else o.attr('checked', 'checked');
+		obj.checked = ref.checked;
 	});
 }

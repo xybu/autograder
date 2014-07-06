@@ -7,5 +7,5 @@
  */
 
 foreach($user_list as $user) {
-	echo "<tr><td><input type=\"checkbox\" name=\"users[" . $user['user_id'] . "][selected]\" value=\"true\" /></td><td><input type=\"text\" name=\"users[" . $user['user_id'] . "][new_name]\"" . " value=\"" . $user['user_id'] . "\" /></td><td>" . $user['role'] . "</td><td>" . $user['password'] . "</td></tr>";
+	echo "<tr><td><input type=\"checkbox\" name=\"users[" . $user['user_id'] . "][selected]\" value=\"true\" /></td><td><input type=\"text\" name=\"users[" . $user['user_id'] . "][new_name]\"" . " value=\"" . $user['user_id'] . "\" /></td><td>" . $user['role'] . "</td><td><tt>" . $user['password'] . "</tt></td></tr>";
 }
