@@ -16,6 +16,22 @@ class Assignment extends \Model {
 		return $this->assignments;
 	}
 	
+	function getDefaultAssignmentData() {
+		return array(
+			'display' => '',
+			'start' => '',
+			'close' => '',
+			'quota_strategy' => 'daily',
+			'quota_amount' => 15,
+			'submit_filetype' => 'c',
+			'submit_filesize' => 10240,
+			'submit_notes' => '',
+			'max_score' => 100,
+			'grader_script' => '/',
+			'grader_tar' => ''
+		);
+	}
+	
 	function findById($key) {
 		if (array_key_exists($key, $this->assignments)) {
 			$data = $this->assignments[$key];

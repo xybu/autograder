@@ -45,10 +45,15 @@ body {
 #loading {
 	position: absolute;
 	right: 1.5em;
-	top: 3.5em;
+	top: 1.5em;
 	padding: 0.5em 0.8em;
 	background: #11b911;
 	color: #fff;
+	-moz-animation-delay: 0.5s;
+	-moz-animation-duration: 1s;
+	-webkit-animation-delay: 0.5s;
+	-webkit-animation-duration: 1s;
+	z-index: 1280;
 }
 
 /* For signin.html */

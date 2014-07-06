@@ -182,6 +182,16 @@ function load_assignments_panel() {
 			}
 		});
 	});
+	
+	$('#add-assignment-form').ajaxForm({
+		dataType: 'json',
+		beforeSubmit: function(formData, jqForm) {
+			console.log(formData);
+			return false;
+		},
+		complete: function(xhr) {
+		}
+	});
 }
 
 function selectAll(ref, parent_id) {

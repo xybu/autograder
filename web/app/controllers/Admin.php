@@ -48,10 +48,14 @@ class Admin extends \Controller {
 		
 		$base->set('me', $user_info);
 		$base->set('assignment_list', $Assignment->getAllAssignments());
+		$base->set('blank_item', $Assignment->getDefaultAssignmentData());
 		$this->setView('admin/ajax_assignments.html');
 	}
 	
 	function addAssignment($base) {
+		$user_info = $this->verifyAdminPermission();
+		$Assignment = \models\Assignment::instance();
+		echo json_encode($_POST);
 	}
 	
 	function editAssignment($base) {

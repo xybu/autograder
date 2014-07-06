@@ -1,4 +1,8 @@
-<h2 class="page-header">Assignments</h2>
+<h2 class="page-header">Assignments
+	<span class="pull-right">
+		<a data-toggle="modal" data-target="#newAssignmentModal" class="btn btn-primary"><i class="fa fa-plus"></i> New</a>
+	</span>
+</h2>
 <?php
 $id = 0; // $id is an internal counter to distinguish elements
 foreach ($assignment_list as $key => $info) {
@@ -6,3 +10,28 @@ foreach ($assignment_list as $key => $info) {
 	require 'ajax_assignment_item.html';
 	++$id;
 }
+?>
+<div id="newAssignmentModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="newAssignmentModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-xl">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h4 class="modal-title">New assignment</h4>
+			</div>
+			<form id="add-assignment-form" class="assignment-item-form form-horizontal" method="post" action="/admin/assignments/add">
+				<div class="modal-body">
+			<?php
+			$id = 'new';
+			$key = '';
+			$info = $blank_item;
+			require 'ajax_assignment_form.html';
+			?>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="submit" class="btn btn-primary">Submit</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
