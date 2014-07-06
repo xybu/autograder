@@ -38,14 +38,12 @@ $(document).ready(function() {
 });
 
 function load_content_dom(ajax_url) {
-	if (ajax_url == "/") ajax_url = "/admin/status";
-	console.log(ajax_url);
 	$("#loading").removeClass("fadeOut");
 	$("#loading").addClass("slideInRight");
+	if (ajax_url == "/") ajax_url = "/admin/status";
 	$.ajax({
 		cache: false,
 		complete: function(event) {
-			console.log(event);
 			$("#content").html(event.responseText);
 			$('body').on('hidden.bs.modal', '.modal', function () {
 				$(this).removeData('bs.modal');
@@ -53,6 +51,9 @@ function load_content_dom(ajax_url) {
 			switch (ajax_url) {
 				case '/admin/users':
 					load_users_panel();
+					break;
+				case '/admin/assignments':
+					load_assignments_panel();
 					break;
 			}
 			$("#loading").removeClass("slideInRight");
@@ -161,6 +162,25 @@ function load_users_panel() {
 				$('#add-user-response').text(xhr.responseText);
 			}
 		}
+	});
+}
+
+function load_assignments_panel() {
+	$('.date').datetimepicker();
+	$('.panel-heading').each(function(i, item){
+		item = $(item);
+		item.on('click', function(e){
+			var t = $(this).parent().find('.form-toggle');
+			if (t.hasClass('hide')) {
+				item.find('i').removeClass('fa-angle-double-down');
+				item.find('i').addClass('fa-angle-double-up');
+				t.removeClass('hide');
+			} else {
+				item.find('i').removeClass('fa-angle-double-up');
+				item.find('i').addClass('fa-angle-double-down');
+				t.addClass('hide');
+			}
+		});
 	});
 }
 

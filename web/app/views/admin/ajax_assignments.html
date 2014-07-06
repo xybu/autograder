@@ -1,0 +1,8 @@
+<h2 class="page-header">Assignments</h2>
+<?php
+$id = 0; // $id is an internal counter to distinguish elements
+foreach ($assignment_list as $key => $info) {
+	// $key is the real identifier
+	require 'ajax_assignment_item.html';
+	++$id;
+}

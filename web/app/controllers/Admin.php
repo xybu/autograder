@@ -44,7 +44,10 @@ class Admin extends \Controller {
 	
 	function showAssignmentPage($base) {
 		$user_info = $this->verifyAdminPermission();
+		$Assignment = \models\Assignment::instance();
+		
 		$base->set('me', $user_info);
+		$base->set('assignment_list', $Assignment->getAllAssignments());
 		$this->setView('admin/ajax_assignments.html');
 	}
 	

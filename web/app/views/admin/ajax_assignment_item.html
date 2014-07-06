@@ -1,0 +1,132 @@
+<form class="assignment-item-form form-horizontal" method="post">
+	<article class="panel panel-default">
+		<section class="panel-heading">
+			<h5>
+			<i class="fa fa-fw fa-angle-double-down"></i> <?php echo $info['display']?>
+			<small><?php echo $key?></small>
+			</h5>
+		</section>
+		<div class="form-toggle hide">
+			<section class="panel-body">
+				<div class="form-group">
+					<label for="id_<?php echo $id?>" class="col-sm-2 control-label">Identifier</label>
+					<div class="col-sm-5">
+						<input type="text" class="form-control" id="id_<?php echo $id?>" name="id" value="<?php echo $key?>" placeholder="<?php echo $key?>">
+					</div>
+					<div class="col-sm-5">
+						<input type="text" class="form-control" id="display_<?php echo $id?>" name="display" value="<?php echo $info['display']?>" placeholder="<?php echo $info['display']?>">
+					</div>
+					<div class="col-sm-10 col-sm-offset-2">
+						<p class="help-block">The unique <tt>identifier</tt> and a human-friendly <tt>name</tt> of the assignment.</p>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="start_<?php echo $id?>" class="col-sm-2 control-label">Duration</label>
+					<div class="col-sm-5">
+						<div class="input-group date" data-date-format="YYYY-MM-DDThh:mm:ss">
+							<span class="input-group-addon">from</span>
+							<input type="text" class="form-control" id="start_<?php echo $id?>" name="start" value="<?php echo $info['start']?>" />
+							<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+						</div>
+					</div>
+					<div class="col-sm-5">
+						<div class="input-group date" data-date-format="YYYY-MM-DDThh:mm:ss">
+							<span class="input-group-addon">to</span>
+							<input type="text" class="form-control" id="close_<?php echo $id?>" name="close" value="<?php echo $info['close']?>" />
+							<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+						</div>
+					</div>
+					<div class="col-sm-10 col-sm-offset-2">
+						<p class="help-block">The open and close datetimes. Format: <tt>yyyy-mm-ddThh:mm:ss</tt>.</p>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="quota_amount_<?php echo $id?>" class="col-sm-2 control-label">Quota</label>
+					<div class="col-sm-4">
+						<div class="input-group">
+							<input type="number" class="form-control" id="quota_amount_<?php echo $id?>" name="quota_amount" value="<?php echo $info['quota_amount']?>" placeholder="<?php echo $info['quota_amount']?>" step="1">
+							<div class="input-group-addon">time(s)</div>
+						</div>
+					</div>
+					<div class="col-sm-6">
+							<label class="radio-inline">
+								<input type="radio" name="quota_strategy" id="quota_strategy_d_<?php echo $id?>" value="daily"<?php echo $info['quota_strategy'] == 'daily'? ' checked' : ''?>>
+								Daily
+							</label>
+							<label class="radio-inline">
+								<input type="radio" name="quota_strategy" id="quota_strategy_w<?php echo $id?>" value="weekly"<?php echo $info['quota_strategy'] == 'weekly'? ' checked' : ''?>>
+								Weekly
+							</label>
+							<label class="radio-inline">
+								<input type="radio" name="quota_strategy" id="quota_strategy_t<?php echo $id?>" value="total"<?php echo $info['quota_strategy'] == 'total'? ' checked' : ''?>>
+								Total
+							</label>
+					</div>
+					<div class="col-sm-10 col-sm-offset-2">
+						<p class="help-block">The number of times allowed to submit within a given period of time.</p>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="submit_filesize_<?php echo $id?>" class="col-sm-2 control-label">File limit</label>
+					<div class="col-sm-4">
+						<div class="input-group">
+							<div class="input-group-addon">size</div>
+							<input type="number" class="form-control" id="submit_filesize_<?php echo $id?>" name="submit_filesize" value="<?php echo array_key_exists('submit_filesize', $info) ? $info['submit_filesize'] : ""?>" placeholder="<?php echo array_key_exists('submit_filesize', $info) ? $info['submit_filesize'] : ""?>">
+							<div class="input-group-addon">B</div>
+						</div>
+					</div>
+					<div class="col-sm-6">
+						<div class="input-group">
+							<div class="input-group-addon">ext</div>
+							<input type="text" class="form-control" id="submit_filetype_<?php echo $id?>" name="submit_filetype" value="<?php echo $info['submit_filetype']?>" placeholder="<?php echo $info['submit_filetype']?>">
+						</div>
+					</div>
+					<div class="col-sm-10 col-sm-offset-2">
+						<p class="help-block">The size, in Bytes, and ext names allowed to submit. All submitted files are required to have an ext name. Separate multiple ext names by commas, e.g., <tt>tgz,gz,tar</tt></p>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="grader_tar" class="col-sm-2 control-label">Grader tar</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" id="grader_tar" name="grader_tar" value="<?php echo $info['grader_tar']?>" placeholder="<?php echo $info['grader_tar']?>">
+					</div>
+					<div class="col-sm-10 col-sm-offset-2">
+						<p class="help-block">If the <em>abs</em> path is given, the tar will be extracted to the grading directory before the script runs. E.g., <tt>/home/ag/lab1.tar.gz</tt></p>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="grader_script" class="col-sm-2 control-label">Script</label>
+					<div class="col-sm-10">
+						<input type="text" class="form-control" id="grader_script" name="grader_script" value="<?php echo $info['grader_script']?>" placeholder="<?php echo $info['grader_script']?>">
+					</div>
+					<div class="col-sm-10 col-sm-offset-2">
+						<p class="help-block">The <em>abs</em> path of the grader script. E.g., <tt>/home/ag/lab1_test.py</tt> with <tt>rwx</tt> permission.</p>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="max_score_<?php echo $id?>" class="col-sm-2 control-label">Max score</label>
+					<div class="col-sm-4">
+						<input type="number" class="form-control" id="max_score_<?php echo $id?>" name="max_score" value="<?php echo $info['max_score']?>" placeholder="<?php echo $info['max_score']?>" step="1">
+					</div>
+					<div class="col-sm-10 col-sm-offset-2">
+						<p class="help-block">The max possible score for this assignment.</p>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="display" class="col-sm-2 control-label">Notes</label>
+					<div class="col-sm-10">
+						<textarea class="form-control" id="submit_notes" name="submit_notes" value="<?php echo $info['submit_notes']?>"></textarea>
+					</div>
+					<div class="col-sm-10 col-sm-offset-2">
+						<p class="help-block">The notes, if given, will be shown as <em>Instructor Notes</em> on <em>submission page</em>.</p>
+					</div>
+				</div>
+			</section>
+			<section class="panel-footer text-right">
+				<span id="response"></span>
+				<button class="btn btn-danger" id="delete"><i class="fa fa-trash-o"></i> Delete</button>
+				<button type="submit" class="btn btn-primary" id="submit"><i class="fa fa-edit"></i> Update</button>
+			</section>
+		</div>
+	</article>
+</form>

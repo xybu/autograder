@@ -140,3 +140,9 @@ br.divider {
 #roles-table td {
 	text-align: center;
 }
+
+/* Assignment list table in admin cp */
+.assignment-item-form .panel-heading {
+	cursor: pointer;
+	padding: 0.2em 0.4em;
+}
