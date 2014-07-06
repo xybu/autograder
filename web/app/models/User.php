@@ -33,8 +33,58 @@ class User extends \Model {
 		return null;
 	}
 	
-	function getRoleMap() {
-		return $this->roles;
+	function getUserTable() {
+		return $this->users;
+	}
+	
+	function saveUserTable($user_data) {
+		return @file_put_contents($this->Base->get("DATA_PATH") . "users.json", json_encode($user_data), LOCK_EX);
+	}
+	
+	/**
+	 * Return an array of users in 3-tuple ('user_id', 'role', 'password') format
+	 * whose id and role matches the given wildcard patterns.
+	 */
+	function matchByPatterns($id_pattern = '*', $role_pattern = '*', $pass_pattern = '*') {
+		$result = array();
+		foreach ($this->users as $rolename => $members) {
+			if (!fnmatch($role_pattern, $rolename)) continue;
+			foreach($members as $id => $pass) {
+				if (fnmatch($id_pattern, $id) && fnmatch($pass_pattern, $pass))
+					$result[] = array('user_id' => $id, 'role' => $rolename, 'password' => $pass);
+			}
+		}
+		return $result;
+	}
+	
+	/**
+	 * Generate an array of $num random strings each with a length of $len chars.
+	 * Each string occurs once in the pool, and is not used for other users.
+	 */
+	function getPasswordPool($num, $len) {
+		$user_raw = json_encode($this->users);
+		$i = 0;
+		$pool = array();
+		while ($i < $num) {
+			$str = $this->getRandomStr($len);
+			if (in_array($str, $pool) || strpos('"' . $str . '"', $user_raw) !== false) continue;
+			$pool[] = $str;
+			++$i;
+		}
+		return $pool;
+	}
+	
+	/**
+	 * Return a randomly generated string.
+	 */
+	function getRandomStr($len) {
+		$chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		return substr(str_shuffle(substr(str_shuffle($chars), 0, $len / 2 + 1) . substr(str_shuffle($chars), 0, $len / 2 + 1)), 0, $len);
+	}
+	
+	function findRoleByName($str) {
+		if (array_key_exists($str, $this->roles)) return $this->roles[$str];
+		return null;
 	}
 	
 	/**
@@ -62,7 +112,11 @@ class User extends \Model {
 		return $new_role;
 	}
 	
-	function saveRoleMap($role_data) {
+	function getRoleTable() {
+		return $this->roles;
+	}
+	
+	function saveRoleTable($role_data) {
 		return @file_put_contents($this->Base->get("DATA_PATH") . "roles.json", json_encode($role_data), LOCK_EX);
 	}
 }

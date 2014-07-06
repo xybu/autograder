@@ -38,7 +38,7 @@ $(document).ready(function() {
 });
 
 function load_content_dom(ajax_url) {
-	if (ajax_url == "/") ajax_url = "/status";
+	if (ajax_url == "/") ajax_url = "/admin/status";
 	console.log(ajax_url);
 	$("#loading").removeClass("fadeOut");
 	$("#loading").addClass("slideInRight");
@@ -51,18 +51,21 @@ function load_content_dom(ajax_url) {
 				$(this).removeData('bs.modal');
 			});
 			switch (ajax_url) {
-				case '/users':
+				case '/admin/users':
 					load_users_panel();
 					break;
 			}
 			$("#loading").removeClass("slideInRight");
 			$("#loading").addClass("fadeOut");
 		},
-		url: "/admin" + ajax_url
+		url: ajax_url
 	});
 }
 
 function load_users_panel() {
+
+	$('.selectpicker').selectpicker();
+
 	$('#roles-form').ajaxForm({
 		dataType: 'json',
 		beforeSubmit: function(formData, jqForm) {
@@ -73,11 +76,82 @@ function load_users_panel() {
 				if (xhr.responseJSON.error) {
 					$('#roles-form-response').html("<span class=\"text-danger\">" +  xhr.responseJSON.error_description+ " (error: " + xhr.responseJSON.error + ")</span>");
 				} else {
-					load_content_dom('/users');
+					load_content_dom('/admin/users');
 				}
 			} else {
 				$('#roles-form-response').text(xhr.responseText);
 			}
 		}
+	});
+	
+	$('#search-user-form').ajaxForm({
+		dataType: 'html',
+		complete: function(xhr) {
+			if (xhr.status == 200) {
+				$('#users-table-body').html(xhr.responseText);
+			} else {
+				$('#roles-form-response').text(xhr.responseJSON);
+			}
+		}
+	});
+	
+	var action_selector = $('#action-selector');
+	$('#role-selector').selectpicker('hide');
+	action_selector.change(function(event){
+		var submit_button = $('#submit_button');
+		$('#role-selector').selectpicker('hide');
+		$('#email_form').addClass('hide');
+		submit_button.removeAttr('disabled');
+		submit_button.removeClass('btn-default');
+		submit_button.addClass('btn-success');
+		switch (action_selector.val()) {
+			case 'update':
+				break;
+			case 'delete':
+				break;
+			case 'send_email':
+				$('#email_form').removeClass('hide');
+				break;
+			case 'change_role':
+				$('#role-selector').selectpicker('show');
+				break
+			case 'reset_password':
+				break;
+			default:
+				submit_button.removeClass('btn-success');
+				submit_button.addClass('btn-default');
+				submit_button.attr('disabled', 'disabled');
+				break;
+		}
+	});
+	
+	$('#add-user-form').ajaxForm({
+		dataType: 'json',
+		beforeSubmit: function(formData, jqForm) {
+			if ($('#add-user-form #role-selector').val() == "") {
+				$('#add-user-response').html("<span class=\"text-warning\">Please choose a role from the drop-down list.</span>");
+				return false;
+			}
+			$('#add-user-response').html('');
+		},
+		complete: function(xhr) {
+			if (xhr.status == 200) {
+				if (xhr.responseJSON.error) {
+					$('#add-user-response').html("<span class=\"text-danger\">" +  xhr.responseJSON.error_description+ " (error: " + xhr.responseJSON.error + ")</span>");
+				} else {
+					$('#add-user-response').html("<span class=\"text-success\">" +  xhr.responseJSON.message + "</span>");
+				}
+			} else {
+				$('#add-user-response').text(xhr.responseText);
+			}
+		}
+	});
+}
+
+function selectAll(parent_id) {
+	$('#' + parent_id + " tr td:first-child input").each(function(name, obj){
+		var o = $(obj)
+		if (o.attr('checked')) o.removeAttr('checked');
+		else o.attr('checked', 'checked');
 	});
 }

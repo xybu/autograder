@@ -4,6 +4,8 @@ namespace controllers;
 
 class Admin extends \Controller {
 	
+	const PASSWORD_LEN = 12;
+	
 	private function verifyAdminPermission($show_json_error = true) {
 		$user_info = $this->getUserStatus();
 		if ($user_info == null || !$user_info["role"]["permissions"]["manage"])
@@ -89,25 +91,63 @@ class Admin extends \Controller {
 		$User = \models\User::instance();
 		
 		$user_info = $this->verifyAdminPermission();
-		$roles_info = $User->getRoleMap();
+		$roles_info = $User->getRoleTable();
 		$base->set('roles_info', $roles_info);
 		$base->set('me', $user_info);
 		$this->setView('admin/ajax_users.html');
 	}
 	
-	function addUsers($bsae) {
-	}
-	
-	function deleteUsers($base) {
-	}
-	
-	function editUser($base) {
-	}
-	
-	function queryUser($base) {
-	}
-	
-	function sendEmailToUsers($base) {
+	function updateUser($base) {
+		$User = \models\User::instance();
+		
+		$user_info = $this->verifyAdminPermission();
+		
+		$action = $base->get('POST.action');
+		if ($action == 'query') {
+			$id_pattern = $base->get('POST.name_pattern');
+			$role_pattern = $base->get('POST.role_pattern');
+			$result = $User->matchByPatterns($id_pattern, $role_pattern);
+			$base->set('user_list', $result);
+			$this->setView('admin/ajax_user_rows.html');
+			return;
+		} else if ($action == 'add') {
+			$role_name = $base->get('POST.role');
+			if ($User->findRoleByName($role_name) == null)
+				$this->json_echo($this->getError('invalid_data', 'The role "' . $role_name . '" is not defined.'));
+			$user_list = $base->get('POST.user_list');
+			$user_list = str_replace("\r", "", $user_list);
+			$users = explode("\n", $user_list);
+			$user_table = $User->getUserTable();
+			//TODO: here we are assuming the length is large enough, which is bad.
+			$password_pool = $User->getPasswordPool(count($users), static::PASSWORD_LEN);
+			
+			$c = 0;
+			$skip_list = array();
+			
+			foreach ($users as $i => $name) {
+				if (!empty($name)) {
+					// skip existing users
+					if ($User->findById($name) != null) {
+						$skip_list[] = $name;
+						continue;
+					}
+					$p = $password_pool[$i];
+					$user_table[$role_name][$name] = $p;
+					++$c;
+				}
+			}
+			
+			if (count($skip_list) > 0) $skip_str = ' Skipped existing users: ' . implode(', ', $skip_list) . '.';
+			else $skip_str = '';
+			
+			if ($User->saveUserTable($user_table) === false) {
+				$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "users.json") . "\"."));
+			}
+			
+			$this->json_echo($this->getSuccess('Added ' . $c . ' user(s) to role "' . $role_name . '".' . $skip_str));
+		
+		} else 
+			$this->json_echo($this->getError('undefined_action', 'The action you are performing is not defined.'));
 	}
 	
 	function updateRole($base) {
@@ -138,7 +178,7 @@ class Admin extends \Controller {
 			$role_data[$new_role['key']] = $User->sanitizeRoleEntry($new_role);		
 		}
 		
-		if ($User->saveRoleMap($role_data) === false) {
+		if ($User->saveRoleTable($role_data) === false) {
 			$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "roles.json") . "\"."));
 		}
 		

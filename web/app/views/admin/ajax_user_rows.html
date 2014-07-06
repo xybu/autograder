@@ -1,0 +1,11 @@
+<?php
+/** 
+ * ajax_user_rows.html
+ *
+ * Given an array of users in 3-tuple form ('user_id', 'role', 'password'),
+ * print the items in html format.
+ */
+
+foreach($user_list as $user) {
+	echo "<tr><td><input type=\"checkbox\" name=\"users[" . $user['user_id'] . "][selected]\" value=\"true\" /></td><td><input type=\"text\" name=\"users[" . $user['user_id'] . "][new_name]\"" . " value=\"" . $user['user_id'] . "\" /></td><td>" . $user['role'] . "</td><td>" . $user['password'] . "</td></tr>";
+}
