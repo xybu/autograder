@@ -39,7 +39,7 @@ $(document).ready(function() {
 
 function load_content_dom(ajax_url) {
 	$("#loading").removeClass("fadeOut");
-	$("#loading").addClass("slideInRight");
+	// $("#loading").addClass("slideInRight");
 	if (ajax_url == "/") ajax_url = "/admin/status";
 	$.ajax({
 		cache: false,

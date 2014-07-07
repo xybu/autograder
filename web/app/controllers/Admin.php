@@ -52,6 +52,12 @@ class Admin extends \Controller {
 		$this->setView('admin/ajax_assignments.html');
 	}
 	
+	function showSubmissionsPane($base) {
+		$user_info = $this->verifyAdminPermission();
+		$Assignment = \models\Assignment::instance();
+		$this->setView('admin/ajax_submissions.html');
+	}
+	
 	function updateAssignment($base) {
 		$user_info = $this->verifyAdminPermission();
 		$Assignment = \models\Assignment::instance();
@@ -99,9 +105,6 @@ class Admin extends \Controller {
 			$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "assignments.json") . "\"."));
 		
 		$this->json_echo($this->getSuccess('The assignment info is succesfully updated.'));
-	}
-	
-	function editAssignment($base) {
 	}
 	
 	function deleteAssignment($base) {
