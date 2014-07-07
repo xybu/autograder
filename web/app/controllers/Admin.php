@@ -52,6 +52,11 @@ class Admin extends \Controller {
 		$this->setView('admin/ajax_assignments.html');
 	}
 	
+	function createGradeBook($base, $params) {
+		$assignment_id = $params['id'];
+		$format = $params['format'];
+	}
+	
 	function showSubmissionsPane($base) {
 		$user_info = $this->verifyAdminPermission();
 		$Assignment = \models\Assignment::instance();
@@ -122,6 +127,59 @@ class Admin extends \Controller {
 	}
 	
 	function querySubmission($base) {
+		$user_info = $this->verifyAdminPermission();
+		$Assignment = \models\Assignment::instance();
+		$cond = array();
+		
+		// if not specified, the following get ''
+		$user_id_pattern = $base->get('POST.name_pattern');
+		if ($user_id_pattern != '')
+			$cond[':user_id_pattern'] = $user_id_pattern;
+		
+		$date_created_start = $base->get('POST.date_created_start');
+		if ($date_created_start != '' && strtotime($date_created_start) !== false)
+			$cond[':date_created_start'] = $date_created_start;
+		
+		$date_created_end = $base->get('POST.date_created_end');
+		if ($date_created_end != '' && strtotime($date_created_end) !== false)
+			$cond[':date_created_end'] = $date_created_end;
+		
+		$date_updated_start = $base->get('POST.date_updated_start');
+		if ($date_updated_start != '' && strtotime($date_updated_start) !== false)
+			$cond[':date_updated_start'] = $date_updated_start;
+		
+		$date_updated_end = $base->get('POST.date_updated_end');
+		if ($date_updated_end != '' && strtotime($date_updated_end) !== false)
+			$cond[':date_updated_end'] = $date_updated_end;
+		
+		$grade_max = $base->get('POST.grade_max');
+		if ($grade_max != '' && is_numeric($grade_max))
+			$cond[':grade_max'] = $grade_max;
+		
+		$grade_min = $base->get('POST.grade_min');
+		if ($grade_min != '' && is_numeric($grade_min))
+			$cond[':grade_min'] = $grade_min;
+		
+		// if nothing is picked, the following get null
+		$assignment_ids = $base->get('POST.assignment_id');
+		if ($assignment_ids != null)
+			$cond[':assignment_id_set'] = $assignment_ids;
+		
+		$status = $base->get('POST.status');
+		if ($status != null)
+			$cond[':status_set'] = $status;
+		
+		$result = $Assignment->findSubmissions($cond);
+		$View = \View::instance();
+		$ret = "";
+		foreach ($result as $i => $row) {
+			$base->set('row', $row);
+			$ret .= $View->render('admin/ajax_submission_row.html');
+		}
+		$ret = $this->getSuccess($ret);
+		$ret['count'] = count($result);
+		$this->json_echo($ret);
+		
 	}
 	
 	function showServerPage($base) {

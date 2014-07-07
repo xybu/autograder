@@ -170,6 +170,7 @@ function load_users_panel() {
 
 function load_assignments_panel() {
 	$('.date').datetimepicker();
+	$('.selectpicker').selectpicker();
 	
 	$('.panel-heading').each(function(i, item){makeToggleable(item)});
 	$('.form-toggle').each(function(i, item){
@@ -184,8 +185,6 @@ function load_assignments_panel() {
 			});
 		});
 	});
-	
-	
 	
 	$('.assignment-item-form').ajaxForm({
 		dataType: 'json',
@@ -237,6 +236,18 @@ function load_assignments_panel() {
 function load_submissions_panel() {
 	$('.date').datetimepicker();
 	$('.selectpicker').selectpicker();
+	$('#search-submission-form').ajaxForm({
+		dataType: 'json',
+		beforeSubmit: function(formData, jqForm) {
+			console.log(formData);
+		},
+		complete: function(xhr, status, jqForm) {
+			if (status == 'success') {
+				$('#search-submission-form #response').html('<span class="text-success">Found ' + xhr.responseJSON.count + ' record(s).</span>');
+				$('#submissions-table-body').html(xhr.responseJSON.message);
+			}
+		}
+	});
 }
 
 function makeToggleable(item) {

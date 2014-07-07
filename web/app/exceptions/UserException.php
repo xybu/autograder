@@ -1,6 +1,6 @@
 <?php
 
-namespace controllers;
+namespace exceptions;
 
 class UserException extends \Exception {
 
@@ -18,5 +18,3 @@ class UserException extends \Exception {
 		);
 	}
 }
-
-

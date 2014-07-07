@@ -18,7 +18,7 @@ class User extends \Controller {
 			
 			$userInfo = $User->findByIdAndPassword($userId, $password);
 			if ($userInfo == null)
-				throw new UserException("user_not_found", "The user/password pair was not found.");
+				throw new \exceptions\UserException("user_not_found", "The user/password pair was not found.");
 			
 			$this->setUserStatus($userInfo);
 			
@@ -32,7 +32,7 @@ class User extends \Controller {
 			
 			$base->reroute("/" . $redirect_uri);
 			
-		} catch (UserException $e) {
+		} catch (\exceptions\UserException $e) {
 			$this->json_echo($e->toArray(), True);
 		}
 	}

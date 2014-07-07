@@ -1,8 +1,37 @@
 <h2 class="page-header">Assignments
 	<span class="pull-right">
-		<a data-toggle="modal" data-target="#newAssignmentModal" class="btn btn-primary"><i class="fa fa-plus"></i> New</a>
+		<a data-toggle="modal" data-target="#newAssignmentModal" class="btn btn-success"><i class="fa fa-plus"></i> New</a>
 	</span>
 </h2>
+<div class="panel panel-default">
+	<div class="panel-body">
+		<form class="form-inline" id="get-gradebook-form">
+			<div class="form-group">
+				<select id="assignment_id" name="assignment_id" class="selectpicker" data-width="auto">
+				<?php
+				$keys = array_keys($assignment_list);
+				echo '<option>' . implode('</option><option>', $keys) . '</option>';
+				?>
+				</select>
+			</div>
+			<div class="form-group">
+				<select id="strategy" name="strategy" class="selectpicker" data-width="auto">
+					<option>Highest score</option>
+					<option>Latest score</option>
+				</select>
+			</div>
+			<div class="form-group">
+				<select id="format" name="format" class="selectpicker" data-width="auto">
+					<option>csv</option>
+					<option>html</option>
+				</select>
+			</div>
+			<div class="form-group pull-right">
+				<input type="submit" class="btn btn-primary" value="Get Gradebook" />
+			</div>
+		</form>
+	</div>
+</div>
 <?php
 $id = 0; // $id is an internal counter to distinguish elements
 foreach ($assignment_list as $key => $info) {

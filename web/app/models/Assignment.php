@@ -284,6 +284,61 @@ class Assignment extends \Model {
 		return $error_description;
 	}
 	
+	/**
+	 * Fetch all submission records that satisfy the $cond.
+	 * 
+	 */
+	function findSubmissions($cond) {
+		$sql_cond = array();
+		
+		if (array_key_exists(':user_id_pattern', $cond)) {
+			$sql_cond[] = "user_id LIKE :user_id_pattern";
+			$cond[':user_id_pattern'] = $this->toSqlWildcard($cond[':user_id_pattern']);
+		}
+		
+		if (array_key_exists(':date_created_start', $cond))
+			$sql_cond[] = "date_created >= :date_created_start";
+		
+		if (array_key_exists(':date_updated_start', $cond))
+			$sql_cond[] = "date_updated >= :date_updated_start";
+		
+		if (array_key_exists(':date_created_end', $cond))
+			$sql_cond[] = "date_created <= :date_created_end";
+		
+		if (array_key_exists(':date_updated_end', $cond))
+			$sql_cond[] = "date_updated <= :date_updated_end";
+		
+		if (array_key_exists(':grade_max', $cond))
+			$sql_cond[] = "grade <= :grade_max";
+		
+		if (array_key_exists(':grade_min', $cond))
+			$sql_cond[] = "grade >= :grade_min";
+		
+		if (array_key_exists(':assignment_id_set', $cond)) {
+			$sql_cond[] = "assignment_id IN (" . '"' . implode('","', $cond[':assignment_id_set']) . '"' . ")";
+			unset($cond[':assignment_id_set']);
+		}
+		
+		if (array_key_exists(':status_set', $cond)) {
+			$sql_cond[] = "status IN (" . '"' . implode('","', $cond[':status_set']) . '"' . ")";
+			unset($cond[':status_set']);
+		}
+		
+		if (count($sql_cond) > 0) $where = ' WHERE ' . implode(' AND ', $sql_cond);
+		else $where = '';
+		
+		$sql = "SELECT * FROM submissions" . $where;
+		
+		return $this->query($sql, $cond);
+	}
+	
+	function toSqlWildcard($str) {
+		$str = str_replace('*', '%', $str);
+		$str = str_replace('?', '_', $str);
+		$str = str_replace('"', '\"', $str);
+		return $str;
+	}
+	
 	function isValidIdentifier($str) {
 		return preg_match("/\\s/", $str) == 0;
 	}

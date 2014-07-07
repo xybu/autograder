@@ -1,6 +1,6 @@
 <?php
 
-namespace controllers;
+namespace exceptions;
 
 class AssignmentException extends \Exception {
 
@@ -18,5 +18,3 @@ class AssignmentException extends \Exception {
 		);
 	}
 }
-
-

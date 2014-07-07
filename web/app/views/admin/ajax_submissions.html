@@ -11,7 +11,7 @@
 			<div class="form-group">
 				<label for="assignment_id" class="col-sm-2 control-label">Assignment</label>
 				<div class="col-sm-10">
-					<select id="assignment_id" name="assignment_id" class="selectpicker" title="Choose one or more assignment..." multiple data-selected-text-format="values" data-width="100%">
+					<select id="assignment_id" name="assignment_id[]" class="selectpicker" title="Choose one or more assignment..." multiple data-selected-text-format="values" data-width="100%">
 					<?php
 					foreach ($assignment_list as $key => $info) {
 						echo "<option value=\"$key\">$key</option>";
@@ -21,11 +21,12 @@
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="assignment_id" class="col-sm-2 control-label">Status</label>
+				<label for="status" class="col-sm-2 control-label">Status</label>
 				<div class="col-sm-10">
-					<select id="status" name="status" class="selectpicker" title="Pick some status..." multiple data-selected-text-format="values">
+					<select id="status" name="status[]" class="selectpicker" title="Pick some status..." multiple data-selected-text-format="values">
 						<option>submitted</option>
 						<option>queued</option>
+						<option>being graded</option>
 						<option>graded</option>
 					</select>
 				</div>
@@ -81,10 +82,19 @@
 			</div>
 			<div class="form-group">
 				<div class="col-sm-10 col-sm-offset-2 text-right">
-					<span id="response" class="pull-left"></span>
+					<small id="response"></small>
 					<input type="submit" id="search-submit" class="btn btn-primary" value="Search" />
 				</div>
 			</div>
 		</section>
 	</article>
 </form>
+<div class="table-responsive">
+	<table id="submissions-table" class="table table-hover table-bordered">
+		<thead>
+			<tr><td><input type="checkbox" onclick="selectAll(this, 'submissions-table-body')" /></td><td>User</td><td>Assignment</td><td>Status</td><td>Grade</td><td>Manage</td></tr>
+		</thead>
+		<tbody id="submissions-table-body">
+		</tbody>
+	</table>
+</div>
