@@ -1,6 +1,15 @@
 Utilities
 =========
 
-Some supplementary utilities for Autograder project:
+Some supplementary utilities for Autograder project.
 
- * `password_gen`: random password generator
+Directories
+===========
+
+ * `dump`: the MySQL database dump.
+
+History
+=======
+
+ * (07/06/2014) The tool `password_gen` was retired because the functionality is moved to admin panel.
+ 

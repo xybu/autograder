@@ -25,17 +25,22 @@ DROP TABLE IF EXISTS `submissions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `submissions` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` int(15) NOT NULL AUTO_INCREMENT,
   `user_id` varchar(64) NOT NULL,
   `assignment_id` varchar(128) NOT NULL,
   `file_path` varchar(256) NOT NULL,
-  `status` varchar(45) NOT NULL,
+  `status` varchar(32) NOT NULL,
   `date_created` datetime NOT NULL,
   `date_updated` datetime NOT NULL,
   `grade` int(11) DEFAULT NULL,
+  `grade_adjustment` int(11) DEFAULT NULL,
   `grade_detail` text,
+  `grader_formal_log` text,
+  `grader_internal_log` text,
+  `web_internal_log` text,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`)
+  UNIQUE KEY `id_UNIQUE` (`id`),
+  KEY `file_path` (`file_path`(255))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -48,4 +53,4 @@ CREATE TABLE `submissions` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-06-05  0:31:10
+-- Dump completed on 2014-07-06 23:53:06

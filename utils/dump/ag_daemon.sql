@@ -30,9 +30,10 @@ CREATE TABLE `queue` (
   `user_id` varchar(64) NOT NULL,
   `priority` int(11) NOT NULL DEFAULT '10',
   `file_path` varchar(384) DEFAULT NULL,
-  `api_key` varchar(128) DEFAULT NULL,
-  `assignment` tinytext,
+  `assignment` text,
   `date_created` datetime DEFAULT NULL,
+  `api_key` varchar(128) DEFAULT NULL,
+  `cli_addr` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`,`submission_id`),
   UNIQUE KEY `id_UNIQUE` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -47,4 +48,4 @@ CREATE TABLE `queue` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-06-15  1:13:24
+-- Dump completed on 2014-07-06 23:52:27
