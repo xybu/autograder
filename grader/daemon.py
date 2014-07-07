@@ -35,7 +35,7 @@ import subprocess
 import SocketServer
 import mysql.connector
 
-with open('../conf/grader.json', 'r') as s_f:
+with open('grader.json', 'r') as s_f:
 	Settings = json.load(s_f)
 
 # this event is used to wake up sleeping workers

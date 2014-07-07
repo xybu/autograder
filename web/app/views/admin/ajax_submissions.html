@@ -1,1 +1,90 @@
 <h2 class="page-header">Submissions</h2>
+<form class="form-horizontal" id="search-submission-form" method="post" action="/admin/submissions/query">
+	<article class="panel panel-default">
+		<section class="panel-body">
+			<div class="form-group">
+				<label for="name_pattern" class="col-sm-2 control-label">Username</label>
+				<div class="col-sm-10">
+					<input type="text" id="name_pattern" name="name_pattern" value="*" class="form-control" title="Support wildcard expression." />
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="assignment_id" class="col-sm-2 control-label">Assignment</label>
+				<div class="col-sm-10">
+					<select id="assignment_id" name="assignment_id" class="selectpicker" title="Choose one or more assignment..." multiple data-selected-text-format="values" data-width="100%">
+					<?php
+					foreach ($assignment_list as $key => $info) {
+						echo "<option value=\"$key\">$key</option>";
+					}
+					?>
+					</select>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="assignment_id" class="col-sm-2 control-label">Status</label>
+				<div class="col-sm-10">
+					<select id="status" name="status" class="selectpicker" title="Pick some status..." multiple data-selected-text-format="values">
+						<option>submitted</option>
+						<option>queued</option>
+						<option>graded</option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="date_created_start" class="col-sm-2 control-label">DateCreated</label>
+				<div class="col-sm-5">
+					<div class="input-group date" data-date-format="YYYY-MM-DDThh:mm:ss">
+						<span class="input-group-addon">from</span>
+						<input type="text" class="form-control" id="date_created_start" name="date_created_start" title="format: yyyy-mm-ddThh:mm:ss" />
+						<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+					</div>
+				</div>
+				<div class="col-sm-5">
+					<div class="input-group date" data-date-format="YYYY-MM-DDThh:mm:ss">
+						<span class="input-group-addon">to</span>
+						<input type="text" class="form-control" id="date_created_end" name="date_created_end" title="format: yyyy-mm-ddThh:mm:ss" />
+						<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+					</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="date_updated_start" class="col-sm-2 control-label">DateUpdated</label>
+				<div class="col-sm-5">
+					<div class="input-group date" data-date-format="YYYY-MM-DDThh:mm:ss">
+						<span class="input-group-addon">from</span>
+						<input type="text" class="form-control" id="date_updated_start" name="date_updated_start" title="format: yyyy-mm-ddThh:mm:ss" />
+						<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+					</div>
+				</div>
+				<div class="col-sm-5">
+					<div class="input-group date" data-date-format="YYYY-MM-DDThh:mm:ss">
+						<span class="input-group-addon">to</span>
+						<input type="text" class="form-control" id="date_updated_end" name="date_updated_end" title="format: yyyy-mm-ddThh:mm:ss" />
+						<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+					</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="grade_min" class="col-sm-2 control-label">Grade</label>
+				<div class="col-sm-5">
+					<div class="input-group date" data-date-format="YYYY-MM-DDThh:mm:ss">
+						<span class="input-group-addon">min</span>
+						<input type="number" class="form-control" id="grade_min" name="grade_min" />
+					</div>
+				</div>
+				<div class="col-sm-5">
+					<div class="input-group date" data-date-format="YYYY-MM-DDThh:mm:ss">
+						<span class="input-group-addon">max</span>
+						<input type="number" class="form-control" id="grade_max" name="grade_max" />
+					</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-10 col-sm-offset-2 text-right">
+					<span id="response" class="pull-left"></span>
+					<input type="submit" id="search-submit" class="btn btn-primary" value="Search" />
+				</div>
+			</div>
+		</section>
+	</article>
+</form>

@@ -55,6 +55,8 @@ class Admin extends \Controller {
 	function showSubmissionsPane($base) {
 		$user_info = $this->verifyAdminPermission();
 		$Assignment = \models\Assignment::instance();
+		$base->set('assignment_list', $Assignment->getAllAssignments());
+		
 		$this->setView('admin/ajax_submissions.html');
 	}
 	

@@ -55,6 +55,9 @@ function load_content_dom(ajax_url) {
 				case '/admin/assignments':
 					load_assignments_panel();
 					break;
+				case '/admin/submissions':
+					load_submissions_panel();
+					break
 			}
 			$("#loading").removeClass("slideInRight");
 			$("#loading").addClass("fadeOut");
@@ -229,6 +232,11 @@ function load_assignments_panel() {
 			}
 		}
 	});
+}
+
+function load_submissions_panel() {
+	$('.date').datetimepicker();
+	$('.selectpicker').selectpicker();
 }
 
 function makeToggleable(item) {
