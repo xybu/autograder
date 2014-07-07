@@ -167,35 +167,93 @@ function load_users_panel() {
 
 function load_assignments_panel() {
 	$('.date').datetimepicker();
-	$('.panel-heading').each(function(i, item){
+	
+	$('.panel-heading').each(function(i, item){makeToggleable(item)});
+	$('.form-toggle').each(function(i, item){
 		item = $(item);
-		item.on('click', function(e){
-			var t = $(this).parent().find('.form-toggle');
-			if (t.hasClass('hide')) {
-				item.find('i').removeClass('fa-angle-double-down');
-				item.find('i').addClass('fa-angle-double-up');
-				t.removeClass('hide');
-			} else {
-				item.find('i').removeClass('fa-angle-double-up');
-				item.find('i').addClass('fa-angle-double-down');
-				t.addClass('hide');
-			}
+		item.find('#delete').click(function(e){
+			$.ajax({
+				type: 'POST',
+				url: '/admin/assignments/del',
+				data: {'id': $(this).attr('data-target')}	
+			}).done(function(data){
+				item.parent().remove();
+			});
 		});
 	});
 	
-	$('#add-assignment-form').ajaxForm({
+	
+	
+	$('.assignment-item-form').ajaxForm({
 		dataType: 'json',
 		beforeSubmit: function(formData, jqForm) {
-			console.log(formData);
-			return false;
+			$('.has-error').each(function(i, item){$(item).removeClass('has-error')});
+			var id = jqForm.find('[name="id"]');
+			var start = jqForm.find('[name="start"]');
+			var close = jqForm.find('[name="close"]');
+			if (typeof id.val() === 'undefined' || hasWhiteSpace(id.val())) {
+				id.parent().parent().addClass('has-error');
+				id.tooltip();
+				id.focus();
+				return false;
+			}
+			if (!moment(start.val()).isValid()) {
+				start.parent().parent().parent().addClass('has-error');
+				start.focus();
+				return false
+			}
+			if (!moment(close.val()).isValid() || !moment(close.val()).isAfter(start.val())) {
+				close.parent().parent().parent().addClass('has-error');
+				close.focus();
+				return false
+			}
 		},
-		complete: function(xhr) {
+		complete: function(xhr, status, jqForm) {
+			var r = jqForm.find('#response');
+			if (status == 'success') {
+				if (xhr.responseJSON.error) {
+					r.html("<span class=\"text-danger\">" +  xhr.responseJSON.error_description+ " (error: " + xhr.responseJSON.error + ")</span>");
+					if (xhr.responseJSON.error == 'invalid_script_path') {
+						var s = jqForm.find('[name="grader_script"]');
+						s.parent().parent().addClass('has-error');
+						s.focus();
+					}
+				} else {
+					if (jqForm.find('[name="internal"]').val() == 'new') {
+						$('#newAssignmentModal').modal('hide');
+						setTimeout("load_content_dom('/admin/assignments')", 500);
+					} else r.html("<span class=\"text-success\">" +  xhr.responseJSON.message+ "</span>");
+				}
+			} else {
+				r.text(xhr.responseText);
+			}
 		}
 	});
+}
+
+function makeToggleable(item) {
+	item = $(item);
+	item.on('click', function(e){
+		var t = $(this).parent().find('.form-toggle');
+		if (t.hasClass('hide')) {
+			item.find('i').removeClass('fa-angle-double-down');
+			item.find('i').addClass('fa-angle-double-up');
+				t.removeClass('hide');
+		} else {
+			item.find('i').removeClass('fa-angle-double-up');
+			item.find('i').addClass('fa-angle-double-down');
+			t.addClass('hide');
+		}
+	});
+	return item;
 }
 
 function selectAll(ref, parent_id) {
 	$('#' + parent_id + " tr td:first-child input").each(function(name, obj){
 		obj.checked = ref.checked;
 	});
+}
+
+function hasWhiteSpace(s) {
+	return /\s/g.test(s);
 }

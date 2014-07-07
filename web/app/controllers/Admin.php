@@ -52,16 +52,65 @@ class Admin extends \Controller {
 		$this->setView('admin/ajax_assignments.html');
 	}
 	
-	function addAssignment($base) {
+	function updateAssignment($base) {
 		$user_info = $this->verifyAdminPermission();
 		$Assignment = \models\Assignment::instance();
-		echo json_encode($_POST);
+		
+		$id = $base->get('POST.id');
+		$data = null;
+		if ($base->get('POST.internal') == 'new') {
+			$data = $Assignment->getDefaultAssignmentData();
+			if ($Assignment->findById($id) != null)
+				$this->json_echo($this->getError('id_used', 'The identifier is already taken.'));
+		} else {
+			$data = $Assignment->findById($id);
+			if ($data == null)
+				$this->json_echo($this->getError('id_not_found', 'The assignment is not found.'));
+		}
+		
+		if (!$Assignment->isValidIdentifier($id))
+			$this->json_echo($this->getError('invalid_id', 'The identifier contains whitespaces.'));
+		
+		//TODO: should add necessary sanity check here
+		$data['display'] = $base->get('POST.display');
+		$data['start'] = $base->get('POST.start');
+		$data['close'] = $base->get('POST.close');
+		$data['quota_strategy'] = $base->get('POST.quota_strategy');
+		$data['quota_amount'] = $base->get('POST.quota_amount');
+		$data['submit_filetype'] = str_replace(array(" ", "."), '', $base->get('POST.submit_filetype'));
+		$data['submit_filesize'] = intval($base->get('POST.submit_filesize'));
+		$data['submit_notes'] = $base->get('POST.submit_notes');
+		$data['max_score'] = intval($base->get('POST.max_score'));
+		$data['grader_script'] = $base->get('POST.grader_script');
+		$data['grader_tar'] = $base->get('POST.grader_tar');
+		
+		if (!$Assignment->isValidFilePath($data['grader_script']))
+			$this->json_echo($this->getError('invalid_script_path', 'The grader script path is not a valid file.'));
+		
+		if (!empty($data['grader_tar']) && !$Assignment->isValidFilePath($data['grader_tar']))
+			$this->json_echo($this->getError('invalid_tar_path', 'The grader tar path is not a valid file.'));
+		
+		if ($base->get('POST.internal') == 'new') {
+			$Assignment->addAssignment($id, $data);
+		} else {
+			$Assignment->editAssignment($id, $data);
+		}
+		if ($Assignment->saveAssignments() === false) 
+			$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "assignments.json") . "\"."));
+		
+		$this->json_echo($this->getSuccess('The assignment info is succesfully updated.'));
 	}
 	
 	function editAssignment($base) {
 	}
 	
 	function deleteAssignment($base) {
+		$user_info = $this->verifyAdminPermission();
+		$Assignment = \models\Assignment::instance();
+		
+		$id = $base->get('POST.id');
+		if ($Assignment->deleteAssignment($id))
+			$Assignment->saveAssignments();
 	}
 	
 	function regradeSubmission($base) {

@@ -1,4 +1,4 @@
-<form class="assignment-item-form form-horizontal" method="post">
+<form class="assignment-item-form form-horizontal" method="post" action="/admin/assignments/update">
 	<article class="panel panel-default">
 		<section class="panel-heading">
 			<h5>
@@ -11,8 +11,8 @@
 <?php require 'ajax_assignment_form.html'?>
 			</section>
 			<section class="panel-footer text-right">
-				<span id="response"></span>
-				<button class="btn btn-danger" id="delete"><i class="fa fa-trash-o"></i> Delete</button>
+				<span class="pull-left" id="response"></span>
+				<button class="btn btn-danger" id="delete" type="button" data-target="<?php echo $key?>"><i class="fa fa-trash-o"></i> Delete</button>
 				<button type="submit" class="btn btn-primary" id="submit"><i class="fa fa-edit"></i> Update</button>
 			</section>
 		</div>

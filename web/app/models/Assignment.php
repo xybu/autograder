@@ -41,6 +41,30 @@ class Assignment extends \Model {
 		return null;
 	}
 	
+	function addAssignment($id, $data) {
+		if (array_key_exists('id', $data)) unset($data['id']);
+		$this->assignments[$id] = $data;
+		return count($this->assignments);
+	}
+	
+	function editAssignment($id, $data) {
+		if (array_key_exists('id', $data)) unset($data['id']);
+		$this->assignments[$id] = $data;
+	}
+	
+	function deleteAssignment($id) {
+		if (array_key_exists($id, $this->assignments)) {
+			unset($this->assignments[$id]);
+			return true;
+		}
+		return false;
+	}
+	
+	function saveAssignments($table = null) {
+		if ($table == null) $table = $this->assignments;
+		return @file_put_contents($this->Base->get("DATA_PATH") . "assignments.json", json_encode($table), LOCK_EX);
+	}
+	
 	function setBaseDir($d) {
 		$this->baseDir = d;
 	}
@@ -258,5 +282,13 @@ class Assignment extends \Model {
 		
 		if ($count == 1) return $record;
 		return $error_description;
+	}
+	
+	function isValidIdentifier($str) {
+		return preg_match("/\\s/", $str) == 0;
+	}
+	
+	function isValidFilePath($str) {
+		return is_file($str);
 	}
 }

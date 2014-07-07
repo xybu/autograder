@@ -18,7 +18,7 @@ foreach ($assignment_list as $key => $info) {
 				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 				<h4 class="modal-title">New assignment</h4>
 			</div>
-			<form id="add-assignment-form" class="assignment-item-form form-horizontal" method="post" action="/admin/assignments/add">
+			<form id="add-assignment-form" class="assignment-item-form form-horizontal" method="post" action="/admin/assignments/update">
 				<div class="modal-body">
 			<?php
 			$id = 'new';
@@ -28,6 +28,7 @@ foreach ($assignment_list as $key => $info) {
 			?>
 				</div>
 				<div class="modal-footer">
+					<span class="pull-left" id="response"></span>
 					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 					<button type="submit" class="btn btn-primary">Submit</button>
 				</div>

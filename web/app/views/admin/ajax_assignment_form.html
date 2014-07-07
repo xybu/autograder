@@ -1,10 +1,14 @@
+				<input type="hidden" name="internal" value="<?php echo $id?>" />
 				<div class="form-group">
 					<label for="id_<?php echo $id?>" class="col-sm-2 control-label">Identifier</label>
-					<div class="col-sm-5">
-						<input type="text" class="form-control" id="id_<?php echo $id?>" name="id" value="<?php echo $key?>" placeholder="<?php echo $key?>">
+					<div class="col-sm-3">
+						<?php
+						if ($id === 'new') echo '<input type="text" class="form-control" id="id_new" name="id" value="" placeholder="E.g., lab0_hello" data-toggle="tooltip" data-placement="bottom" title="identifier must not contain whitespaces" required>';
+						else echo '<input type="hidden" name="id" value="' . $key . '" /><p class="form-control-static">' . $key . '</p>';
+						?>
 					</div>
-					<div class="col-sm-5">
-						<input type="text" class="form-control" id="display_<?php echo $id?>" name="display" value="<?php echo $info['display']?>" placeholder="<?php echo $info['display']?>">
+					<div class="col-sm-7">
+						<input type="text" class="form-control" id="display_<?php echo $id?>" name="display" value="<?php echo $info['display']?>" placeholder="<?php echo $info['display']?>" required>
 					</div>
 					<div class="col-sm-10 col-sm-offset-2">
 						<p class="help-block">The unique <tt>identifier</tt> and a human-friendly <tt>name</tt> of the assignment.</p>
@@ -15,14 +19,14 @@
 					<div class="col-sm-5">
 						<div class="input-group date" data-date-format="YYYY-MM-DDThh:mm:ss">
 							<span class="input-group-addon">from</span>
-							<input type="text" class="form-control" id="start_<?php echo $id?>" name="start" value="<?php echo $info['start']?>" />
+							<input type="text" class="form-control" id="start_<?php echo $id?>" name="start" value="<?php echo $info['start']?>" required />
 							<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
 						</div>
 					</div>
 					<div class="col-sm-5">
 						<div class="input-group date" data-date-format="YYYY-MM-DDThh:mm:ss">
 							<span class="input-group-addon">to</span>
-							<input type="text" class="form-control" id="close_<?php echo $id?>" name="close" value="<?php echo $info['close']?>" />
+							<input type="text" class="form-control" id="close_<?php echo $id?>" name="close" value="<?php echo $info['close']?>" required />
 							<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
 						</div>
 					</div>
@@ -34,7 +38,7 @@
 					<label for="quota_amount_<?php echo $id?>" class="col-sm-2 control-label">Quota</label>
 					<div class="col-sm-4">
 						<div class="input-group">
-							<input type="number" class="form-control" id="quota_amount_<?php echo $id?>" name="quota_amount" value="<?php echo $info['quota_amount']?>" placeholder="<?php echo $info['quota_amount']?>" step="1">
+							<input type="number" class="form-control" id="quota_amount_<?php echo $id?>" name="quota_amount" value="<?php echo $info['quota_amount']?>" placeholder="<?php echo $info['quota_amount']?>" step="1" min="1" required>
 							<div class="input-group-addon">time(s)</div>
 						</div>
 					</div>
@@ -78,7 +82,7 @@
 				<div class="form-group">
 					<label for="grader_tar" class="col-sm-2 control-label">Grader tar</label>
 					<div class="col-sm-10">
-						<input type="text" class="form-control" id="grader_tar" name="grader_tar" value="<?php echo $info['grader_tar']?>" placeholder="<?php echo $info['grader_tar']?>">
+						<input type="text" class="form-control" id="grader_tar_<?php echo $id?>" name="grader_tar" value="<?php echo $info['grader_tar']?>" placeholder="<?php echo $info['grader_tar']?>">
 					</div>
 					<div class="col-sm-10 col-sm-offset-2">
 						<p class="help-block">If the <em>abs</em> path is given, the tar will be extracted to the grading directory before the script runs. E.g., <tt>/home/ag/lab1.tar.gz</tt></p>
@@ -87,7 +91,7 @@
 				<div class="form-group">
 					<label for="grader_script" class="col-sm-2 control-label">Script</label>
 					<div class="col-sm-10">
-						<input type="text" class="form-control" id="grader_script" name="grader_script" value="<?php echo $info['grader_script']?>" placeholder="<?php echo $info['grader_script']?>">
+						<input type="text" class="form-control" id="grader_script_<?php echo $id?>" name="grader_script" value="<?php echo $info['grader_script']?>" placeholder="<?php echo $info['grader_script']?>">
 					</div>
 					<div class="col-sm-10 col-sm-offset-2">
 						<p class="help-block">The <em>abs</em> path of the grader script. E.g., <tt>/home/ag/lab1_test.py</tt> with <tt>rwx</tt> permission.</p>
@@ -105,7 +109,7 @@
 				<div class="form-group">
 					<label for="display" class="col-sm-2 control-label">Notes</label>
 					<div class="col-sm-10">
-						<textarea class="form-control" id="submit_notes" name="submit_notes" value="<?php echo $info['submit_notes']?>"></textarea>
+						<textarea class="form-control" id="submit_notes" name="submit_notes"><?php echo $info['submit_notes']?></textarea>
 					</div>
 					<div class="col-sm-10 col-sm-offset-2">
 						<p class="help-block">The notes, if given, will be shown as <em>Instructor Notes</em> on <em>submission page</em>.</p>
