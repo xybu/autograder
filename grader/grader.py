@@ -56,14 +56,32 @@ def WriteInternalLog(s):
 	"""
 	sys.stdout.write(s + "\n")
 
+class Grade:
+	
+	def __init__(self, max_score = 100):
+		self.max_score = max_score
+		self.current_score = 0
+	
+	def set_max_score(self, m):
+		self.max_score = m
+	
+	def plus(self, p):
+		self.current_score += p
+	
+	def times(self, t):
+		self.current_score *= t
+	
+	def zero(self):
+		self.current_score = 0
+
+
+gradeObj = Grade()
+
 class GraderTestCase(unittest.TestCase):
 	"""
 	The test suite will be run under current working directory.
 	This class should be seen as abstract; each assignment will need its own grading script.
 	"""
-	
-	def grade(self):
-		return self._grade
 	
 	def make(self, makefile_name = "", sandboxed = True, file_target = [], handler = lambda r,o,e,t:r, ram_limit = None, timeout = None, sb_args = None):
 		"""
@@ -74,7 +92,7 @@ class GraderTestCase(unittest.TestCase):
 		@param	ram_limit: the RAM limit for the sandbox; only effective when sandboxed is set True.
 		@param	timeout: the timeout limit for the sandbox; only effective when sandbox is set True.
 		@param	sb_args: the additional args for the sandbox.
-		@param	file_target (optional): A LIST of files that will be removed before running `make`, and whose existence will be checked after running `make`.
+		@param	file_target (optional): A list of files that will be removed before running `make`, and whose existence will be checked after running `make`. All relative paths.
 		@param	handler (required): It determines how to deal with the result of running `make` command.
 		"""
 		
@@ -197,25 +215,7 @@ class HandlerFactory:
 			f_t = []
 			for name in t:
 				if not os.path.exists("./" + name): f_t.append(name)
-			assert f_t == [], "Makefile did not build the following files: " + ", ".join(f_t)	
-	
-class Grade:
-	
-	def __init__(self, max_score = 100):
-		self.max_score = max_score
-		self.current_score = 0
-	
-	def set_max_score(self, m):
-		self.max_score = m
-	
-	def plus(self, p):
-		self.current_score += p
-	
-	def times(self, t):
-		self.current_score *= t
-	
-	def zero(self):
-		self.current_score = 0
+			assert f_t == [], "Makefile did not build the following files: " + ", ".join(f_t)
 
 class GraderResult(unittest.TextTestResult):
 	"""
@@ -271,10 +271,9 @@ def main(testSuiteClass):
 	
 	suite = unittest.makeSuite(testSuiteClass, "test_")
 	runner = GraderResult()
-	grade = Grade()
-	runner._grade = grade
+	global gradeObj
+	runner._grade = gradeObj
 	GraderTestCase._test_runner = runner
-	GraderTestCase._grade = grade
 	
 	start_time = time.time()
 	suite.run(runner)	
@@ -283,7 +282,7 @@ def main(testSuiteClass):
 	
 	# print the header
 	WriteFormalLog('')
-	WriteFormalLog('Ran {0:d} test(s) in {1:.2f} second(s)'.format(len(gradebook) - 1, elapsed_time))
+	WriteFormalLog('Ran {0:d} test(s) in {1:.2f} second(s)'.format(len(gradebook) - 2, elapsed_time))
 	WriteFormalLog('Grade: {0:d} / {1:d}'.format(gradebook['total'], gradebook['max']))
 	
 	# print all errors

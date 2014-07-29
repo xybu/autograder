@@ -1,5 +1,9 @@
 /* Bootstrap Extensions */
 
+.btn {
+    padding: 0.4em 0.8em;
+}
+
 body.modal-open, .modal-open .navbar-fixed-top, .modal-open .navbar-fixed-bottom {
     margin-right: 0;
 }

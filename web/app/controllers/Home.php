@@ -58,7 +58,7 @@ class Home extends \Controller {
 		$User = \models\User::instance();
 		$user_info = $User->findById($user_id);
 		if ($user_info == null)
-			$this->json_echo(array("error" => "unknown_user", "error_description" => "The user id provided is not found."));
+			$this->json_echo(array("error" => "unknown_user", "error_description" => "The user id provided is not found. Please contact admin."));
 		
 		$base->set("password", $user_info["password"]);
 		

@@ -51,3 +51,5 @@ credentials.txt
 grader.json
 globals.ini
 
+# Log files
+*.log
