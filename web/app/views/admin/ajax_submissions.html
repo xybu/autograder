@@ -89,12 +89,25 @@
 		</section>
 	</article>
 </form>
-<div class="table-responsive">
-	<table id="submissions-table" class="table table-hover table-bordered">
-		<thead>
-			<tr><td><input type="checkbox" onclick="selectAll(this, 'submissions-table-body')" /></td><td>User</td><td>Assignment</td><td>Status</td><td>Grade</td><td>Manage</td></tr>
-		</thead>
-		<tbody id="submissions-table-body">
-		</tbody>
-	</table>
-</div>
+<form class="form-horizontal" id="submission-record-form" method="post" action="/admin/submissions/update">
+	<div class="table-responsive">
+		<table id="submissions-table" class="table table-hover table-bordered">
+			<thead>
+				<tr><td><input type="checkbox" onclick="selectAll(this, 'submissions-table-body')" /></td><td>User</td><td>Assignment</td><td>Status</td><td>Grade</td><td>Manage</td></tr>
+			</thead>
+			<tbody id="submissions-table-body">
+			</tbody>
+		</table>
+	</div>
+	<div class="help-block">
+		<select class="selectpicker" id="action-selector" name="action">
+			<option value="">Batch action</option>
+			<option value="regrade">Regrade selected</option>
+			<option value="delete">Delete selected</option>
+		</select>
+		<div class="pull-right">
+			<input type="submit" class="btn btn-default" id="submit_button" value="Submit" />
+		</div>
+	</div>
+	<div id="response" class="text-center"></div>
+</form>

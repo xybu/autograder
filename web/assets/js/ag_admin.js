@@ -239,7 +239,6 @@ function load_submissions_panel() {
 	$('#search-submission-form').ajaxForm({
 		dataType: 'json',
 		beforeSubmit: function(formData, jqForm) {
-			console.log(formData);
 		},
 		complete: function(xhr, status, jqForm) {
 			if (status == 'success') {
@@ -248,6 +247,26 @@ function load_submissions_panel() {
 			}
 		}
 	});
+	
+	$('#submission-record-form').ajaxForm({
+		dataType: 'json',
+		beforeSubmit: function(formData, jqForm) {
+			var action_selector = $('#submission-record-form #action-selector');
+			var action_selector_styler = action_selector.parent().find('button[data-id="action-selector"]');
+			action_selector_styler.removeClass('btn-danger');
+			// action_selector_styler.addClass('btn-default');
+			if (action_selector.val() == '') {
+				action_selector_styler.addClass('btn-danger');
+				// action_selector_styler.addClass('btn-default');
+			}
+		},
+		complete: function(xhr, status, jqForm) {
+			if (status == 'success') {
+				$('#submission-record-form #response').html('<span class="text-success">' + xhr.responseJSON.count + '</span>');
+			}
+		}
+	});
+	
 }
 
 function makeToggleable(item) {

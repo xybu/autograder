@@ -1,9 +1,10 @@
 <?php
+
 echo "<tr>" .
-	"<td><input type=\"checkbox\" /></td>" .
+	"<td><input type=\"checkbox\" name=\"submission_id[]\" value=\"" . $row["id"] . "\" /></td>" .
 	"<td>" . $row['user_id'] . "</td>" .
 	"<td>" . $row['assignment_id'] . "</td>" .
 	"<td>" . $row['status'] . " <small>at " . $row['date_updated'] . "</small></td>" .
 	"<td>" . $row['grade'] . "</td>" .
-	"<td>a b c</td>" .
+	"<td class=\"text-center\"><a title=\"Download the submission file\" href=\"/submissions/get/" . $row["id"] . "\"<i class=\"fa fa-cloud-download fa-lg\"></i></a>&nbsp;<a href=\"/submissions/log/" . $row['id'] . "\" data-toggle=\"modal\" data-target=\"#wrapperModal\" title=\"Read the grading log\"><i class=\"fa fa-info-circle fa-lg\"></i></a>&nbsp;<a title=\"Download the grading dump\" href=\"/admin/submissions/get_dump/" . $row["id"] . "\"<i class=\"fa fa-file-archive-o fa-lg\"></i></a>&nbsp;<a title=\"Edit this submission record\" href=\"/admin/submissions/edit/" . $row["id"] . "\"<i class=\"fa fa-pencil-square-o fa-lg\"></i></a>&nbsp;</td>" .
 	"</tr>";

@@ -65,6 +65,10 @@ class Admin extends \Controller {
 		$this->setView('admin/ajax_submissions.html');
 	}
 	
+	function updateSubmissions($base) {
+		var_dump($_POST);
+	}
+	
 	function updateAssignment($base) {
 		$user_info = $this->verifyAdminPermission();
 		$Assignment = \models\Assignment::instance();
