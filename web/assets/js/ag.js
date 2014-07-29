@@ -6,6 +6,23 @@ $(document).ready(function() {
 		$("#redirect_hash").val(window.location.hash);
 	}
 	
+	if ($('#signin-form').length) {
+		$("#signin-form").ajaxForm({
+			dataType: 'json',
+			beforeSubmit: function(formData, jqForm) {
+			},
+			complete: function(xhr) {
+				if (xhr.status == 200) {
+					location.reload();
+				} else if (xhr.status == 403) {
+					$("#help_text").html("<p class=\"text-danger\">" + xhr.responseJSON.error_description + " (" + xhr.responseJSON.error + ")</p>");
+				} else {
+					$("#help_text").html("<p class=\"text-danger\">An error occurred performing the request. If it persists please contact admin.</p>");
+				}
+			}
+		});
+	}
+	
 	if ($("#forgot_password_form").length) {
 		$("#forgot_password_form").ajaxForm({
 			dataType: 'json',
