@@ -332,6 +332,13 @@ class Assignment extends \Model {
 		return $this->query($sql, $cond);
 	}
 	
+	/**
+	 * Remove the submission record from database, but do not remove the files.
+	 */
+	function deleteSubmission($id) {
+		$this->query("DELETE FROM submissions WHERE id=? LIMIT 1;", $id);
+	}
+	
 	function toSqlWildcard($str) {
 		$str = str_replace('*', '%', $str);
 		$str = str_replace('?', '_', $str);

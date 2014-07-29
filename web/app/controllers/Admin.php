@@ -14,6 +14,7 @@ class Admin extends \Controller {
 				$this->json_echo(array("error" => "permission_denied", "error_description" => "You cannot access admin panel."), true);
 			else $this->base->reroute("/");
 		
+		$this->user = $user_info;
 		return $user_info;
 	}
 	
@@ -67,7 +68,60 @@ class Admin extends \Controller {
 	}
 	
 	function updateSubmissions($base) {
-		var_dump($_POST);
+		$user_info = $this->verifyAdminPermission();
+		$action = $base->get('POST.action');
+		
+		if (!$base->exists('POST.submission_id'))
+			$this->json_echo($this->getError('no_user_selected', 'You did not select any users.'));
+		
+		$submission_ids = $base->get('POST.submission_id');
+		
+		if ($action == 'regrade') {
+			$this->batchRegradeSubmissions($submission_ids);
+		} else if ($action == 'delete') {
+			$this->batchDeleteSubmissions($submission_ids);
+		}
+		
+		$this->json_echo($this->getSuccess('The action is performed successfully.'));
+	}
+	
+	/**
+	 * Send delete signal to the Assignment model in batch.
+	 */
+	private function batchDeleteSubmissions($submission_ids) {
+		$Assignment = \models\Assignment::instance();
+		if (empty($submission_ids)) return;
+		
+		foreach ($submission_ids as $id) {
+			$Assignment->deleteSubmission($id);
+		}
+	}
+	
+	/**
+	 * Send the regrade signal to the related models in batch.
+	 * This is not subject to quotas, deadlines, and other restrictions.
+	 */
+	private function batchRegradeSubmissions($submission_ids) {
+		$Assignment = \models\Assignment::instance();
+		$Connector = \models\Connector::instance();
+		$User = \models\User::instance();
+		
+		if (empty($submission_ids)) return;
+		
+		foreach ($submission_ids as $id) {
+			$submission_record = $Assignment->findSubmissionById($id);
+			if ($submission_record == null) continue;
+			
+			$Assignment->addLog($submission_record, $this->user['user_id'] . " attempted to regrade the submission.");
+			
+			$user_info = $User->findById($submission_record['user_id']);
+			$assignment_info = $Assignment->findById($submission_record['assignment_id']);
+			$assign_result = $Connector->assignTask($submission_record, $user_info, $assignment_info);
+			if ($assign_result['result'] == 'queued') {
+				$Assignment->addLog($submission_record, "Queued with id " . $assign_result["queued_id"] . ".");
+			}
+			$Assignment->updateSubmission($submission_record);
+		}
 	}
 	
 	function updateAssignment($base) {

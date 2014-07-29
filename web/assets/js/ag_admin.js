@@ -212,7 +212,7 @@ function load_assignments_panel() {
 		},
 		complete: function(xhr, status, jqForm) {
 			var r = jqForm.find('#response');
-			if (status == 'success') {
+			if (xhr.status == 200) {
 				if (xhr.responseJSON.error) {
 					r.html("<span class=\"text-danger\">" +  xhr.responseJSON.error_description+ " (error: " + xhr.responseJSON.error + ")</span>");
 					if (xhr.responseJSON.error == 'invalid_script_path') {
@@ -258,11 +258,17 @@ function load_submissions_panel() {
 			if (action_selector.val() == '') {
 				action_selector_styler.addClass('btn-danger');
 				// action_selector_styler.addClass('btn-default');
+				return false;
 			}
 		},
 		complete: function(xhr, status, jqForm) {
-			if (status == 'success') {
-				$('#submission-record-form #response').html('<span class="text-success">' + xhr.responseJSON.count + '</span>');
+			console.log(xhr);
+			if (xhr.status == 200) {
+				if (xhr.responseJSON.error) {
+					$('#submission-record-form #response').html('<span class="text-danger">' + xhr.responseJSON.error_description + '</span>');
+				} else {
+					$('#submission-record-form #response').html('<span class="text-success">' + xhr.responseJSON.message + '</span>');
+				}
 			}
 		}
 	});
