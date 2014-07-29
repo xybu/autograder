@@ -1,3 +1,6 @@
+NOTES
+=====
+
 All graders are assumed passive by now.
 The web module actively dispatches tasks to graders.
 Another possible scheduling policy is to let graders query the web module to find tasks to run.

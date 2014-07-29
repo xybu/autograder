@@ -64,17 +64,29 @@ Set-up
 
 ## Install
 
-Instructions TBA.
+First fetch the source code through git:
+
+'''
+git clone https://github.com/xybu92/autograder
+'''
+
+and then run `./setup.sh` and follow its instructions.
+
+The commands inside this script may not apply to your server configurations and you may
+need to set up your httpd and mysqld manually.
 
 ## Configure
 
-Instructions TBA.
+ * Copy `grader/grader.json.def` to `grader/grader.json` and update its MySQL credentials and API keys (which will be used to authenticate with web component).
+ * Copy `web/app/config/globals.ini.def` to `web/app/config/globals.ini` and update its MySQL
+ credentials and API keys (to match the ones used in grader).
+ * Log in to web interface with an admin account, and change the rest of the settings in admin panel.
 
-Usage
-=====
+API
+===
 
 For the definitions about the data and API, and the tutorial for writing test suites, 
-refer to `/doc/README.md`.
+refer to [API.md](./API.md).
 
 Supplements
 ===========
@@ -88,4 +100,4 @@ reference environment (without installing AutoGrader), probably in the form of a
 Support
 =======
 
-For technical support, contact Xiangyu Bu (https://github.com/xybu92).
+For technical support, contact [Xiangyu Bu](https://github.com/xybu92).
