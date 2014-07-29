@@ -47,15 +47,14 @@ File Structure
 
 The file hierarchy of the project is as below:
 
- * **conf** stores all the configuration files for the project.
- * **database** hosts the SQL dump files.
- * **doc** has more documents for the project.
  * **grader** the grader daemon and worker parts and the superclass of grader test cases.
  * **log** is the default directory to store log files. Excluded from Git and will be created by **inst.sh**.
  * **submissions** the default directory to save submissions that are sent to the web. Excluded from Git and will be created by **inst.sh**.
  * **utils** has some handy utility programs that will ease instructors' life.
+  * **dump** stores the MySQL database dumps and an import script.
  * **web** stores the web application. The root dir of the web server should be pointed here.
- * **inst.sh** is the installation script.
+ * **setup.sh** is the installation script.
+ * **start.sh** will start the grader daemon in background.
 
 Most directories have a specific **README.md** that gives more details.
 
