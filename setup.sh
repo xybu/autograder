@@ -27,3 +27,7 @@ chmod 775 tmp
 chmod 755 tmp/cache
 
 sudo ln -s /etc/nginx/sites-enabled/autograder `pwd`/web/nginx.conf
+sudo nginx -s reload
+
+echo "To set up the MySQL database, cd to utils/dump/, change the MySQL root password in import.sh, and run it. Update the credentials according to its response."
+

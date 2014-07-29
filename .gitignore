@@ -40,3 +40,9 @@ trash
 submissions
 test.*
 test
+
+# default sql files are named *.def
+*.sql
+
+# file to save creds
+credentials.txt

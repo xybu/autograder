@@ -1,0 +1,2 @@
+CREATE USER 'ag_web__USERNAME_SEED_'@'localhost' IDENTIFIED BY '_PASSWORD_SEED_';
+GRANT ALL PRIVILEGES ON ag_web.* TO 'ag_web__USERNAME_SEED_'@'localhost';
