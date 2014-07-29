@@ -74,8 +74,7 @@ class Grade:
 	def zero(self):
 		self.current_score = 0
 
-
-gradeObj = Grade()
+grade = Grade()
 
 class GraderTestCase(unittest.TestCase):
 	"""
@@ -271,8 +270,8 @@ def main(testSuiteClass):
 	
 	suite = unittest.makeSuite(testSuiteClass, "test_")
 	runner = GraderResult()
-	global gradeObj
-	runner._grade = gradeObj
+	global grade
+	runner._grade = grade
 	GraderTestCase._test_runner = runner
 	
 	start_time = time.time()
