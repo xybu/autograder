@@ -65,9 +65,9 @@ Set-up
 
 First fetch the source code through git:
 
-'''
+```
 git clone https://github.com/xybu92/autograder
-'''
+```
 
 and then run `./setup.sh` and follow its instructions.
 
