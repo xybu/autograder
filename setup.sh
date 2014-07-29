@@ -21,6 +21,10 @@ sudo chgrp www-data submissions
 chmod 770 submissions
 
 cd web
+
+# chmod for the data files
+chmod 660 data/*
+
 # create tmp dir for the web program
 mkdir tmp
 mkdir -p tmp/cache

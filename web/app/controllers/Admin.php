@@ -5,6 +5,7 @@ namespace controllers;
 class Admin extends \Controller {
 	
 	const PASSWORD_LEN = 12;
+	const MAX_DOWNLOAD_SPEED = 256; // in kBps
 	
 	private function verifyAdminPermission($show_json_error = true) {
 		$user_info = $this->getUserStatus();
@@ -125,6 +126,37 @@ class Admin extends \Controller {
 		$id = $base->get('POST.id');
 		if ($Assignment->deleteAssignment($id))
 			$Assignment->saveAssignments();
+	}
+	
+	function getSubmissionDump($base, $params) {
+		$user_info = $this->verifyAdminPermission();
+		try {
+			
+			$submission_id = $params["id"];
+			if (!is_numeric($submission_id)) throw new \exceptions\AssignmentException("invalid_parameter", "Your request is refused because it contains invalid information.", 403);
+			
+			$Assignment = \models\Assignment::instance();
+			
+			$submission_info = $Assignment->findSubmissionById($submission_id);
+			if ($submission_info == null) throw new \exceptions\AssignmentException("submission_not_found", "There is no record for this submission.", 404);
+			
+			$path = $base->get("UPLOADS") . "/" . $submission_info["assignment_id"] . "/" . $submission_info["user_id"] . "/dumps";
+			
+			$path = $path . "/submission_" . $submission_info["id"] . "_dump.tar.gz";
+			
+			if (!file_exists($path))
+				throw new \exceptions\AssignmentException("file_not_found", "The file you are requesting is not found in the repository. Please contact admin.", 404);
+			
+			\Web::instance()->send($path, "application/octet-stream", self::MAX_DOWNLOAD_SPEED);
+			
+		} catch (\exceptions\AssignmentException $ex) {
+			if ($ex->getCode() == 404) header("HTTP/1.0 404 Not Found");
+			else if ($ex->getCode() == 403) header("HTTP/1.0 403 Forbidden");
+			
+			if ($user_info != null) $base->set("me", $user_info);
+			$base->set("error", $ex->toArray());
+			$this->setView("error.html");
+		}
 	}
 	
 	function regradeSubmission($base) {
