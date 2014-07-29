@@ -1,6 +1,8 @@
 Autograder/Grader
 =================
 
+Rename `grader.json.def` to `grader.json` and update its credentials.
+
 Introduction
 ============
 

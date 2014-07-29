@@ -3,6 +3,8 @@ Autograder-Web
 
 The web interface of autograder project.
 
+Copy `app/config/globals.ini.def` to `app/config/globals.ini` and update its credentials.
+
 File Permissions
 ================
  * *tmp*: RW
