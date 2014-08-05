@@ -112,59 +112,64 @@ class Admin extends \Controller {
 	
 	function updateSubmissions($base) {
 		$user_info = $this->verifyAdminPermission();
+		
 		$action = $base->get('POST.action');
-		
-		if (!$base->exists('POST.submission_id'))
-			$this->json_echo($this->getError('no_user_selected', 'You did not select any users.'));
-		
 		$submission_ids = $base->get('POST.submission_id');
 		
-		if ($action == 'regrade') {
-			$this->batchRegradeSubmissions($submission_ids);
-		} else if ($action == 'delete') {
-			$this->batchDeleteSubmissions($submission_ids);
-		}
+		if (empty($submission_ids))
+			$this->json_echo($this->getError('no_user_selected', 'You did not select any users.'));
 		
-		$this->json_echo($this->getSuccess('The action is performed successfully.'));
-	}
-	
-	/**
-	 * Send delete signal to the Assignment model in batch.
-	 */
-	private function batchDeleteSubmissions($submission_ids) {
 		$Assignment = \models\Assignment::instance();
-		if (empty($submission_ids)) return;
 		
-		foreach ($submission_ids as $id) {
-			$Assignment->deleteSubmission($id);
-		}
-	}
-	
-	/**
-	 * Send the regrade signal to the related models in batch.
-	 * This is not subject to quotas, deadlines, and other restrictions.
-	 */
-	private function batchRegradeSubmissions($submission_ids) {
-		$Assignment = \models\Assignment::instance();
-		$Connector = \models\Connector::instance();
-		$User = \models\User::instance();
-		
-		if (empty($submission_ids)) return;
-		
-		foreach ($submission_ids as $id) {
-			$submission_record = $Assignment->findSubmissionById($id);
-			if ($submission_record == null) continue;
+		if ($action == 'adjust') {
 			
-			$Assignment->addLog($submission_record, $this->user['user_id'] . " attempted to regrade the submission.");
-			
-			$user_info = $User->findById($submission_record['user_id']);
-			$assignment_info = $Assignment->findById($submission_record['assignment_id']);
-			$assign_result = $Connector->assignTask($submission_record, $user_info, $assignment_info);
-			if ($assign_result['result'] == 'queued') {
-				$Assignment->addLog($submission_record, "Queued with id " . $assign_result["queued_id"] . ".");
+			foreach ($submission_ids as $id) {
+				$submission_record = $Assignment->findSubmissionById($id);
+				if ($submission_record == null) continue;
+				
+				$grade_adj_raw = $base->get('POST.grade_adjustment_' . $id);
+				if (!is_numeric($grade_adj_raw)) continue;
+				
+				$grade_adj = intval($grade_adj_raw);
+				$grade_comment = $base->get('POST.comment_' . $id);
+				
+				$submision_record['grade_adjustment'] = $grade_adj;
+				$Assignment->addLog($submission_record, $this->user['user_id'] . " changed the delta grade to " . $grade_adj . " with comment " . $grade_comment . ".");
+				
+				$Assignment->updateSubmission($submission_record);
 			}
-			$Assignment->updateSubmission($submission_record);
+			
+		} else if ($action == 'regrade') {
+			// Send the regrade signal to the related models in batch.
+			// This is not subject to quotas, deadlines, and other restrictions.
+			
+			$Connector = \models\Connector::instance();
+			$User = \models\User::instance();
+			
+			foreach ($submission_ids as $id) {
+				$submission_record = $Assignment->findSubmissionById($id);
+				if ($submission_record == null) continue;
+				
+				$Assignment->addLog($submission_record, $this->user['user_id'] . " attempted to regrade the submission.");
+				
+				$user_info = $User->findById($submission_record['user_id']);
+				$assignment_info = $Assignment->findById($submission_record['assignment_id']);
+				$assign_result = $Connector->assignTask($submission_record, $user_info, $assignment_info);
+				if ($assign_result['result'] == 'queued') {
+					$Assignment->addLog($submission_record, "Queued with id " . $assign_result["queued_id"] . ".");
+				}
+				$Assignment->updateSubmission($submission_record);
+			}
+			
+		} else if ($action == 'delete') {
+			
+			foreach ($submission_ids as $id) {
+				$Assignment->deleteSubmission($id);
+			}
+			
 		}
+		
+		$this->json_echo($this->getSuccess('The action is performed successfully. Records with invalid data were skipped.'));
 	}
 	
 	function updateAssignment($base) {
@@ -299,7 +304,9 @@ class Admin extends \Controller {
 		if ($status != null)
 			$cond[':status_set'] = $status;
 		
-		$result = $Assignment->findSubmissions($cond);
+		$special_cond = $base->get('POST.special_cond');
+		
+		$result = $Assignment->findSubmissions($cond, $special_cond);
 		$View = \View::instance();
 		$ret = "";
 		foreach ($result as $i => $row) {
@@ -367,6 +374,11 @@ class Admin extends \Controller {
 			$role_name = $base->get('POST.role');
 			if ($User->findRoleByName($role_name) == null)
 				$this->json_echo($this->getError('invalid_data', 'The role "' . $role_name . '" is not defined.'));
+			
+			$notify_all = $base->get('POST.notify');
+			if ($notify_all != 'true') $notify_all = false;
+			else $notify_all = true;
+			
 			$user_list = str_replace("\r", "", $base->get('POST.user_list'));
 			$users = explode("\n", $user_list);
 			
@@ -383,6 +395,16 @@ class Admin extends \Controller {
 						$skip_list[] = $name;
 					} else {
 						$User->addUser($name, $role_name, $password_pool[$i]);
+						
+						if ($notify_all) {
+							$base->set('password', $password_pool[$i]);
+							$mail = new \models\Mail();
+							$mail->addTo($name . $base->get("USER_EMAIL_DOMAIN"), $name);
+							$mail->setFrom($base->get("COURSE_ADMIN_EMAIL"), $base->get("COURSE_ID_DISPLAY") . " AutoGrader");
+							$mail->setSubject("Your " . $base->get("COURSE_ID_DISPLAY") . " AutoGrader Password");
+							$mail->setMessage(\View::instance()->render("email_forgot_password.txt"));
+							$mail->send();
+						}
 						++$c;
 					}
 				}
@@ -394,6 +416,8 @@ class Admin extends \Controller {
 			if ($User->saveUserTable() === false) {
 				$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "users.json") . "\"."));
 			}
+			
+			$User->clearCache();
 			
 			$this->json_echo($this->getSuccess('Added ' . $c . ' user(s) to role "' . $role_name . '".' . $skip_str));
 		
@@ -424,6 +448,8 @@ class Admin extends \Controller {
 			if ($User->saveUserTable() === false) {
 				$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "users.json") . "\"."));
 			}
+			
+			$User->clearCache();
 			
 			$this->json_echo($this->getSuccess('Successfully updated the role of the selected user(s).'));
 				
@@ -469,6 +495,8 @@ class Admin extends \Controller {
 			if ($User->saveUserTable() === false) {
 				$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "users.json") . "\"."));
 			}
+			
+			$User->clearCache();
 			
 			$this->json_echo($this->getSuccess('Successfully renamed ' . $i . ' users.' . $skip_str));
 			
@@ -535,6 +563,8 @@ class Admin extends \Controller {
 		if ($User->saveRoleTable($role_data) === false) {
 			$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "roles.json") . "\"."));
 		}
+		
+		$User->clearCache();
 		
 		$this->json_echo($this->getSuccess('Successfully saved role data.'));
 	}

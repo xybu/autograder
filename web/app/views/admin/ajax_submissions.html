@@ -81,6 +81,26 @@
 				</div>
 			</div>
 			<div class="form-group">
+				<label class="col-sm-2 control-label">Specials</label>
+				<div class="col-sm-10">
+					<div class="radio">
+						<label>
+							<input type="radio" name="special_cond" id="special_cond_1" value="" checked> No special conditions.
+						</label>
+					</div>
+					<div class="radio">
+						<label>
+							<input type="radio" name="special_cond" id="special_cond_2" value="latest"> List only the LATEST submissions for each user.
+						</label>
+					</div>
+					<div class="radio">
+						<label>
+							<input type="radio" name="special_cond" id="special_cond_3" value="highest"> List only the HIGHEST submissions for each user.
+						</label>
+					</div>
+				</div>
+			</div>
+			<div class="form-group">
 				<div class="col-sm-10 col-sm-offset-2 text-right">
 					<small id="response"></small>
 					<input type="submit" id="search-submit" class="btn btn-primary" value="Search" />
@@ -93,7 +113,7 @@
 	<div class="table-responsive">
 		<table id="submissions-table" class="table table-hover table-bordered">
 			<thead>
-				<tr><td><input type="checkbox" onclick="selectAll(this, 'submissions-table-body')" /></td><td>User</td><td>Assignment</td><td>Status</td><td>Grade</td><td>Manage</td></tr>
+				<tr><td><input type="checkbox" onclick="selectAll(this, 'submissions-table-body')" /></td><td>User</td><td>Assignment</td><td>Status</td><td class="text-center">Raw Grade</td><td class="text-center">&Delta; Grade</td><td>Comment</td><td class="text-center">Manage</td></tr>
 			</thead>
 			<tbody id="submissions-table-body">
 			</tbody>
@@ -102,6 +122,7 @@
 	<div class="help-block">
 		<select class="selectpicker" id="action-selector" name="action">
 			<option value="">Batch action</option>
+			<option value="adjust">Adjust grades</option>
 			<option value="regrade">Regrade selected</option>
 			<option value="delete">Delete selected</option>
 		</select>

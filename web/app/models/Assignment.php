@@ -305,46 +305,53 @@ class Assignment extends \Model {
 	 * Fetch all submission records that satisfy the $cond.
 	 * 
 	 */
-	function findSubmissions($cond) {
+	function findSubmissions($cond, $strategy = '') {
+		
 		$sql_cond = array();
 		
 		if (array_key_exists(':user_id_pattern', $cond)) {
-			$sql_cond[] = "user_id LIKE :user_id_pattern";
+			$sql_cond[] = "s1.user_id LIKE :user_id_pattern";
 			$cond[':user_id_pattern'] = $this->toSqlWildcard($cond[':user_id_pattern']);
 		}
 		
 		if (array_key_exists(':date_created_start', $cond))
-			$sql_cond[] = "date_created >= :date_created_start";
+			$sql_cond[] = "s1.date_created >= :date_created_start";
 		
 		if (array_key_exists(':date_updated_start', $cond))
-			$sql_cond[] = "date_updated >= :date_updated_start";
+			$sql_cond[] = "s1.date_updated >= :date_updated_start";
 		
 		if (array_key_exists(':date_created_end', $cond))
-			$sql_cond[] = "date_created <= :date_created_end";
+			$sql_cond[] = "s1.date_created <= :date_created_end";
 		
 		if (array_key_exists(':date_updated_end', $cond))
-			$sql_cond[] = "date_updated <= :date_updated_end";
+			$sql_cond[] = "s1.date_updated <= :date_updated_end";
 		
 		if (array_key_exists(':grade_max', $cond))
-			$sql_cond[] = "grade <= :grade_max";
+			$sql_cond[] = "s1.grade <= :grade_max";
 		
 		if (array_key_exists(':grade_min', $cond))
-			$sql_cond[] = "grade >= :grade_min";
+			$sql_cond[] = "s1.grade >= :grade_min";
 		
 		if (array_key_exists(':assignment_id_set', $cond)) {
-			$sql_cond[] = "assignment_id IN (" . '"' . implode('","', $cond[':assignment_id_set']) . '"' . ")";
+			$sql_cond[] = "s1.assignment_id IN (" . '"' . implode('","', $cond[':assignment_id_set']) . '"' . ")";
 			unset($cond[':assignment_id_set']);
 		}
 		
 		if (array_key_exists(':status_set', $cond)) {
-			$sql_cond[] = "status IN (" . '"' . implode('","', $cond[':status_set']) . '"' . ")";
+			$sql_cond[] = "s1.status IN (" . '"' . implode('","', $cond[':status_set']) . '"' . ")";
 			unset($cond[':status_set']);
 		}
 		
-		if (count($sql_cond) > 0) $where = ' WHERE ' . implode(' AND ', $sql_cond);
-		else $where = '';
+		if ($strategy == 'highest') {
+			$sql_cond[] = "s1.grade=(SELECT MAX(s2.grade) FROM submissions s2 WHERE s1.user_id=s2.user_id AND s2.assignment_id=s1.assignment_id)";
+		} else if ($strategy == 'latest') {
+			$sql_cond[] = "s1.date_created=(SELECT s2.date_created FROM submissions s2 WHERE s1.user_id=s2.user_id AND s2.assignment_id=s1.assignment_id ORDER BY s2.date_created DESC LIMIT 1)";
+		}
 		
-		$sql = "SELECT * FROM submissions" . $where;
+		$where = '';
+		if (count($sql_cond) > 0) $where = ' WHERE ' . implode(' AND ', $sql_cond);
+		
+		$sql = "SELECT * FROM submissions s1" . $where . " ORDER BY s1.user_id ASC";
 		
 		return $this->query($sql, $cond);
 	}

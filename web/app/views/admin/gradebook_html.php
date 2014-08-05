@@ -23,7 +23,7 @@ header('Expires: 0');
 				<h1 class="page-header"><?php echo $assignment_id?></h1>
 				<p><strong><?php echo count($records)?></strong> records found.</p>
 				<table class="table table-hover table-bordered">
-					<thead><tr><td>user_id</td><td>total</td><td>grade_raw</td><td>grade_adjusted</td><td>submission_id</td><td>detail</td></tr></thead>
+					<thead><tr><td>user_id</td><td>total</td><td>raw grade</td><td>&Delta; grade</td><td>submission_id</td><td>detail</td></tr></thead>
 					<tbody>			
 <?php
 foreach ($records as $r) {

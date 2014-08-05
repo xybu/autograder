@@ -88,10 +88,10 @@ if (!$submission_info["grade_adjustment"]) {
 			<pre><?php echo $submission_info["grader_internal_log"]?></pre>
 		</div>
 		<div class="tab-pane" id="raw">
+			<h4>Grade Data (Instructor Only)</h4>
+			<pre><?php echo str_replace(', ', "<br />", $submission_info["grade_detail"])?></pre>
 			<h4>Raw Formal Log (Instructor Only)</h4>
 			<pre><?php echo $submission_info["grader_formal_log"]?></pre>
-			<h5>Grade Detail</h5>
-			<pre><?php echo str_replace(', ', "<br />", $submission_info["grade_detail"])?></pre>
 		</div>
 		<?php endif?>
 	</div>

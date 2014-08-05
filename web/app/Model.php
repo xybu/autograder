@@ -3,12 +3,12 @@
 class Model extends \Prefab {
 	
 	protected $Base = null;
-	protected $cache = null;
+	protected $Cache = null;
 	protected $db = null;
 	
 	function __construct() {
 		$this->Base = \Base::instance();
-		$this->cache = \Cache::instance();
+		$this->Cache = \Cache::instance();
 	}
 	
 	function query($cmds, $args = null, $ttl = 0, $log = true) {

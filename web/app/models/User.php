@@ -4,21 +4,43 @@ namespace models;
 
 class User extends \Model {
 	
-	protected $users;
-	protected $roles;
+	function clearCache() {
+		$this->Cache->clear('user_table');
+		$this->Cache->clear('role_table');
+	}
 	
-	function __construct() {
-		parent::__construct();
-		$this->users = json_decode(file_get_contents($this->Base->get("DATA_PATH") . "users.json"), true);
-		$this->roles = json_decode(file_get_contents($this->Base->get("DATA_PATH") . "roles.json"), true);
+	function getUserTable() {
+		if (!$this->Cache->exists('user_table')) {
+			$this->Cache->set('user_table', json_decode(file_get_contents($this->Base->get("DATA_PATH") . "users.json"), true));
+		}
+		
+		return $this->Cache->get('user_table');
+	}
+	
+	function saveUserTable($user_data = null) {
+		if ($user_data == null) $user_data = $this->getUserTable();
+		return @file_put_contents($this->Base->get("DATA_PATH") . "users.json", json_encode($user_data), LOCK_EX);
+	}
+	
+	function getRoleTable() {
+		if (!$this->Cache->exists('role_table')) {
+			$this->Cache->set('role_table', json_decode(file_get_contents($this->Base->get("DATA_PATH") . "roles.json"), true));
+		}
+		
+		return $this->Cache->get('role_table');
+	}
+	
+	function saveRoleTable($role_data = null) {
+		if ($role_data == null) $role_data = $this->getRoleTable();
+		return @file_put_contents($this->Base->get("DATA_PATH") . "roles.json", json_encode($role_data), LOCK_EX);
 	}
 	
 	function findById($id) {
-		foreach ($this->users as $rolename => $members) {
+		foreach ($this->getUserTable() as $rolename => $members) {
 			if (array_key_exists($id, $members))
 				return array(
 					"user_id" => $id,
-					"role" => array("name" => $rolename, "permissions" => $this->roles[$rolename]),
+					"role" => array("name" => $rolename, "permissions" => $this->getRoleTable()[$rolename]),
 					"password" => $members[$id]
 				);
 		}
@@ -28,13 +50,13 @@ class User extends \Model {
 	function findByIdAndPassword($id, $password) {
 		$userinfo = $this->findById($id);
 		
-		if ($userinfo != null && $password == $userinfo["password"])
+		if ($userinfo != null && password_verify($password, $userinfo["password"]))
 			return $userinfo;
 		return null;
 	}
 	
 	function addUser($id, $role, $password) {
-		$this->users[$role][$id] = $password;
+		$this->getUserTable()[$role][$id] = password_hash($password, PASSWORD_DEFAULT);
 	}
 	
 	/**
@@ -46,26 +68,17 @@ class User extends \Model {
 		if ($new_id == null) $new_id = $old_user['user_id'];
 		if ($new_pass == null) $new_pass = $old_user['password'];
 		if ($new_role == null) $new_role = $old_user['role']['name'];
-		unset($this->users[$old_user['role']['name']][$old_user['user_id']]);
-		$this->users[$new_role][$new_id] = $new_pass;
+		unset($this->getUserTable()[$old_user['role']['name']][$old_user['user_id']]);
+		$this->getUserTable()[$new_role][$new_id] = $new_pass;
 	}
 	
 	function deleteUserById($id) {
-		foreach ($this->users as $rolename => &$members) {
+		foreach ($this->getUserTable() as $rolename => &$members) {
 			if (array_key_exists($id, $members)) {
 				unset($members[$id]);
 				return;
 			}
 		}
-	}
-	
-	function getUserTable() {
-		return $this->users;
-	}
-	
-	function saveUserTable($user_data = null) {
-		if ($user_data == null) $user_data = $this->users;
-		return @file_put_contents($this->Base->get("DATA_PATH") . "users.json", json_encode($user_data), LOCK_EX);
 	}
 	
 	/**
@@ -74,7 +87,7 @@ class User extends \Model {
 	 */
 	function matchByPatterns($id_pattern = '*', $role_pattern = '*', $pass_pattern = '*') {
 		$result = array();
-		foreach ($this->users as $rolename => $members) {
+		foreach ($this->getUserTable() as $rolename => $members) {
 			if (!fnmatch($role_pattern, $rolename)) continue;
 			foreach($members as $id => $pass) {
 				if (fnmatch($id_pattern, $id) && fnmatch($pass_pattern, $pass))
@@ -89,7 +102,7 @@ class User extends \Model {
 	 * Each string occurs once in the pool, and is not used for other users.
 	 */
 	function getPasswordPool($num, $len) {
-		$user_raw = json_encode($this->users);
+		$user_raw = json_encode($this->getUserTable());
 		$i = 0;
 		$pool = array();
 		while ($i < $num) {
@@ -110,7 +123,7 @@ class User extends \Model {
 	}
 	
 	function findRoleByName($str) {
-		if (array_key_exists($str, $this->roles)) return $this->roles[$str];
+		if (array_key_exists($str, $this->getRoleTable())) return $this->getRoleTable()[$str];
 		return null;
 	}
 	
@@ -139,15 +152,6 @@ class User extends \Model {
 		return $new_role;
 	}
 	
-	function getRoleTable() {
-		return $this->roles;
-	}
-	
-	function saveRoleTable($role_data = null) {
-		if ($role_data == null) $role_data = $this->roles;
-		return @file_put_contents($this->Base->get("DATA_PATH") . "roles.json", json_encode($role_data), LOCK_EX);
-	}
-	
 	/**
 	 * Replace the tokens {user_id}, {password}, {role_id}, {role_name}
 	 * with the corresponding user data.
@@ -159,5 +163,5 @@ class User extends \Model {
 		$str = str_replace('{role_name}', $user_info['role']['permissions']['display'], $str);
 		return $str;
 	}
-}
 
+}

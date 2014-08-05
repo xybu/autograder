@@ -6,6 +6,7 @@ class Home extends \Controller {
 	
 	// interval between two retrieving password requests, in minutes
 	const RETRIEVE_PASSWORD_INTERVAL = 60;
+	const DEFAULT_PASSWORD_LEN = 12;
 	
 	function showHomePage($base) {
 		if ($base->exists("SESSION.user")) {
@@ -57,10 +58,15 @@ class Home extends \Controller {
 		
 		$User = \models\User::instance();
 		$user_info = $User->findById($user_id);
+		$password_pool = $User->getPasswordPool(1, static::DEFAULT_PASSWORD_LEN);
+		
+		$User->editUser($user_info, null, null, $password_pool[0]);
+		$User->saveUserTable();
+		
 		if ($user_info == null)
 			$this->json_echo(array("error" => "unknown_user", "error_description" => "The user id provided is not found. Please contact admin."));
 		
-		$base->set("password", $user_info["password"]);
+		$base->set("password", $password_pool[0]);
 		
 		$Mail = new \models\Mail();
 		$Mail->addTo($user_id . $base->get("USER_EMAIL_DOMAIN"), $user_id);

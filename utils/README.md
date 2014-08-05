@@ -7,6 +7,7 @@ Directories
 ===========
 
  * `dump`: the MySQL database dump.
+ * `default`: the default JSON files.
 
 History
 =======

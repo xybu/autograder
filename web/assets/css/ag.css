@@ -131,6 +131,14 @@ body {
 	padding: 0.7em;
 }
 
+/* The icons in the manage column of tables */
+.manage-icons {
+}
+
+,manage-icons a:hover {
+	text-decoration: none;
+}
+
 /* Announcement UI */
 .announcement-post {
 	background-color: #f8f8f8;
