@@ -103,6 +103,23 @@ class Assignment extends \Model {
 	}
 	
 	/**
+	 * Fetch submission records of a specific assignment, one record per user,
+	 * and the record is decided by $strategy, which is either 'highest' or 'latest'.
+	 * Returns an array of 5-tuple of user_id, grade, grade_adjustment, grade_detail, id
+	 */
+	function getGradeBookRecords($assignment_info, $strategy) {
+		$nested_sql = "";
+		if ($strategy == 'highest') {
+			$nested_sql = "grade=(SELECT MAX(s2.grade) FROM submissions s2 WHERE s1.user_id=s2.user_id AND s2.assignment_id=:assignment_id)";
+		} else {
+			$nested_sql = "date_created=(SELECT s2.date_created FROM submissions s2 WHERE s1.user_id=s2.user_id AND s2.assignment_id=:assignment_id ORDER BY s2.date_created DESC LIMIT 1)";
+		}
+		return $this->query("SELECT user_id, grade, grade_adjustment, grade_detail, id  FROM submissions s1 WHERE $nested_sql AND s1.assignment_id=:assignment_id ORDER BY user_id ASC", array(
+			':assignment_id' => $assignment_info['id']
+		));
+	}
+	
+	/**
 	 * Update a submission record in database given the submission data array.
 	 * 
 	 * @param	$s: an array previously returned by a findSubmission* function.

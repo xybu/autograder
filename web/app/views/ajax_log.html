@@ -13,9 +13,10 @@ if (!$submission_info["grade_adjustment"]) {
 		<li class="active"><a href="#basics" data-toggle="tab">Basic Info</a></li>
 		<li><a href="#report" data-toggle="tab">Report</a></li>
 		<li><a href="#events" data-toggle="tab">Event Log</a></li>
-		<?php if ($me["role"]["permissions"]["manage"])
+		<?php if ($me["role"]["permissions"]["manage"]) {
 			echo '<li><a href="#internals" data-toggle="tab">Internal Log</a></li>';
 			echo '<li><a href="#raw" data-toggle="tab">Raw Log</a><li>';
+		}
 		?>
 	</ul>
 	

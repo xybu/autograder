@@ -231,6 +231,12 @@ function load_assignments_panel() {
 			}
 		}
 	});
+	
+	$('#get-gradebook-form').submit(function(){
+		var query_string = $('#get-gradebook-form select').fieldSerialize();
+		window.open('/admin/gradebook?' + query_string, 'GradeBookWindow', 400, 400);
+		return false;
+	});
 }
 
 function load_submissions_panel() {

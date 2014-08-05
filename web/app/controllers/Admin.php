@@ -54,9 +54,52 @@ class Admin extends \Controller {
 		$this->setView('admin/ajax_assignments.html');
 	}
 	
-	function createGradeBook($base, $params) {
-		$assignment_id = $params['id'];
-		$format = $params['format'];
+	/**
+	 * Fetch the grades for an assignment and render the records in the given format.
+	 * The query string should contain three elements:
+	 * 	assignment_id: the identifier of the assignment queried
+	 * 	strategy: 'highest' or 'latest'
+	 * 	format: 'csv' or 'html'
+	 */
+	function createGradeBook($base) {
+		$user_info = $this->verifyAdminPermission();
+		$Assignment = \models\Assignment::instance();
+		
+		$assignment_id = $base->get('GET.assignment_id');
+		$strategy = $base->get('GET.strategy');
+		$format = $base->get('GET.format');
+		
+		try {
+			$assignment_info = $Assignment->findById($assignment_id);
+			
+			if (empty($assignment_info))
+				throw new \exceptions\AdminException('assignment_not_found', "The target assignment '$assignment_id' is not found.");
+			
+			if ($strategy != 'highest' && $strategy != 'latest')
+				throw new \exceptions\AdminException('strategy_not_supported', "The target strategy '$strategy' is not supported.");
+			
+			if ($format != 'csv' && $format != 'html')
+				throw new \exceptions\AdminException('format_not_supported', "The target format '$format' is not supported.");
+			
+			$records = $Assignment->getGradeBookRecords($assignment_info, $strategy);
+			// $records is an array of 5-tuples (user_id, grade, grade_adjustment, grade_detail, id)
+			
+			// the HTTP header will be printed by the views
+			
+			$base->set('assignment_id', $assignment_id);
+			$base->set('records', $records);
+			
+			if ($format == 'csv') {
+				
+				
+				echo \View::instance()->render('admin/gradebook_csv.php');
+			} else {
+				echo \View::instance()->render('admin/gradebook_html.php');
+			}
+			
+		} catch (\exceptions\AdminException $e) {
+			$this->json_echo($e->toArray());
+		}
 	}
 	
 	function showSubmissionsPane($base) {
@@ -211,9 +254,6 @@ class Admin extends \Controller {
 			$base->set("error", $ex->toArray());
 			$this->setView("error.html");
 		}
-	}
-	
-	function regradeSubmission($base) {
 	}
 	
 	function querySubmission($base) {

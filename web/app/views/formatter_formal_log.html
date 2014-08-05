@@ -26,4 +26,6 @@ $formal_log = preg_replace("/(<br \/>){2,}/", "<hr />", $formal_log);
 // remove the horizontal line at the end of the string
 $formal_log = preg_replace("/<hr \/>$/", "", $formal_log);
 
+$formal_log = str_replace("AssertionError: ", "", $formal_log);
+
 echo $formal_log;
