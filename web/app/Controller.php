@@ -65,10 +65,6 @@ abstract class Controller {
 		else $this->base->set("SESSION.user", $userData);
 	}
 	
-	function getError($code, $msg) {
-		return array('error' => $code, 'error_description' => $msg);
-	}
-	
 	function echo_success($msg, $extra_data = null) {
 		if ($extra_data == null) $extra_data = array();
 		$extra_data['status'] = 'success';

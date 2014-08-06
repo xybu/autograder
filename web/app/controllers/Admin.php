@@ -437,14 +437,14 @@ class Admin extends \Controller {
 			if (count($skip_list) > 0) $skip_str = ' Skipped existing users: ' . implode(', ', $skip_list) . '.';
 			else $skip_str = '';
 			
-			$this->echo_success('Added ' . $c . ' user(s) to role "' . $role_name . '".' . $skip_str));
+			$this->echo_success('Added ' . $c . ' user(s) to role "' . $role_name . '".' . $skip_str);
 		
 		} else if ($action == 'delete') {
 			$users = $base->get('POST.users');
 			foreach ($users as $name => $item)
 				if (array_key_exists('selected', $item)) $User->deleteUserById($name);
 			
-			$this->echo_success('Successfully deleted the selected user(s).'));
+			$this->echo_success('Successfully deleted the selected user(s).');
 		} else if ($action == 'change_role') {
 			$role_name = $base->get('POST.role');
 			
@@ -465,7 +465,7 @@ class Admin extends \Controller {
 				}
 			}
 			
-			$this->echo_success('Successfully updated the role of the selected user(s).'));
+			$this->echo_success('Successfully updated the role of the selected user(s).');
 				
 		} else if ($action == 'reset_password') {
 			$users = $base->get('POST.users');
@@ -479,7 +479,7 @@ class Admin extends \Controller {
 				}
 			}
 			
-			$this->echo_success('Successfully generated new password for the selected user(s).'));
+			$this->echo_success('Successfully generated new password for the selected user(s).');
 		} else if ($action == 'update') {
 			$users = $base->get('POST.users');
 			$skip_list = array();
@@ -535,7 +535,7 @@ class Admin extends \Controller {
 				}
 			}
 			
-			$this->echo_success('Successfully sent email to ' . $i . ' user(s).'));
+			$this->echo_success('Successfully sent email to ' . $i . ' user(s).');
 			
 		} else {
 			throw new \exceptions\ActionError('undefined_action', 'The action is not defined.');
