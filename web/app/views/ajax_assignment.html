@@ -29,11 +29,11 @@ if (!$me['role_info']["submit"]) {
 }
 
 if ($can_submit == 1) {
-	if ($me['role_info']["manage"]) {
-		echo '<p class="bg-info notification-bar">You have admin privilege and are not restricted by submission quota.</p>';
+	if ($me['role_info']["override_quota"]) {
+		echo '<p class="bg-info notification-bar">Your role is not subject to submission quota restrictions.</p>';
 	} else if ($count["remaining"] > 0) {
 		echo '<p class="bg-success notification-bar">You can submit <strong>' . $assignment_info["quota_amount"] . '</strong> time(s) <em>' . $assignment_info["quota_strategy"] . '</em> and have <strong>' . $count["remaining"] . '</strong> submission chances left for this period.</p>';
-	} else if (!$me['role_info']["manage"]) {
+	} else if (!$me['role_info']["override_quota"]) {
 		echo '<p class="bg-warning notification-bar">You can only submit <strong>' . $assignment_info["quota_amount"] . '</strong> time(s) <em>' . $assignment_info["quota_strategy"] . '</em> but have used up your quota. Please wait for next period.</p>';
 		$can_submit = 0;
 	}
