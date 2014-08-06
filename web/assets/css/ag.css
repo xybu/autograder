@@ -135,8 +135,26 @@ body {
 .manage-icons {
 }
 
-,manage-icons a:hover {
+.manage-icons a {
+	cursor: pointer;
+}
+
+.manage-icons a:hover {
 	text-decoration: none;
+}
+
+/* A beautiful top alert */
+.alert-top {
+	position: fixed;
+	top: 15%;
+	right: 3%;
+	max-width: 50%;
+	font-size: 1em;
+	z-index: 105;
+}
+
+.alert-top .close {
+	margin-left: 0.5em;
 }
 
 /* Announcement UI */

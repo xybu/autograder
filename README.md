@@ -49,8 +49,9 @@ The file hierarchy of the project is as below:
 
  * **grader** the grader daemon and worker parts and the superclass of grader test cases.
  * **log** is the default directory to store log files. Excluded from Git and will be created by **inst.sh**.
- * **submissions** the default directory to save submissions that are sent to the web. Excluded from Git and will be created by **inst.sh**.
+ * **submissions** the default directory to save submissions that are sent to the web. Excluded from Git and will be created by **setup.sh**.
  * **utils** has some handy utility programs that will ease instructors' life.
+  * **default** stores the default data files used in the project.
   * **dump** stores the MySQL database dumps and an import script.
  * **web** stores the web application. The root dir of the web server should be pointed here.
  * **setup.sh** is the installation script.
@@ -63,6 +64,8 @@ Set-up
 
 ## Install
 
+Properly configure the timezone of your server so that all components inherit the system tzdata.
+
 First fetch the source code through git:
 
 ```
@@ -74,12 +77,20 @@ and then run `./setup.sh` and follow its instructions.
 The commands inside this script may not apply to your server configurations and you may
 need to set up your httpd and mysqld manually.
 
-## Configure
+The default sandbox (not included) is UMLBox, of which the source is available through git: 
 
+```
+git clone https://github.com/xybu92/umlbox-dash
+```
+
+If you need another sandbox, the corresponding arguments inside `grader/grader.py` should be changed.
+
+## Configure
+ 
  * Copy `grader/grader.json.def` to `grader/grader.json` and update its MySQL credentials and API keys (which will be used to authenticate with web component).
  * Copy `web/app/config/globals.ini.def` to `web/app/config/globals.ini` and update its MySQL
  credentials and API keys (to match the ones used in grader).
- * Log in to web interface with an admin account, and change the rest of the settings in admin panel.
+ * Log in to web interface with default admin account `admin` and password `123`, and change the rest of the settings in admin panel.
 
 API
 ===

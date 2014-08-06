@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+	<channel>
+		<title>AutoGrader Announcements</title>
+		<description>The RSS feed of AutoGrader announcements.</description>
+		<lastBuildDate>2014-08-12 01:42:00</lastBuildDate>
+		<pubDate>2014-08-12 01:42:00</pubDate>
+		<ttl>7200</ttl>
+		
+		<item>
+			<title>Test for HTML "purifications"!</title>
+			<description>Umm, this article will contain some malicious data.&#13;
+&lt;b&gt;test&lt;/b&gt;</description>
+			<link/>
+			<pubDate>2014-08-12 01:41:34</pubDate>
+			<guid>53e2693e20778-53e2693e207dd-53e2693e2083c</guid>
+		</item>
+	</channel>
+</rss>

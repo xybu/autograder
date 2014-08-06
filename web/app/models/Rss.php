@@ -1,7 +1,7 @@
 <?php
 /**
  * A simple RSS wrapper class.
- * This abstraction layer is added in case of future need.
+ * This abstraction layer is added in preparation of future needs.
  * 
  * @author	Xiangyu Bu <xybu92@live.com>
  */
@@ -48,29 +48,31 @@ class Rss extends \Model {
 	}
 	
 	/**
-	 * Return the loaded feed object.
-	 */
-	function get_feed() {
-		return $this->feed;
-	}
-	
-	/**
 	 * Return an array of all items.
 	 */
 	function get_items() {
-		return $this->feed->channel->item;
+		return $this->get_channel_info()->item;
 	}
 	
 	function get_raw() {
 		return $this->feed->asXML();
 	}
 	
+	function find_items_by_guid($guid) {
+		return $this->get_channel_info()->xpath('item/guid[text()="' . $guid . '"]/..');
+	}
+	
 	function add_item($title, $description, $link, $pubDate, $guid = "") {
 		if ($guid == '') {
-			$guid = uniqid() . '-' . $this->get_rand_str(6) . '-' . $this->get_rand_str(8);
+			// make sure the randomly generated guid is unique in the rss feed
+			$test = array();
+			do {
+				$guid = uniqid() . '-' . uniqid() . '-' . uniqid();
+				$test = $this->find_items_by_guid($guid);
+			} while (count($test) != 0);
 		}
 		
-		$new_item = $this->feed->channel->addChild('item', '');
+		$new_item = $this->get_channel_info()->addChild('item', '');
 		$new_item->addChild('title', $title);
 		$new_item->addChild('description', $description);
 		$new_item->addChild('link', $link);
@@ -78,14 +80,29 @@ class Rss extends \Model {
 		$new_item->addChild('guid', $guid);
 	}
 	
-	function edit_item() {
+	function edit_item($title, $description, $link, $pubDate, $guid) {
+		// find all items with given guid
+		$item_nodes = $this->find_items_by_guid($guid);
+		foreach ($item_nodes as &$node) {
+			$node->title = $title;
+			$node->description = $description;
+			$node->link = $link;
+			$node->pubDate = $pubDate;
+			$node->guid = $guid;
+		}
 	}
 	
 	function delete_item($guid) {
-		
+		$item_nodes = $this->find_items_by_guid($guid);
+		// SimpleXMLElement itself has an [0] index
+		foreach ($item_nodes as &$node) unset($node[0]);
 	}
 	
 	function save($file_path = "") {
+		// update the metadata
+		$this->get_channel_info()->pubDate = date('c');
+		$this->get_channel_info()->lastBuildDate = date('c');
+		
 		if (empty($file_path)) $file_path = $this->path;
 		return @file_put_contents($file_path, $this->get_raw(), LOCK_EX);
 	}

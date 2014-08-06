@@ -1,0 +1,39 @@
+<form class="form-horizontal announcement-form" role="form" method="post" action="/admin/announcement/update">
+	<input type="hidden" name="guid" value="<?php echo $article['guid']?>" />
+	<div class="form-group">
+		<label class="col-sm-2 control-label">Title</label>
+		<div class="col-sm-10">
+			<input type="text" name="title" placeholder="Title for this announcement." class="form-control" value="<?php echo htmlspecialchars($article['title'])?>" required />
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-sm-2 control-label">Pub DateTime</label>
+		<div class="col-sm-10">
+			<div class="input-group date" data-date-format="YYYY-MM-DD hh:mm:ss a">
+				<input type="text" class="form-control" id="pubDate" name="pubDate" value="<?php echo $article['pubDate']?>" required />
+				<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+			</div>
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-sm-2 control-label">Link</label>
+		<div class="col-sm-10">
+			<input type="text" id="link" name="link" value="<?php echo htmlspecialchars($article['link'])?>" placeholder="The URL to open when article title is clicked (optional)." class="form-control" />
+		</div>
+	</div>
+	<div class="form-group">
+		<label class="col-sm-2 control-label">Content</label>
+		<div class="col-sm-10">
+			<textarea id="content" name="content" class="form-control" rows="3"><?php echo $article['content']?></textarea>
+		</div>
+	</div>
+	<div class="form-group">
+		<div class="col-sm-12 text-right">
+<?php
+if ($article['guid'] != '') echo '<input type="button" class="btn btn-danger" value="Delete" data-guid="' . $article['guid'] . '" />';
+?>
+			<input type="button" class="btn btn-default" value="Clear" />
+			<input type="submit" class="btn btn-primary" value="Submit" />
+		</div>
+	</div>
+</form>

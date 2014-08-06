@@ -33,7 +33,7 @@ class User extends \Model {
 	}
 	
 	function findById($id) {
-		$result = $this->query('SELECT user_id, password, role_id FROM users WHERE user_id=?', $id);
+		$result = $this->query('SELECT * FROM users WHERE user_id=?', $id);
 		
 		if (count($result) == 1) {
 			$role_id = $result[0]['role_id'];
@@ -50,6 +50,10 @@ class User extends \Model {
 		if ($user_info != null && password_verify($password, $user_info['password']))
 			return $user_info;
 		return null;
+	}
+	
+	function findByRole($role_id) {
+		return $this->query('SELECT * FROM users WHERE role_id=?', $role_id);
 	}
 	
 	function addUser($id, $password, $role) {

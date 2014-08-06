@@ -24,7 +24,7 @@ class Admin extends \Controller {
 		$this->set_view('admincp.html');
 	}
 	
-	function addAnnouncement($base) {
+	function updateAnnouncementItem($base) {
 		$this->verifyAdminPermission();
 		
 		try {
@@ -32,25 +32,49 @@ class Admin extends \Controller {
 			$pubDate = $base->get('POST.pubDate');
 			$link = $base->get('POST.link');
 			$content = $base->get('POST.content');
+			$guid = $base->get('POST.guid');
 			
 			$Rss = new \models\Rss($base->get('DATA_PATH') . 'feed.xml');
-			$Rss->add_item($title, $content, $link, $pubDate);
+			$msg = '';
+			
+			if (empty($guid)) {
+				// if guid is empty, then add an article
+				$Rss->add_item($title, $content, $link, $pubDate);
+				$msg = 'The announcement has been created successfully.';
+			} else {
+				// otherwise update an article
+				$Rss->edit_item($title, $content, $link, $pubDate, $guid);
+				$msg = 'The announcement has been updated.';
+			}
+			
 			if ($Rss->save() === false)
 				throw new \exceptions\FileError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "feed.xml") . "\".");
 			
-			$this->echo_success('Successfully created a new announcement.');
+			$this->echo_success($msg);
 			
 		} catch (\exceptions\FileError $e) {
 			$this->echo_json($e->toArray());
 		}
 	}
 	
-	function editAnnouncement($base) {
-		
-	}
-	
-	function deleteAnnouncement($base) {
-		
+	function deleteAnnouncementItem($base) {
+		$this->verifyAdminPermission();
+		try {
+			$guid = $base->get('POST.guid');
+			if (empty($guid))
+				throw new \exceptions\ActionError('target_unspecified', 'The announcement to delete is not specified.');
+			
+			$Rss = new \models\Rss($base->get('DATA_PATH') . 'feed.xml');
+			$Rss->delete_item($guid);
+			
+			if ($Rss->save() === false)
+				throw new \exceptions\FileError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "feed.xml") . "\".");
+			
+			$this->echo_success('The selected article has been deleted.');
+			
+		} catch (\exceptions\Error $e) {
+			$this->echo_json($e->toArray());
+		}
 	}
 	
 	function showAnnouncementsPage($base) {
@@ -578,9 +602,13 @@ class Admin extends \Controller {
 		
 		foreach ($current_roles as $i => $role) {
 			
-			if (array_key_exists('delete', $role)) continue;
-			
 			try {
+				if (array_key_exists('delete', $role)) {
+					if (count($User->findByRole($role['key'])) > 0)
+						throw new \exceptions\ActionError('role_in_use', 'The role "' . $role['key'] . '" cannot be deleted because it is still in use.');
+					continue;
+				}
+			
 				if (!array_key_exists('key', $role) || !array_key_exists('display', $role))
 					throw new \exceptions\ActionError('invalid_data', 'ID and name are required fields.');
 			

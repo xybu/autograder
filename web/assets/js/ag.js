@@ -12,7 +12,7 @@ $(document).ready(function() {
 			beforeSubmit: function(formData, jqForm) {
 			},
 			complete: function(xhr) {
-				if (xhr.status == 200) {
+				if (xhr.status < 400) {
 					location.reload();
 				} else if (xhr.status == 403) {
 					$("#help_text").html("<p class=\"text-danger\">" + xhr.responseJSON.error_description + " (" + xhr.responseJSON.error + ")</p>");

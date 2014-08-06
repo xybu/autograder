@@ -13,9 +13,9 @@ $(document).ready(function() {
 				return n;
 			}).concat(event.parameters.id ? event.parameters.id.split('.') : []);
 			var links = names.slice();
-                	
-                	// process the navigation link
-                	var marked = 0;
+			
+			// process the navigation link
+			var marked = 0;
 			$('#sidebar a').each(function() {
 				if ($(this).attr('href') == event.path) {
 					$(this).addClass('active').focus();
@@ -25,12 +25,11 @@ $(document).ready(function() {
 				}
 			});
                 	
-                	if (marked > 0)
-	                	load_content_dom(event.path);
-	                else {
-	                	// the uri is not loadable
-	                	$('#content').html('<p class="bg-danger notification-bar">The URI requested is not available. Please select one from the sidebar.</p>');
-	                }
+			if (marked > 0) load_content_dom(event.path);
+			else {
+				// the uri is not loadable
+				$('#content').html('<p class="bg-danger notification-bar">The URI requested is not available. Please select one from the sidebar.</p>');
+			}
 		});
 		$('#sidebar a').address();
 	}
@@ -62,7 +61,6 @@ function load_content_dom(ajax_url) {
 					load_announcements_panel();
 					break;
 			}
-			$("#loading").removeClass("slideInRight");
 			$("#loading").addClass("fadeOut");
 		},
 		url: ajax_url
@@ -71,6 +69,48 @@ function load_content_dom(ajax_url) {
 
 function load_announcements_panel() {
 	$('.date').datetimepicker();
+	$('.announcement-form').ajaxForm({
+		dataType: 'json',
+		complete: function(xhr) {
+			if (xhr.status == 200) {
+				if (xhr.responseJSON.error) {
+					displayAlert('danger', xhr.responseJSON.error_description + ' <em>(' + xhr.responseJSON.error + ')</em>', function(){
+						$('body .alert-top').addClass('animated');
+						$('body .alert-top').addClass('fadeOut');
+					}, 5000);
+				} else {
+					displayAlert('success', xhr.responseJSON.message, function(){
+						$('body .alert-top').addClass('animated');
+						$('body .alert-top').addClass('fadeOut');
+					}, 5000);
+					load_content_dom('/admin/announcements');
+				}
+			} else {
+			}
+		}
+	});
+	$('.announcement-form input[value="Delete"]').click(function(e){
+		var item = $(e.target);
+		var container = item.closest('form.announcement-form').parent();
+		$.ajax({
+			type: 'POST',
+			url: '/admin/announcement/del',
+			data: {'guid': item.attr('data-guid')}
+		}).done(function(data){
+			if (data.status && data.status == 'success') {
+				container.toggle(500);
+				displayAlert('success', data.message, function(){
+					$('body .alert-top').addClass('animated');
+					$('body .alert-top').addClass('fadeOut');
+				}, 5000);
+			} else {
+				displayAlert('danger', data.error_description + ' <em>(' + data.error + ')</em>', function(){
+					$('body .alert-top').addClass('animated');
+					$('body .alert-top').addClass('fadeOut');
+				}, 5000);
+			}
+		});
+	});
 }
 
 function load_users_panel() {
@@ -79,19 +119,9 @@ function load_users_panel() {
 
 	$('#roles-form').ajaxForm({
 		dataType: 'json',
-		beforeSubmit: function(formData, jqForm) {
-			$('#roles-form-response').html('');
-		},
 		complete: function(xhr) {
-			if (xhr.status == 200) {
-				if (xhr.responseJSON.error) {
-					$('#roles-form-response').html("<span class=\"text-danger\">" +  xhr.responseJSON.error_description+ " (error: " + xhr.responseJSON.error + ")</span>");
-				} else {
-					load_content_dom('/admin/users');
-				}
-			} else {
-				$('#roles-form-response').text(xhr.responseText);
-			}
+			defaultAJAXCompletionHandler(xhr);
+			if (xhr.status == 200 && !xhr.responseJSON.error) load_content_dom('/admin/users');
 		}
 	});
 	
@@ -139,39 +169,24 @@ function load_users_panel() {
 	$('#update-user-form').ajaxForm({
 		dataType: 'json',
 		complete: function(xhr) {
-			if (xhr.status == 200) {
-				if (xhr.responseJSON.error) {
-					$('#update-user-response').html("<span class=\"text-danger\">" +  xhr.responseJSON.error_description+ " (error: " + xhr.responseJSON.error + ")</span>");
-				} else {
-					$('#update-user-response').html("<span class=\"text-success\">" +  xhr.responseJSON.message + '</span>');
-					$('#search-submit').click();
-				}
-			} else {
-				$('#update-user-response').text(xhr.responseText);
-			}
+			if (xhr.status == 200 && !xhr.responseJSON.error) $('#search-submit').click();
+			defaultAJAXCompletionHandler(xhr);
 		}
 	});
 	
 	$('#add-user-form').ajaxForm({
 		dataType: 'json',
 		beforeSubmit: function(formData, jqForm) {
-			if ($('#add-user-form #role-selector').val() == "") {
-				$('#add-user-response').html("<span class=\"text-warning\">Please choose a role from the drop-down list.</span>");
+			var role_selector = $('#add-user-form #role-selector');
+			var role_styler = role_selector.parent().find('button[data-id="role-selector"]');
+			role_styler.removeClass('btn-warning');
+			if (role_selector.val() == "") {
+				role_styler.addClass('btn-warning');
+				displayAlert('warning', 'Please choose a role from the dropdown list.', function(){}, 0);
 				return false;
 			}
-			$('#add-user-response').html('');
 		},
-		complete: function(xhr) {
-			if (xhr.status == 200) {
-				if (xhr.responseJSON.error) {
-					$('#add-user-response').html("<span class=\"text-danger\">" +  xhr.responseJSON.error_description+ " (error: " + xhr.responseJSON.error + ")</span>");
-				} else {
-					$('#add-user-response').html("<span class=\"text-success\">" +  xhr.responseJSON.message + "</span>");
-				}
-			} else {
-				$('#add-user-response').text(xhr.responseText);
-			}
-		}
+		complete: defaultAJAXCompletionHandler
 	});
 }
 
@@ -287,6 +302,28 @@ function load_submissions_panel() {
 		}
 	});
 	
+}
+
+function defaultAJAXCompletionHandler(xhr) {
+	if (xhr.status == 200) {
+		if (xhr.responseJSON.error) {
+			displayAlert('danger', xhr.responseJSON.error_description + ' <em>(' + xhr.responseJSON.error + ')</em>', function(){
+			}, 0);
+		} else {
+			displayAlert('success', xhr.responseJSON.message, function(){
+				$('body .alert-top').addClass('animated');
+				$('body .alert-top').addClass('fadeOut');
+			}, 5000);
+		}
+	} else {
+		displayAlert('danger', xhr.responseText, function(){}, 0);
+	}
+}
+
+function displayAlert(level, msg, callback, timer) {
+	$('body .alert-top').remove();
+	$('body').append('<div class="alert alert-top alert-' + level + '"><a href="#" class="close" data-dismiss="alert">&times;</a>' + msg + '</div>');
+	if (callback) setTimeout(callback, timer);
 }
 
 function makeToggleable(item) {

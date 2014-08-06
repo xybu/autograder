@@ -3,24 +3,13 @@
 	<channel>
 		<title>AutoGrader Announcements</title>
 		<description>The RSS feed of AutoGrader announcements.</description>
-		<lastBuildDate>Mon, 06 Sep 2010 00:01:00 +0000</lastBuildDate>
-		<pubDate>Sun, 06 Sep 2009 16:20:00 +0000</pubDate>
+		<lastBuildDate>2014-08-06T19:11:59+00:00</lastBuildDate>
+		<pubDate>2014-08-06T19:11:59+00:00</pubDate>
 		<ttl>7200</ttl>
 		
-		<item>
-			<title>Example entry</title>
-			<description>Here is some text containing an interesting description.</description>
-			<link>http://www.example.com/blog/post/1</link>
-			<guid>7bd204c6-1655-4c27-aeee-53f933c5395f</guid>
-			<pubDate>Sun, 06 Sep 2009 16:20:00 +0000</pubDate>
-		</item>
 		
-		<item>
-			<title>Example entry 2</title>
-			<description>Here is some text containing an interesting description.</description>
-			<link/>
-			<guid>7bd204c6-1655-4c27-aeee-53f933c5395f</guid>
-			<pubDate>Sun, 06 Sep 2009 16:20:00 +0000</pubDate>
-		</item>
-	</channel>
+		
+		
+	<item><title>Test for HTML "purifications"!</title><description>Umm, this article will contain some malicious data.&#13;
+&lt;b&gt;test&lt;/b&gt;</description><link/><pubDate>2014-08-12 01:41:34</pubDate><guid>53e2693e20778-53e2693e207dd-53e2693e2083c</guid></item><item><title>Test Timestamp update</title><description>I want to see if the timestamps in the metadata get updated.</description><link/><pubDate>2014-08-19 03:11:59 pm</pubDate><guid>53e27dff7b15c-53e27dff7b1c0-53e27dff7b21e</guid></item></channel>
 </rss>
