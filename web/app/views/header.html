@@ -43,7 +43,7 @@
 						<a data-toggle="dropdown" class="dropdown-toggle" href="#"><?php echo $me["user_id"] . $USER_EMAIL_DOMAIN?> <b class="caret"></b></a>
 						<ul class="dropdown-menu">
 						<?php
-if ($me["role"]["permissions"]["manage"])
+if ($me["role_info"]["manage"])
 	echo "<li><a href=\"/admin\">Manage</a></li><li class=\"divider\"></li>";
 ?>
 							<li><a href="/logout">Log out</a></li>

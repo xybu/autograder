@@ -33,11 +33,11 @@ class User extends \Model {
 	}
 	
 	function findById($id) {
-		$result = $this->query('SELECT user_id, user_password, role_id FROM users WHERE user_id=?', $id);
+		$result = $this->query('SELECT user_id, password, role_id FROM users WHERE user_id=?', $id);
 		
 		if (count($result) == 1) {
 			$role_id = $result[0]['role_id'];
-			$result[0]['role_info'] = $this->getRoleTable()[$role_id]);
+			$result[0]['role_info'] = $this->getRoleTable()[$role_id];
 			return $result[0];
 		}
 		
@@ -48,7 +48,7 @@ class User extends \Model {
 		$user_info = $this->findById($id);
 		
 		if ($user_info != null && password_verify($password, $user_info['password']))
-			return $userinfo;
+			return $user_info;
 		return null;
 	}
 	
