@@ -30,4 +30,9 @@ class Model extends \Prefab {
 		return $str;
 	}
 	
+	function get_rand_str($len) {
+		$chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		return substr(str_shuffle(substr(str_shuffle($chars), 0, $len / 2 + 1) . substr(str_shuffle($chars), 0, $len / 2 + 1)), 0, $len);
+	}
+	
 }

@@ -57,13 +57,20 @@ function load_content_dom(ajax_url) {
 					break;
 				case '/admin/submissions':
 					load_submissions_panel();
-					break
+					break;
+				case '/admin/announcements':
+					load_announcements_panel();
+					break;
 			}
 			$("#loading").removeClass("slideInRight");
 			$("#loading").addClass("fadeOut");
 		},
 		url: ajax_url
 	});
+}
+
+function load_announcements_panel() {
+	$('.date').datetimepicker();
 }
 
 function load_users_panel() {

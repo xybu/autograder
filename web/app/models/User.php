@@ -103,20 +103,12 @@ class User extends \Model {
 		$i = 0;
 		$pool = array();
 		while ($i < $num) {
-			$str = $this->getRandomStr($len);
+			$str = $this->get_rand_str($len);
 			if (in_array($str, $pool)) continue;
 			$pool[] = $str;
 			++$i;
 		}
 		return $pool;
-	}
-	
-	/**
-	 * Return a randomly generated string.
-	 */
-	function getRandomStr($len) {
-		$chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-		return substr(str_shuffle(substr(str_shuffle($chars), 0, $len / 2 + 1) . substr(str_shuffle($chars), 0, $len / 2 + 1)), 0, $len);
 	}
 	
 	/**

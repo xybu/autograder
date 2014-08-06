@@ -65,14 +65,17 @@ class Rss extends \Model {
 		return $this->feed->asXML();
 	}
 	
-	function add_item($title, $description, $link, $pubDate, $guid) {
-		$new_item = new SimpleXMLElement("<item />");
+	function add_item($title, $description, $link, $pubDate, $guid = "") {
+		if ($guid == '') {
+			$guid = uniqid() . '-' . $this->get_rand_str(6) . '-' . $this->get_rand_str(8);
+		}
+		
+		$new_item = $this->feed->channel->addChild('item', '');
 		$new_item->addChild('title', $title);
 		$new_item->addChild('description', $description);
 		$new_item->addChild('link', $link);
 		$new_item->addChild('pubDate', $pubDate);
 		$new_item->addChild('guid', $guid);
-		$this->feed->channel->appendChild($new_item);
 	}
 	
 	function edit_item() {
@@ -84,7 +87,7 @@ class Rss extends \Model {
 	
 	function save($file_path = "") {
 		if (empty($file_path)) $file_path = $this->path;
-		return file_put_contents($file_path, $this->get_raw());
+		return @file_put_contents($file_path, $this->get_raw(), LOCK_EX);
 	}
 	
 }

@@ -25,7 +25,24 @@ class Admin extends \Controller {
 	}
 	
 	function addAnnouncement($base) {
-		$user_info = $this->verifyAdminPermission();
+		$this->verifyAdminPermission();
+		
+		try {
+			$title = $base->get('POST.title');
+			$pubDate = $base->get('POST.pubDate');
+			$link = $base->get('POST.link');
+			$content = $base->get('POST.content');
+			
+			$Rss = new \models\Rss($base->get('DATA_PATH') . 'feed.xml');
+			$Rss->add_item($title, $content, $link, $pubDate);
+			if ($Rss->save() === false)
+				throw new \exceptions\FileError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "feed.xml") . "\".");
+			
+			$this->echo_success('Successfully created a new announcement.');
+			
+		} catch (\exceptions\FileError $e) {
+			$this->echo_json($e->toArray());
+		}
 	}
 	
 	function editAnnouncement($base) {
