@@ -32,6 +32,8 @@ class User extends \Controller {
 			if ($base->exists('POST.redirect_hash')) {
 				$redirect_uri = $base->get('POST.redirect_hash');
 				if (strpos($redirect_uri, '#') === false) $redirect_uri = "";
+				else if (strpos($redirect_uri, '/admin/') !== false)
+					$redirect_uri = '/admin' . $redirect_uri;
 			} else $redirect_uri = '';
 			
 			$base->reroute('/' . $redirect_uri);
