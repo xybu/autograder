@@ -245,6 +245,7 @@ function load_submissions_panel() {
 	$('#search-submission-form').ajaxForm({
 		dataType: 'json',
 		beforeSubmit: function(formData, jqForm) {
+			$('#submission-record-form #response').html('');
 		},
 		complete: function(xhr, status, jqForm) {
 			if (status == 'success') {

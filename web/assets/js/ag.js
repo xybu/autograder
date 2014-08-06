@@ -133,7 +133,7 @@ function init_assignment_detail_page() {
 				$("#action_feedback").html("<span class=\"text-danger\">" + xhr.responseJSON.error_description + "</span>");
 			} else {
 				var str = xhr.responseJSON.message;
-				alert(str + ' Click "OK" to refresh the page.');
+				alert(str + '\nClick "OK" to refresh the page.');
 				load_content_dom(current_path);
 			}
 		}

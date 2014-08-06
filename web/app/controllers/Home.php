@@ -94,7 +94,6 @@ class Home extends \Controller {
 		$user_info = $this->get_user_status();
 		
 		if ($user_info != null) $base->set("me", $user_info);
-		
 		$this->set_view('help.html');
 	}
 }

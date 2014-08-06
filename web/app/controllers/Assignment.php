@@ -64,7 +64,7 @@ class Assignment extends \Controller {
 			
 			// the assignment should exist
 			$assignment_id = $base->get('POST.assignment_id');
-			$assignment_info = $Assignment->findById($params['id']);
+			$assignment_info = $Assignment->findById($assignment_id);
 			if ($assignment_info == null)
 				throw new \exceptions\ActionError('assignment_not_found', 'The assignment requested does not exist.');
 			

@@ -204,7 +204,7 @@ class Admin extends \Controller {
 				$grade_adj = intval($grade_adj_raw);
 				$grade_comment = $base->get('POST.comment_' . $id);
 				
-				$submision_record['grade_adjustment'] = $grade_adj;
+				$submission_record['grade_adjustment'] = $grade_adj;
 				$Assignment->addLog($submission_record, $this->user['user_id'] . " changed the delta grade to " . $grade_adj . " with comment " . $grade_comment . ".");
 				
 				$Assignment->updateSubmission($submission_record);
@@ -411,7 +411,7 @@ class Admin extends \Controller {
 			
 			$c = 0;
 			$skip_list = array();
-			
+			$View = \View::instance();
 			foreach ($users as $i => $name) {
 				if (!empty($name)) {
 					// skip existing users
@@ -426,7 +426,7 @@ class Admin extends \Controller {
 							$mail->addTo($name . $base->get("USER_EMAIL_DOMAIN"), $name);
 							$mail->setFrom($base->get("COURSE_ADMIN_EMAIL"), $base->get("COURSE_ID_DISPLAY") . " AutoGrader");
 							$mail->setSubject("Your " . $base->get("COURSE_ID_DISPLAY") . " AutoGrader Password");
-							$mail->setMessage(\View::instance()->render("email_forgot_password.txt"));
+							$mail->setMessage($View->render("email_forgot_password.txt"));
 							$mail->send();
 						}
 						++$c;
@@ -471,11 +471,20 @@ class Admin extends \Controller {
 			$users = $base->get('POST.users');
 			$password_pool = $User->getPasswordPool(count($users), static::PASSWORD_LEN);
 			$i = 0;
+			$View = \View::instance();
 			foreach ($users as $name => $item) {
 				if (array_key_exists('selected', $item)) {
 					$user_info = $User->findById($name);
-					if ($user_info != null)
-						$User->editUser($user_info, null, null, $password_pool[$i++]);
+					if ($user_info != null) {
+						$User->editUser($user_info, null, null, $password_pool[$i]);
+						$base->set('password', $password_pool[$i++]);
+						$mail = new \models\Mail();
+						$mail->addTo($name . $base->get("USER_EMAIL_DOMAIN"), $name);
+						$mail->setFrom($base->get("COURSE_ADMIN_EMAIL"), $base->get("COURSE_ID_DISPLAY") . " AutoGrader");
+						$mail->setSubject("Your " . $base->get("COURSE_ID_DISPLAY") . " AutoGrader Password");
+						$mail->setMessage($View->render("email_forgot_password.txt"));
+						$mail->send();
+					}
 				}
 			}
 			
@@ -583,6 +592,8 @@ class Admin extends \Controller {
 			$this->echo_success('Successfully saved role data.');
 			
 		} catch (\exceptions\ActionError $e) {
+			$this->echo_json($e->toArray());
+		} catch (\exceptions\FileError $e) {
 			$this->echo_json($e->toArray());
 		}
 	}

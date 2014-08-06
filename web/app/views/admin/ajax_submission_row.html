@@ -6,7 +6,7 @@ echo "<tr>" .
 	"<td>" . $row['assignment_id'] . "</td>" .
 	"<td>" . $row['status'] . " <small>at " . $row['date_updated'] . "</small></td>" .
 	"<td class=\"text-center\">" . $row['grade'] . "</td>" .
-	"<td><input type=\"number\" name=\"grade_adjustment_" . $row["id"] . "\" value=\"" . $row['grade_adjustment'] . "\" size=\"4\" /></td>" .
+	"<td><input type=\"number\" name=\"grade_adjustment_" . $row["id"] . "\" value=\"" . $row['grade_adjustment'] . "\" style=\"width: 6em\" /></td>" .
 	"<td><input type=\"text\" name=\"comment_" . $row["id"] . "\" value=\"\" placeholder=\"Justify your actions.\" /></td>" .
 	"<td class=\"text-center manage-icons\"><a title=\"Download the submission file\" href=\"/submissions/get/" . $row["id"] . "\"><i class=\"fa fa-cloud-download fa-lg\"></i></a>&nbsp;<a href=\"/submissions/log/" . $row['id'] . "\" data-toggle=\"modal\" data-target=\"#wrapperModal\" title=\"Read the grading log\"><i class=\"fa fa-info-circle fa-lg\"></i></a>&nbsp;<a title=\"Download the grader dump\" href=\"/admin/submissions/get_dump/" . $row["id"] . "\"<i class=\"fa fa-file-archive-o fa-lg\"></i></a></td>" .
 	"</tr>";

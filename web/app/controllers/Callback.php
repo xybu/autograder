@@ -30,8 +30,8 @@ class Callback extends \Controller {
 			if (empty($grader_key) || $Connector->findServerByKey($grader_key) == null)
 				throw new \exceptions\AuthError('invalid_request', 'The grader key is not registered.');
 			
-			$callback_type = $base->get("POST.type");
-			$submission_id = $base->get("POST.submission_id");
+			$callback_type = $base->get('POST.type');
+			$submission_id = $base->get('POST.submission_id');
 			$submission_info = $Assignment->findSubmissionById($submission_id);
 			if ($submission_info == null)
 				throw new \exceptions\ActionError('submission_not_found', 'The target submission record does not exist.');
@@ -42,7 +42,7 @@ class Callback extends \Controller {
 				$Assignment->addLog($submission_info, "Started grading.");
 				$Assignment->updateSubmission($submission_info);
 				$this->echo_success('The start callback has been successfully handled.');
-			} else if ($callback_type == 'done')
+			} else if ($callback_type == 'done') {
 				// for finish callback, update the whole record
 				$Assignment->addLog($submission_info, "Grading finished.");
 				
