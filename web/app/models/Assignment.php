@@ -1,4 +1,12 @@
 <?php
+/**
+ * \models\Assignment.php
+ * 
+ * The assignment and submission model.
+ * Note that it throws FileError in some methods.
+ * 
+ * @author	Xiangyu Bu <xybu92@live.com>
+ */
 
 namespace models;
 
@@ -206,10 +214,10 @@ class Assignment extends \Model {
 	 * 
 	 * @param	$user_info: the array of the submitter (returned by User::findById).
 	 * @param	$assignment_info: the data array of the assignment (returned by findById).
+	 *
+	 * @throws	\exceptions\FileError if any error occurs.
 	 * 
-	 * @return	an int value if the file is successfully saved to submission pool;
-	 * 		otherwise return one string of 'file_too_large', 'empty_ext_name', 'invalid_ext_name', and 'upload_error'
-	 * 		to indicate the reason.
+	 * @return	the newly created submission record.
 	 */
 	function saveSubmission($user_info, $assignment_info) {
 		
@@ -217,10 +225,10 @@ class Assignment extends \Model {
 		$overwrite = true;
 		$slug = true;
 		$count = 0;
-		$error_description = "unknown_error";
+		$error = '';
 		
 		$files = $Web->receive(
-			function($file) use ($user_info, $assignment_info, &$count, &$error_description) {
+			function($file) use ($user_info, $assignment_info, &$count, &$error) {
 				/* $file looks like:
 					array(5) {
 						["name"] =>     string(19) "csshat_quittung.png"
@@ -232,8 +240,8 @@ class Assignment extends \Model {
 					and $file['name'] already contains the slugged name
 				*/
 				
-				if ($file["error"] > 0) {
-					$error_description = "upload_error";
+				if ($file['error'] > 0) {
+					$error = 'upload_error';
 					return false;
 				}
 				
@@ -241,15 +249,15 @@ class Assignment extends \Model {
 				if ($count > 0) return false;
 				
 				// if there is file size limit, check it
-				if (array_key_exists("submit_filesize", $assignment_info) && $file["size"] > $assignment_info["submit_filesize"]) {
-					$error_description = "file_too_large";
+				if (array_key_exists('submit_filesize', $assignment_info) && $file['size'] > $assignment_info['submit_filesize']) {
+					$error = 'file_too_large';
 					return false;
 				}
 				
 				$file_ext = pathinfo($file["name"], PATHINFO_EXTENSION);
-				// files are required to have an extension name, and thus names like 'hello' will be refused
-				if ($file_ext == "") {
-					$error_description = "empty_ext_name";
+				// files are required to have an extension name
+				if ($file_ext == '') {
+					$error = 'empty_ext_name';
 					return false;
 				}
 				
@@ -258,7 +266,7 @@ class Assignment extends \Model {
 					$accepted_ext = "," . str_replace(" ", "", $assignment_info["submit_filetype"]) . ",";
 					$accepted_ext = str_replace(",,", ",", $accepted_ext);
 					if (strpos($accepted_ext, "," . $file_ext . ",") === false) {
-						$error_description = "invalid_ext_name";
+						$error = "invalid_ext_name";
 						return false;
 					}
 				}
@@ -271,34 +279,54 @@ class Assignment extends \Model {
 			$slug
 		);
 		
+		if ($error != '') {
+			$error_desc = '';
+			switch ($error) {
+				case 'upload_error':
+					$error_desc = 'File was refused by the server.';
+					break;
+				case 'file_too_large':
+					$error_desc = 'The file size exceeds limit.';
+					break;
+				case 'empty_ext_name':
+					$error_desc = 'The file does not have an extension name.';
+					break;
+				case 'invalid_ext_name':
+					$error_desc = 'The file extension is not accepted.';
+					break;
+			}
+			throw new \exceptions\FileError($error, $error_desc);
+		}
+		
+		if ($count != 1)
+			throw new \exceptions\FileError('unknown_error', 'You can submit only one file at a time.');
+		
 		// $files is an array of filename-status pairs
-		$record = null;
 		foreach ($files as $name => $status) {
 			if ($status) {
+				// 'history' is safe because $name must have a '.' in the file name
 				$path = dirname($name) . "/history/";
+				if (!file_exists($path)) mkdir($path, 0777);
+				
 				$file_ext = pathinfo($name, PATHINFO_EXTENSION);
 				$file_name_new = "archive." . date('c') . "." . $file_ext;
-				// 'history' is safe because $name must have a '.' in the file name
-				if (!file_exists($path)) mkdir($path, 0777);
 				rename($name, $path . $file_name_new);
 				copy($path . $file_name_new, $path . "../latest.archive");
 				
 				// add to database
 				$this->query(
-					"INSERT INTO submissions (user_id, assignment_id, file_path, status, date_created, date_updated) " .
-					"VALUES (:user_id, :assignment_id, :file_path, 'submitted', NOW(), NOW()); ",
+					"INSERT INTO submissions (user_id, assignment_id, file_path, status, date_created, date_updated) VALUES (:user_id, :assignment_id, :file_path, 'submitted', NOW(), NOW()); ",
 					array(
 						':user_id' => $user_info["user_id"],
 						':assignment_id' => $assignment_info["id"],
 						':file_path' => $path . $file_name_new
 					)
 				);
-				$record = $this->findSubmissionByPath($path . $file_name_new);
+				return $this->findSubmissionByPath($path . $file_name_new);
 			}
 		}
 		
-		if ($count == 1) return $record;
-		return $error_description;
+		return null;
 	}
 	
 	/**
@@ -311,7 +339,7 @@ class Assignment extends \Model {
 		
 		if (array_key_exists(':user_id_pattern', $cond)) {
 			$sql_cond[] = "s1.user_id LIKE :user_id_pattern";
-			$cond[':user_id_pattern'] = $this->toSqlWildcard($cond[':user_id_pattern']);
+			$cond[':user_id_pattern'] = $this->to_mysql_wildcard($cond[':user_id_pattern']);
 		}
 		
 		if (array_key_exists(':date_created_start', $cond))
@@ -361,13 +389,6 @@ class Assignment extends \Model {
 	 */
 	function deleteSubmission($id) {
 		$this->query("DELETE FROM submissions WHERE id=? LIMIT 1;", $id);
-	}
-	
-	function toSqlWildcard($str) {
-		$str = str_replace('*', '%', $str);
-		$str = str_replace('?', '_', $str);
-		$str = str_replace('"', '\"', $str);
-		return $str;
 	}
 	
 	function isValidIdentifier($str) {

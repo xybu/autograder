@@ -4,87 +4,97 @@ namespace controllers;
 
 class Home extends \Controller {
 	
-	// interval between two retrieving password requests, in minutes
-	const RETRIEVE_PASSWORD_INTERVAL = 60;
+	const RETRIEVE_PASSWORD_INTERVAL = 60;	// in minutes
 	const DEFAULT_PASSWORD_LEN = 12;
 	
+	/**
+	 * Homepage route handler.
+	 */
 	function showHomePage($base) {
-		if ($base->exists("SESSION.user")) {
-			$user_info = $this->getUserStatus();
-			if ($user_info == null) {
-				// instead of raising a UserException, reroute the user
-				// to homepage
-				$base->clear("SESSION.user");
-				$base->reroute('/');
-			}
-			
+		$user_info = $this->get_user_status();
+		
+		if ($user_info == null) {
+			$this->set_view("signin.html");
+		} else {
 			$Assignment = \models\Assignment::instance();		
 			$base->set("assignments", $Assignment->getAllAssignments());
 			$base->set("me", $user_info);
-			$this->setView("usercp.html");
-		} else {
-			$this->setView("signin.html");
+			$this->set_view("usercp.html");
 		}
 	}
 	
+	/**
+	 * Announcement RSS route handler.
+	 * This handler does not check if the xml file exists.
+	 */
 	function showAnnouncements($base, $param) {
-		$Rss = new \models\Rss("data/feed.xml");
+		$Rss = new \models\Rss($base->get('DATA_PATH') . 'feed.xml');
+		
 		if ($param['type'] == "rss") {
 			header('Content-Type: application/xml; charset=utf-8');
 			echo $Rss->get_raw();
 		} else {
 			$base->set("announcements", $Rss->get_items());
-			$this->setView("ajax_announcements.html");
+			$this->set_view("ajax_announcements.html");
 		}
 	}
 	
+	/**
+	 * Forgot password page handler.
+	 */
 	function showRetrievePasswordPage($base) {
-		if ($base->exists("SESSION.user"))
-			$base->reroute("/");
-		$this->setView("forgot_password.html");
+		if ($this->get_user_status() != null) $base->reroute("/");
+		$this->set_view("forgot_password.html");
 	}
 	
+	/**
+	 * Forgot password form processor handler.
+	 */
 	function retrievePassword($base) {
 		
-		if ($base->exists("SESSION.forgot_password"))
-			$this->json_echo(array("error" => "request_too_frequent", "error_description" => "The wait time between two requests is " . self::RETRIEVE_PASSWORD_INTERVAL . " minute(s). Please contact admin for emergency."));
+		try {
+			
+			if ($this->get_user_status() != null)
+				throw new \exceptions\ActionError('user_logged_in', 'You are logged in and cannot perform this operation.');
+			
+			if ($base->exists('SESSION.forgot_password'))
+				throw new \exceptions\ActionError('request_too_frequent', 'The wait time between two requests is ' . self::RETRIEVE_PASSWORD_INTERVAL . ' minute(s). Please contact admin for emergency.');
+			
+			$User = \models\User::instance();
+			$user_id = $base->get('POST.user_id');
+			$user_info = $User->findById($user_id);
+			if (empty($user_id))
+				throw new \exceptions\ActionError('empty_user_id', 'Please enter your user id.');
+			
+			if (empty($user_info))
+				throw new \exceptions\ActionError('user_not_found', 'The user id you entered is not registered.');
+			
+			$base->set('SESSION.forgot_password', true, self::RETRIEVE_PASSWORD_INTERVAL);
+			
+			$password_pool = $User->getPasswordPool(1, self::DEFAULT_PASSWORD_LEN);
+			$User->editUser($user_info, null, null, $password_pool[0]);
+			$base->set("password", $password_pool[0]);
+			
+			$mail = new \models\Mail();
+			$mail->addTo($user_id . $base->get("USER_EMAIL_DOMAIN"), $user_id);
+			$mail->setFrom($base->get("COURSE_ADMIN_EMAIL"), $base->get("COURSE_ID_DISPLAY") . " AutoGrader");
+			$mail->setSubject("Your " . $base->get("COURSE_ID_DISPLAY") . " AutoGrader Password");
+			$mail->setMessage(\View::instance()->render("email_forgot_password.txt"));
+			$mail->send();
+			
+			$this->echo_success('An email has been sent to ' . $user_id . $base->get("USER_EMAIL_DOMAIN") . '. Please check your inbox.');
+			
+		} catch (\exceptions\ActionError $e) {
+			$this->echo_json($e->toArray());
+		}
 		
-		if ($base->exists("SESSION.user"))
-			$this->json_echo(array("error" => "user_logged_in", "error_description" => "You are already logged in to the system. Please go to assignment list page."));
-		
-		$user_id = $base->get("POST.user_id");
-		if (empty($user_id))
-			$this->json_echo(array("error" => "empty_user_id", "error_description" => "Please enter your user id."));
-		
-		$User = \models\User::instance();
-		$user_info = $User->findById($user_id);
-		$password_pool = $User->getPasswordPool(1, static::DEFAULT_PASSWORD_LEN);
-		
-		$User->editUser($user_info, null, null, $password_pool[0]);
-		$User->saveUserTable();
-		
-		if ($user_info == null)
-			$this->json_echo(array("error" => "unknown_user", "error_description" => "The user id provided is not found. Please contact admin."));
-		
-		$base->set("password", $password_pool[0]);
-		
-		$Mail = new \models\Mail();
-		$Mail->addTo($user_id . $base->get("USER_EMAIL_DOMAIN"), $user_id);
-		$Mail->setFrom($base->get("COURSE_ADMIN_EMAIL"), $base->get("COURSE_ID_DISPLAY") . " AutoGrader");
-		$Mail->setSubject("Your " . $base->get("COURSE_ID_DISPLAY") . " AutoGrader Password");
-		$Mail->setMessage(\View::instance()->render("email_forgot_password.txt"));
-		$Mail->send();
-
-		$base->set("SESSION.forgot_password", true, self::RETRIEVE_PASSWORD_INTERVAL * 60);
-		
-		$this->json_echo(array("status" => "success", "message" => "An email has been sent to " . $user_id . $base->get("USER_EMAIL_DOMAIN") . ". Please check your inbox."));
 	}
 	
-	function showSupportPage($base) {
-		
-	}	
-	
 	function showHelpPage($base) {
+		$user_info = $this->get_user_status();
 		
+		if ($user_info != null) $base->set("me", $user_info);
+		
+		$this->set_view('help.html');
 	}
 }

@@ -9,9 +9,9 @@
 
 abstract class Controller {
 	
-	protected $base;	// Base is also a singleton
+	protected $base;
 	protected $user;
-	protected $view = null;
+	protected $view_name = null;
 	
 	function encrypt($str, $key){
 		return openssl_encrypt($str, "AES-256-ECB", $key);
@@ -24,12 +24,10 @@ abstract class Controller {
 	}
 	
 	/**
-	 * Set the HTML view to render.
-	 *
-	 * @param	$viewName: the file name of the view to render
+	 * Set the HTML view to render after routing.
 	 */
-	function setView($viewName){
-		$this->view = $viewName;
+	function set_view($viewName){
+		$this->view_name = $viewName;
 	}
 	
 	/**
@@ -43,37 +41,42 @@ abstract class Controller {
 	 * HTTP route post-processor function, executed after a page is loaded
 	 */
 	function afterRoute($base) {
-		if ($this->view) {
-			echo View::instance()->render($this->view);
+		if ($this->view_name) {
+			echo View::instance()->render($this->view_name);
 		}
 	}
 	
-	function getUserStatus(){
+	/**
+	 * The login status is stored in PHP session instead of cookies
+	 * because the goal is to save as little information on clients as possible
+	 */
+	function get_user_status(){
 		if ($this->base->exists("SESSION.user"))
 			return $this->base->get("SESSION.user");
 		return null;
 	}
 	
-	// a SESSION-based login credential
-	// because of the nature of the project, 
-	// the goal is to save as little information on the client as possible
-	function setUserStatus($userData){
-		$this->base->set("SESSION.user", $userData);
-	}
-	
-	function voidUserStatus(){
-		$this->base->clear("SESSION.user");
+	/**
+	 * Save the user status information.
+	 * If the given data is null, log the user out.
+	 */
+	function set_user_status($userData){
+		if ($userData == null) $this->base->clear("SESSION.user");
+		else $this->base->set("SESSION.user", $userData);
 	}
 	
 	function getError($code, $msg) {
 		return array('error' => $code, 'error_description' => $msg);
 	}
 	
-	function getSuccess($msg) {
-		return array('status' => 'success', 'message' => $msg);
+	function echo_success($msg, $extra_data = null) {
+		if ($extra_data == null) $extra_data = array();
+		$extra_data['status'] = 'success';
+		$extra_data['message'] = $msg;
+		$this->echo_json($extra_data);
 	}
 	
-	function json_echo($array_data, $http_forbidden = false){
+	function echo_json($array_data, $http_forbidden = false){
 		$s = json_encode($array_data , JSON_PRETTY_PRINT);
 		if ($http_forbidden)		
 			header('HTTP/1.0 403 Forbidden');

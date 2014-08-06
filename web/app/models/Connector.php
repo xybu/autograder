@@ -1,7 +1,7 @@
 <?php
 /**
  * The PHP-daemon connector layer.
- * 
+ * Note that this model raises ProtocolError.
  * 
  * @author	Xiangyu Bu <xybu92@live.com>
  */
@@ -59,10 +59,9 @@ class Connector extends \Model {
 		$errstr = "";
 		$fp = @fsockopen($server_info["host"], $server_info["port"], $errno, $errstr);
 		
-		if (!$fp) {
-			// failed to connect to the daemon
-			return array("result" => "connection_error", "description" => $errstr . "(" . $errno . ")");
-		}
+		// cannot connect to daemon
+		if (!$fp) 
+			throw new \exceptions\ProtocolError('connector_error', "$errstr ($errno)");
 		
 		$data = array(
 			"submission_id" => $submission_record["id"],
@@ -82,16 +81,16 @@ class Connector extends \Model {
 		fclose($fp);
 		
 		$ret = json_decode($ret, true);
-		if (is_array($ret)) {
-			if (array_key_exists("error", $ret)) {
-				// there is an error
-				return array("result" => "error", "error" => $ret["error"], "error_description" => $ret["error_description"]);
-			} else {
-				// successfully queued.
-				$submission_record["status"] = "queued";
-				return array("result" => "queued", "queued_id" => $ret["queued_id"]);
-			}
-		}
+		if (!is_array($ret))
+			throw new \exceptions\ProtocolError('malformed_response', 'The grader response cannot be parsed.');
+		
+		if (array_key_exists("error", $ret))
+			throw new \exceptions\ProtocolError($ret["error"], $ret["error_description"]);
+		
+		// successfully queued.
+		$submission_record["status"] = "queued";
+		
+		return $ret["queued_id"];
 	}
 	
 	function assignTaskByFile($submission_record, $assignment_info) {

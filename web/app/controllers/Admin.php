@@ -8,20 +8,20 @@ class Admin extends \Controller {
 	const MAX_DOWNLOAD_SPEED = 256; // in kBps
 	
 	private function verifyAdminPermission($show_json_error = true) {
-		$user_info = $this->getUserStatus();
-		if ($user_info == null || !$user_info["role"]["permissions"]["manage"])
+		$user_info = $this->get_user_status();
+		if ($user_info == null || !$user_info["role_info"]["manage"]) {
 			if ($show_json_error)
-				$this->json_echo(array("error" => "permission_denied", "error_description" => "You cannot access admin panel."), true);
+				$this->echo_json(array("error" => "permission_denied", "error_description" => "You cannot access admin panel."), true);
 			else $this->base->reroute("/");
-		
+		}
 		$this->user = $user_info;
 		return $user_info;
 	}
 	
 	function showAdminHomepage($base) {
-		$user_info = $this->verifyAdminPermission(false);
-		$base->set('me', $user_info);
-		$this->setView('admincp.html');
+		$this->verifyAdminPermission(false);
+		$base->set('me', $this->user);
+		$this->set_view('admincp.html');
 	}
 	
 	function addAnnouncement($base) {
@@ -37,21 +37,21 @@ class Admin extends \Controller {
 	}
 	
 	function showAnnouncementsPage($base) {
-		$user_info = $this->verifyAdminPermission();
-		$Rss = new \models\Rss("data/feed.xml");
+		$this->verifyAdminPermission();
+		$Rss = new \models\Rss($base->get('DATA_PATH') . "feed.xml");
 		$base->set("announcements", $Rss->get_items());
-		$base->set('me', $user_info);
-		$this->setView('admin/ajax_announcements.html');
+		$base->set('me', $this->user);
+		$this->set_view('admin/ajax_announcements.html');
 	}
 	
 	function showAssignmentPage($base) {
-		$user_info = $this->verifyAdminPermission();
+		$this->verifyAdminPermission();
 		$Assignment = \models\Assignment::instance();
 		
-		$base->set('me', $user_info);
+		$base->set('me', $this->user);
 		$base->set('assignment_list', $Assignment->getAllAssignments());
 		$base->set('blank_item', $Assignment->getDefaultAssignmentData());
-		$this->setView('admin/ajax_assignments.html');
+		$this->set_view('admin/ajax_assignments.html');
 	}
 	
 	/**
@@ -62,7 +62,7 @@ class Admin extends \Controller {
 	 * 	format: 'csv' or 'html'
 	 */
 	function createGradeBook($base) {
-		$user_info = $this->verifyAdminPermission();
+		$this->verifyAdminPermission();
 		$Assignment = \models\Assignment::instance();
 		
 		$assignment_id = $base->get('GET.assignment_id');
@@ -73,51 +73,122 @@ class Admin extends \Controller {
 			$assignment_info = $Assignment->findById($assignment_id);
 			
 			if (empty($assignment_info))
-				throw new \exceptions\AdminException('assignment_not_found', "The target assignment '$assignment_id' is not found.");
+				throw new \exceptions\ActionError('assignment_not_found', "The target assignment '$assignment_id' is not found.");
 			
 			if ($strategy != 'highest' && $strategy != 'latest')
-				throw new \exceptions\AdminException('strategy_not_supported', "The target strategy '$strategy' is not supported.");
+				throw new \exceptions\ProtocolError('strategy_not_supported', "The target strategy '$strategy' is not supported.");
 			
 			if ($format != 'csv' && $format != 'html')
-				throw new \exceptions\AdminException('format_not_supported', "The target format '$format' is not supported.");
-			
-			$records = $Assignment->getGradeBookRecords($assignment_info, $strategy);
-			// $records is an array of 5-tuples (user_id, grade, grade_adjustment, grade_detail, id)
-			
-			// the HTTP header will be printed by the views
+				throw new \exceptions\ProtocolError('format_not_supported', "The target format '$format' is not supported.");
 			
 			$base->set('assignment_id', $assignment_id);
-			$base->set('records', $records);
+			$base->set('records', $Assignment->getGradeBookRecords($assignment_info, $strategy));
 			
 			if ($format == 'csv') {
-				
-				
-				echo \View::instance()->render('admin/gradebook_csv.php');
-			} else {
-				echo \View::instance()->render('admin/gradebook_html.php');
+				$this->set_view('admin/gradebook_csv.php');
+			} else if ($format == 'html') {
+				$this->set_view('admin/gradebook_html.php');
 			}
 			
-		} catch (\exceptions\AdminException $e) {
-			$this->json_echo($e->toArray());
+		} catch (\exceptions\Error $e) {
+			$this->echo_json($e->toArray());
+		}
+	}
+	
+	function updateAssignment($base) {
+		$this->verifyAdminPermission();
+		
+		$Assignment = \models\Assignment::instance();
+		$id = $base->get('POST.id');
+		$data = null;
+		
+		try {
+			if ($base->get('POST.internal') == 'new') {
+				if ($Assignment->findById($id) != null)
+					throw new \exceptions\ActionError('identifier_taken', 'The assignment identifier is already used.');
+				$data = $Assignment->getDefaultAssignmentData();
+			} else {
+				$data = $Assignment->findById($id);
+				if ($data == null)
+					throw new \exceptions\ActionError('id_not_found', 'The assignment is not found.');
+			}
+			
+			if (!$Assignment->isValidIdentifier($id))
+				throw new \exceptions\ActionError('invalid_id', 'The identifier contains whitespaces.');
+		} catch (\exceptions\ActionError $e) {
+			$this->echo_json($e->toArray());
+		}
+		
+		//TODO: should add necessary sanity check here
+		$data['display'] = $base->get('POST.display');
+		$data['start'] = $base->get('POST.start');
+		$data['close'] = $base->get('POST.close');
+		$data['quota_strategy'] = $base->get('POST.quota_strategy');
+		$data['quota_amount'] = $base->get('POST.quota_amount');
+		$data['submit_filetype'] = str_replace(array(" ", "."), '', $base->get('POST.submit_filetype'));
+		$data['submit_filesize'] = intval($base->get('POST.submit_filesize'));
+		$data['submit_notes'] = $base->get('POST.submit_notes');
+		$data['max_score'] = intval($base->get('POST.max_score'));
+		$data['grader_script'] = $base->get('POST.grader_script');
+		$data['grader_tar'] = $base->get('POST.grader_tar');
+		
+		try {
+			
+			if (!$Assignment->isValidFilePath($data['grader_script']))
+				throw new \exceptions\FileError('invalid_script_path', 'The grader script path is not a valid file.');
+		
+			if (!empty($data['grader_tar']) && !$Assignment->isValidFilePath($data['grader_tar']))
+				throw new \exceptions\FileError('invalid_tar_path', 'The grader tar path is not a valid file.');
+			
+			if ($base->get('POST.internal') == 'new') {
+				$Assignment->addAssignment($id, $data);
+			} else {
+				$Assignment->editAssignment($id, $data);
+			}
+			
+			if ($Assignment->saveAssignments() === false) 
+				throw new \exceptions\FileError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "assignments.json") . "\".");
+			
+		} catch (\exceptions\Error $e) {
+			$this->echo_json($e->toArray());
+		}
+		
+		$this->echo_success('The assignment info is successfully updated.');
+	}
+	
+	function deleteAssignment($base) {
+		$this->verifyAdminPermission();
+		$Assignment = \models\Assignment::instance();
+		$id = $base->get('POST.id');
+		if ($Assignment->deleteAssignment($id)) {
+			try {
+				if ($Assignment->saveAssignments() === false) 
+					throw new \exceptions\FileError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "assignments.json") . "\".");
+			} catch (\exceptions\Error $e) {
+				$this->echo_json($e->toArray());
+			}
 		}
 	}
 	
 	function showSubmissionsPane($base) {
-		$user_info = $this->verifyAdminPermission();
+		$this->verifyAdminPermission();
+		
 		$Assignment = \models\Assignment::instance();
 		$base->set('assignment_list', $Assignment->getAllAssignments());
-		
-		$this->setView('admin/ajax_submissions.html');
+		$this->set_view('admin/ajax_submissions.html');
 	}
 	
 	function updateSubmissions($base) {
-		$user_info = $this->verifyAdminPermission();
+		$this->verifyAdminPermission();
 		
 		$action = $base->get('POST.action');
 		$submission_ids = $base->get('POST.submission_id');
 		
-		if (empty($submission_ids))
-			$this->json_echo($this->getError('no_user_selected', 'You did not select any users.'));
+		try {
+			if (empty($submission_ids)) throw new \exceptions\ActionError('no_user_selected', 'You did not select any users.');
+		} catch (\exceptions\ActionError $e) {
+			$this->echo_json($e->toArray());
+		}
 		
 		$Assignment = \models\Assignment::instance();
 		
@@ -154,9 +225,12 @@ class Admin extends \Controller {
 				
 				$user_info = $User->findById($submission_record['user_id']);
 				$assignment_info = $Assignment->findById($submission_record['assignment_id']);
-				$assign_result = $Connector->assignTask($submission_record, $user_info, $assignment_info);
-				if ($assign_result['result'] == 'queued') {
-					$Assignment->addLog($submission_record, "Queued with id " . $assign_result["queued_id"] . ".");
+				try {
+					$queued_id = $Connector->assignTask($submission_record, $user_info, $assignment_info);
+					$Assignment->addLog($submission_record, "Queued with id " . $queued_id . ".");
+				} catch (\exceptions\ProtocolError $e) {
+					$error_info = $e->toArray();
+					$Assignment->addLog($submission_record, "Encountered error: " . $error_info['error'] . ". Description: " . $error_info['error_description']);
 				}
 				$Assignment->updateSubmission($submission_record);
 			}
@@ -169,95 +243,37 @@ class Admin extends \Controller {
 			
 		}
 		
-		$this->json_echo($this->getSuccess('The action is performed successfully. Records with invalid data were skipped.'));
-	}
-	
-	function updateAssignment($base) {
-		$user_info = $this->verifyAdminPermission();
-		$Assignment = \models\Assignment::instance();
-		
-		$id = $base->get('POST.id');
-		$data = null;
-		if ($base->get('POST.internal') == 'new') {
-			$data = $Assignment->getDefaultAssignmentData();
-			if ($Assignment->findById($id) != null)
-				$this->json_echo($this->getError('id_used', 'The identifier is already taken.'));
-		} else {
-			$data = $Assignment->findById($id);
-			if ($data == null)
-				$this->json_echo($this->getError('id_not_found', 'The assignment is not found.'));
-		}
-		
-		if (!$Assignment->isValidIdentifier($id))
-			$this->json_echo($this->getError('invalid_id', 'The identifier contains whitespaces.'));
-		
-		//TODO: should add necessary sanity check here
-		$data['display'] = $base->get('POST.display');
-		$data['start'] = $base->get('POST.start');
-		$data['close'] = $base->get('POST.close');
-		$data['quota_strategy'] = $base->get('POST.quota_strategy');
-		$data['quota_amount'] = $base->get('POST.quota_amount');
-		$data['submit_filetype'] = str_replace(array(" ", "."), '', $base->get('POST.submit_filetype'));
-		$data['submit_filesize'] = intval($base->get('POST.submit_filesize'));
-		$data['submit_notes'] = $base->get('POST.submit_notes');
-		$data['max_score'] = intval($base->get('POST.max_score'));
-		$data['grader_script'] = $base->get('POST.grader_script');
-		$data['grader_tar'] = $base->get('POST.grader_tar');
-		
-		if (!$Assignment->isValidFilePath($data['grader_script']))
-			$this->json_echo($this->getError('invalid_script_path', 'The grader script path is not a valid file.'));
-		
-		if (!empty($data['grader_tar']) && !$Assignment->isValidFilePath($data['grader_tar']))
-			$this->json_echo($this->getError('invalid_tar_path', 'The grader tar path is not a valid file.'));
-		
-		if ($base->get('POST.internal') == 'new') {
-			$Assignment->addAssignment($id, $data);
-		} else {
-			$Assignment->editAssignment($id, $data);
-		}
-		if ($Assignment->saveAssignments() === false) 
-			$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "assignments.json") . "\"."));
-		
-		$this->json_echo($this->getSuccess('The assignment info is succesfully updated.'));
-	}
-	
-	function deleteAssignment($base) {
-		$user_info = $this->verifyAdminPermission();
-		$Assignment = \models\Assignment::instance();
-		
-		$id = $base->get('POST.id');
-		if ($Assignment->deleteAssignment($id))
-			$Assignment->saveAssignments();
+		$this->echo_success('The action is performed successfully. Records with invalid data, if any, were skipped.');
 	}
 	
 	function getSubmissionDump($base, $params) {
-		$user_info = $this->verifyAdminPermission();
+		$this->verifyAdminPermission();
+		
 		try {
 			
 			$submission_id = $params["id"];
-			if (!is_numeric($submission_id)) throw new \exceptions\AssignmentException("invalid_parameter", "Your request is refused because it contains invalid information.", 403);
+			if (!is_numeric($submission_id)) throw new \exceptions\ActionError('invalid_parameter', 'Your request is refused because it contains invalid information.', 403);
 			
 			$Assignment = \models\Assignment::instance();
 			
 			$submission_info = $Assignment->findSubmissionById($submission_id);
-			if ($submission_info == null) throw new \exceptions\AssignmentException("submission_not_found", "There is no record for this submission.", 404);
+			if ($submission_info == null) throw new \exceptions\ActionError('submission_not_found', 'There is no record for this submission.', 404);
 			
-			$path = $base->get("UPLOADS") . "/" . $submission_info["assignment_id"] . "/" . $submission_info["user_id"] . "/dumps";
+			$path = $base->get("UPLOADS") . $submission_info["assignment_id"] . "/" . $submission_info["user_id"] . "/dumps";
 			
 			$path = $path . "/submission_" . $submission_info["id"] . "_dump.tar.gz";
 			
-			if (!file_exists($path))
-				throw new \exceptions\AssignmentException("file_not_found", "The file you are requesting is not found in the repository. Please contact admin.", 404);
+			if (!file_exists($path)) throw new \exceptions\FileError('file_not_found', 'The file you are requesting is not found in the repository.', 404);
 			
 			\Web::instance()->send($path, "application/octet-stream", self::MAX_DOWNLOAD_SPEED);
 			
-		} catch (\exceptions\AssignmentException $ex) {
+		} catch (\exceptions\Error $ex) {
 			if ($ex->getCode() == 404) header("HTTP/1.0 404 Not Found");
 			else if ($ex->getCode() == 403) header("HTTP/1.0 403 Forbidden");
 			
-			if ($user_info != null) $base->set("me", $user_info);
+			if ($user_info != null) $base->set("me", $this->user);
 			$base->set("error", $ex->toArray());
-			$this->setView("error.html");
+			$this->set_view("error.html");
 		}
 	}
 	
@@ -313,16 +329,13 @@ class Admin extends \Controller {
 			$base->set('row', $row);
 			$ret .= $View->render('admin/ajax_submission_row.html');
 		}
-		$ret = $this->getSuccess($ret);
-		$ret['count'] = count($result);
-		$this->json_echo($ret);
-		
+		$this->echo_success($ret, array('count' => count($result)));		
 	}
 	
 	function showServerPage($base) {
-		$user_info = $this->verifyAdminPermission();
-		$base->set('me', $user_info);
-		$this->setView('admin/ajax_server.html');
+		$this->verifyAdminPermission();
+		$base->set('me', $this->user);
+		$this->set_view('admin/ajax_server.html');
 	}
 	
 	function addServer($base) {
@@ -340,7 +353,7 @@ class Admin extends \Controller {
 	function showStatusPage($base) {
 		$user_info = $this->verifyAdminPermission();
 		$base->set('me', $user_info);
-		$this->setView('admin/ajax_status.html');
+		$this->set_view('admin/ajax_status.html');
 	}
 	
 	function showUsersPage($base) {
@@ -350,7 +363,7 @@ class Admin extends \Controller {
 		$roles_info = $User->getRoleTable();
 		$base->set('roles_info', $roles_info);
 		$base->set('me', $user_info);
-		$this->setView('admin/ajax_users.html');
+		$this->set_view('admin/ajax_users.html');
 	}
 	
 	function updateUser($base) {
@@ -363,17 +376,28 @@ class Admin extends \Controller {
 			$id_pattern = $base->get('POST.name_pattern');
 			$role_pattern = $base->get('POST.role_pattern');
 			$result = $User->matchByPatterns($id_pattern, $role_pattern);
-			if (count($result) == 0)
-				$this->json_echo($this->getError('empty_result', 'There is no user matching the given patterns.'));
-			else {
+			
+			try {
+				if (count($result) == 0)
+					throw new \exceptions\ActionError('empty_result', 'There is no user matching the given patterns.');
+				
 				$base->set('user_list', $result);
 				$data = \View::instance()->render('admin/ajax_user_rows.html');
-				$this->json_echo($this->getSuccess($data));
+				$this->echo_success($data);
+			} catch (\exceptions\ActionError $e) {
+				$this->echo_json($e->toArray());
 			}
+			
 		} else if ($action == 'add') {
 			$role_name = $base->get('POST.role');
-			if ($User->findRoleByName($role_name) == null)
-				$this->json_echo($this->getError('invalid_data', 'The role "' . $role_name . '" is not defined.'));
+			
+			try {
+				if ($User->findRoleByName($role_name) == null)
+					throw new \exceptions\ActionError('invalid_data', 'The role "' . $role_name . '" is not defined.');
+			} catch (\exceptions\ActionError $e) {
+				$this->echo_json($e->toArray());
+				return;
+			}
 			
 			$notify_all = $base->get('POST.notify');
 			if ($notify_all != 'true') $notify_all = false;
@@ -394,7 +418,7 @@ class Admin extends \Controller {
 					if ($User->findById($name) != null) {
 						$skip_list[] = $name;
 					} else {
-						$User->addUser($name, $role_name, $password_pool[$i]);
+						$User->addUser($name, $password_pool[$i], $role_name);
 						
 						if ($notify_all) {
 							$base->set('password', $password_pool[$i]);
@@ -413,45 +437,35 @@ class Admin extends \Controller {
 			if (count($skip_list) > 0) $skip_str = ' Skipped existing users: ' . implode(', ', $skip_list) . '.';
 			else $skip_str = '';
 			
-			if ($User->saveUserTable() === false) {
-				$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "users.json") . "\"."));
-			}
-			
-			$User->clearCache();
-			
-			$this->json_echo($this->getSuccess('Added ' . $c . ' user(s) to role "' . $role_name . '".' . $skip_str));
+			$this->echo_success('Added ' . $c . ' user(s) to role "' . $role_name . '".' . $skip_str));
 		
 		} else if ($action == 'delete') {
 			$users = $base->get('POST.users');
 			foreach ($users as $name => $item)
 				if (array_key_exists('selected', $item)) $User->deleteUserById($name);
 			
-			if ($User->saveUserTable() === false) {
-				$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "users.json") . "\"."));
-			}
-			
-			$this->json_echo($this->getSuccess('Successfully deleted the selected user(s).'));
+			$this->echo_success('Successfully deleted the selected user(s).'));
 		} else if ($action == 'change_role') {
 			$role_name = $base->get('POST.role');
-			if ($User->findRoleByName($role_name) == null)
-				$this->json_echo($this->getError('invalid_data', 'The role "' . $role_name . '" is not defined.'));
+			
+			try {
+				if ($User->findRoleByName($role_name) == null)
+					throw new \exceptions\ActionError('invalid_data', 'The role "' . $role_name . '" is not defined.');
+			} catch (\exceptions\ActionError $e) {
+				$this->echo_json($e->toArray());
+				return;
+			}
 			
 			$users = $base->get('POST.users');
 			foreach ($users as $name => $item) {
 				if (array_key_exists('selected', $item)) {
 					$user_info = $User->findById($name);
-					if ($user_info == null || $user_info['role']['name'] == $role_name) continue;
+					if ($user_info == null || $user_info['role_id'] == $role_name) continue;
 					$User->editUser($user_info, null, $role_name, null);
 				}
 			}
 			
-			if ($User->saveUserTable() === false) {
-				$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "users.json") . "\"."));
-			}
-			
-			$User->clearCache();
-			
-			$this->json_echo($this->getSuccess('Successfully updated the role of the selected user(s).'));
+			$this->echo_success('Successfully updated the role of the selected user(s).'));
 				
 		} else if ($action == 'reset_password') {
 			$users = $base->get('POST.users');
@@ -465,11 +479,7 @@ class Admin extends \Controller {
 				}
 			}
 			
-			if ($User->saveUserTable() === false) {
-				$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "users.json") . "\"."));
-			}
-			
-			$this->json_echo($this->getSuccess('Successfully generated new password for the selected user(s).'));
+			$this->echo_success('Successfully generated new password for the selected user(s).'));
 		} else if ($action == 'update') {
 			$users = $base->get('POST.users');
 			$skip_list = array();
@@ -492,13 +502,7 @@ class Admin extends \Controller {
 			if (count($skip_list) > 0) $skip_str = ' The following ids already exist and cannot be renamed to: ' . implode(', ', $skip_list) . '.';
 			else $skip_str = '';
 			
-			if ($User->saveUserTable() === false) {
-				$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "users.json") . "\"."));
-			}
-			
-			$User->clearCache();
-			
-			$this->json_echo($this->getSuccess('Successfully renamed ' . $i . ' users.' . $skip_str));
+			$this->echo_success('Successfully renamed ' . $i . ' users.' . $skip_str);
 			
 		} else if ($action == 'send_email') {
 			$subject = $base->get('POST.subject');
@@ -506,8 +510,13 @@ class Admin extends \Controller {
 			$users = $base->get('POST.users');
 			$i = 0;
 			
-			if (empty($subject) || empty($body))
-				$this->json_echo($this->getError('empty_fields', "Subject and body should not be empty."));
+			try {
+				if (empty($subject) || empty($body))
+					throw new \exceptions\ActionError('empty_fields', "Subject and body should not be empty.");
+			} catch (\exceptions\ActionError $e) {
+				$this->echo_json($e->toArray());
+				return;
+			}
 			
 			foreach ($users as $name => $item) {
 				if (array_key_exists('selected', $item)) {
@@ -526,10 +535,11 @@ class Admin extends \Controller {
 				}
 			}
 			
-			$this->json_echo($this->getSuccess('Successfully sent email to ' . $i . ' user(s).'));
+			$this->echo_success('Successfully sent email to ' . $i . ' user(s).'));
 			
-		} else 
-			$this->json_echo($this->getError('undefined_action', 'The action you are performing is not defined.'));
+		} else {
+			throw new \exceptions\ActionError('undefined_action', 'The action is not defined.');
+		}
 	}
 	
 	function updateRole($base) {
@@ -544,29 +554,37 @@ class Admin extends \Controller {
 			
 			if (array_key_exists('delete', $role)) continue;
 			
-			if (!array_key_exists('key', $role) || !array_key_exists('display', $role))
-				$this->json_echo($this->getError('invalid_data', 'ID and name are required fields.'));
+			try {
+				if (!array_key_exists('key', $role) || !array_key_exists('display', $role))
+					throw new \exceptions\ActionError('invalid_data', 'ID and name are required fields.');
 			
-			if (!array_key_exists('submit_priority', $role) || !is_numeric($role['submit_priority']))
-				$this->json_echo($this->getError('invalid_data', 'Priority should be an integer value.'));
+				if (!array_key_exists('submit_priority', $role) || !is_numeric($role['submit_priority']))
+					throw new \exceptions\ActionError('invalid_data', 'Priority should be an integer value.');
 			
-			$role_data[$role['key']] = $User->sanitizeRoleEntry($role);
+				$role_data[$role['key']] = $User->sanitizeRoleEntry($role);
+			} catch (\exceptions\ActionError $e) {
+				$this->echo_json($e->toArray());
+				return;
+			}
 		}
 		
-		if (array_key_exists('key', $new_role) && !empty($new_role['key'])) {
-			if (!array_key_exists('display', $new_role) || empty($new_role['display']) || array_key_exists($new_role['key'], $role_data))
-				$this->json_echo($this->getError('invalid_data', 'To add a new role, please provide an unused ID and a non-empty name.'));
+		try {
+			if (array_key_exists('key', $new_role) && !empty($new_role['key'])) {
+				if (!array_key_exists('display', $new_role) || empty($new_role['display']) || array_key_exists($new_role['key'], $role_data))
+					throw new \exceptions\ActionError('invalid_data', 'To add a new role, please provide an unused ID and a non-empty name.');
+				
+				$role_data[$new_role['key']] = $User->sanitizeRoleEntry($new_role);		
+			}
+
+			if ($User->saveRoleTable($role_data) === false) {
+				throw new \exceptions\FileError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "roles.json") . "\".");
+			}
 			
-			$role_data[$new_role['key']] = $User->sanitizeRoleEntry($new_role);		
+			$this->echo_success('Successfully saved role data.');
+			
+		} catch (\exceptions\ActionError $e) {
+			$this->echo_json($e->toArray());
 		}
-		
-		if ($User->saveRoleTable($role_data) === false) {
-			$this->json_echo($this->getError('write_failure', "Failed to write data to \"" . realpath($base->get("DATA_PATH") . "roles.json") . "\"."));
-		}
-		
-		$User->clearCache();
-		
-		$this->json_echo($this->getSuccess('Successfully saved role data.'));
 	}
 	
 }

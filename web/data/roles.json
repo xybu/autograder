@@ -1,1 +1,11 @@
-{"admin":{"display":"Instructor","submit":true,"submit_prestart":true,"submit_overdue":true,"manage":true,"submit_priority":100},"user":{"display":"Student","submit":true,"submit_prestart":false,"submit_overdue":false,"manage":false,"submit_priority":50}}
+{
+"admin":{
+	"display":"Instructor",
+	"submit":true,
+	"submit_prestart":true,
+	"submit_overdue":true,
+	"override_quota": true,
+	"manage":true,
+	"submit_priority":100
+},
+"user":{"display":"Student","submit":true,"submit_prestart":false,"submit_overdue":false,"override_quota": false,"manage":false,"submit_priority":50}}

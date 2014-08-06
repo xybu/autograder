@@ -6,7 +6,7 @@
 	<form id="roles-form" method="post" action="/admin/roles/update">
 	<table id="roles-table" class="table table-hover table-bordered">
 		<thead>
-			<tr><td></td><td>ID</td><td>Name</td><td>Can submit</td><td>Submit prior-start</td><td>Submit overdue</td><td>Grading Priority</td><td>Manage</td></tr>
+			<tr><td></td><td>ID</td><td>Name</td><td>Can submit</td><td>Submit pre-start</td><td>Submit pastdue</td><td>Override Quota</td><td>Queue Priority</td><td>Manage</td></tr>
 		</thead>
 		<tbody>
 <?php
@@ -22,6 +22,7 @@ foreach ($roles_info as $id => $data) {
 		"<td><input type=\"checkbox\" name=\"current[$i][submit]\" value=\"true\"" . ($data['submit'] ? $checked_str : '') . " /></td>" .
 		"<td><input type=\"checkbox\" name=\"current[$i][submit_prestart]\" value=\"true\"" . ($data['submit_prestart'] ? $checked_str : '') . " /></td>". 
 		"<td><input type=\"checkbox\" name=\"current[$i][submit_overdue]\" value=\"true\"" . ($data['submit_overdue'] ? $checked_str : '') . " /></td>" .
+		"<td><input type=\"checkbox\" name=\"current[$i][override_quota]\" value=\"true\"" . ($data['override_quota'] ? $checked_str : '') . " /></td>" .
 		"<td><input type=\"number\" name=\"current[$i][submit_priority]\" value=\"" . $data['submit_priority'] . "\" max=\"255\" min=\"0\" step=\"1\" /></td>" .
 		"<td><input type=\"checkbox\" name=\"current[$i][manage]\" value=\"true\"" . ($data['manage'] ? $checked_str : '') . " /></td>" .
 		"</tr>";
@@ -107,7 +108,7 @@ echo "<tr>" .
 		<div class="form-group">
 			<div class="col-sm-12">
 				<textarea name="body" id="email_body" class="form-control" rows="4" placeholder="Email body here."></textarea>
-				<div class="help-block">Use <tt>{user_id}</tt>, <tt>{password}</tt>, <tt>{role_id}</tt>, <tt>{role_name}</tt> to refer to the username, password, role ID, and role name, of a user.</div>
+				<div class="help-block">Use <code>{user_id}</code>, <code>{role_id}</code>, <code>{role_name}</code> to refer to the username, password, role ID, and role name, of a user.</div>
 			</div>
 		</div>
 	</div>

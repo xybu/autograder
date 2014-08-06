@@ -129,14 +129,12 @@ function init_assignment_detail_page() {
 			$("#action_feedback").html("(Uploaded.)");
 		},
 		complete: function(xhr) {
-			if (xhr.responseJSON.error == "success") {
-				var str = 'You have successfully submitted the file.';
-				if (xhr.responseJSON.more_status == 'error')
-					str += ' However, system failed to add the grading task to queue; will retry later.';
+			if (xhr.responseJSON.error) {
+				$("#action_feedback").html("<span class=\"text-danger\">" + xhr.responseJSON.error_description + "</span>");
+			} else {
+				var str = xhr.responseJSON.message;
 				alert(str + ' Click "OK" to refresh the page.');
 				load_content_dom(current_path);
-			} else {
-				$("#action_feedback").html("<span class=\"text-danger\">" + xhr.responseJSON.error_description + "</span>");
 			}
 		}
 	});

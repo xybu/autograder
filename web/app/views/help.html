@@ -1,0 +1,14 @@
+<?php
+$Base = \Base::instance();
+
+$page_title = "Help";
+require "header.html";
+?>
+		<div class="container-fluid">
+			<?php
+				$content = $Base->read($Base->get('DATA_PATH')); // read file contents
+				echo \Markdown::instance()->convert($content);
+			?>
+		</div>
+<?php
+require "footer.html";

@@ -12,38 +12,40 @@ class Assignment extends \Controller {
 	
 	public function showDetailOf($base, $params) {
 		// verify user
-		$user_info = $this->getUserStatus();
+		$user_info = $this->get_user_status();
 		
-		if ($user_info == null)
-			$this->json_echo(array("error" => "not_logged_in", "error_description" => "You need to log in to perform the request."), true);
+		try {
+			if ($user_info == null)
+				throw new \exceptions\AuthError('not_logged_in', 'You need to log in to perform the request.');
+			
+			$Assignment = \models\Assignment::instance();
+			
+			// verify assignment
+			$assignment_info = $Assignment->findById($params["id"]);
+			if ($assignment_info == null)
+				throw new \exceptions\ActionError('assignment_not_found', 'The assignment requested does not exist.');
+			
+			// if the assignment has opened
+			if (strtotime($assignment_info['start']) > time() && !$user_info["role_info"]['submit_prestart']) 
+				throw new \exceptions\PermissionError('invalid_request', 'The assignment is not open.');
+			
+			$submission_info = $Assignment->getAllSubmissionsOf($user_info["user_id"], $params["id"]);
+			$count = $Assignment->countSubmissions($submission_info, $assignment_info);
 		
-		$Assignment = \models\Assignment::instance();
-		
-		// verify assignment
-		$assignment_info = $Assignment->findById($params["id"]);
-		if ($assignment_info == null) {
-			header('HTTP/1.0 404 Not Found');
-			die();
+			$base->set("me", $user_info);
+			$base->set("count", $count);
+			$base->set("assignment_info", $assignment_info);
+			$base->set("submissions", $submission_info);
+			$this->set_view("ajax_assignment.html");
+			
+		} catch (\exceptions\AuthError $e) {
+			$this->echo_json($e->toArray(), true);
+		} catch (\exceptions\ActionError $e) {
+			$this->echo_json($e->toArray(), true);
+		} catch (\exceptions\PermissionError $e) {
+			$base->set("error", $e->toArray());
+			$this->set_view("error.html");
 		}
-		
-		if (strtotime($assignment_info["start"]) > time() && !$user_info["role"]["permissions"]["manage"]) {
-			$error = array(
-				"error" => "access_unopened_assignment",
-				"error_description" => "The assignment is not opened yet."
-			);
-			$base->set("error", $error);
-			$this->setView("error.html");
-			return;
-		}
-		
-		$submission_info = $Assignment->getAllSubmissionsOf($user_info["user_id"], $params["id"]);
-		$count = $Assignment->countSubmissions($submission_info, $assignment_info);
-		
-		$base->set("me", $user_info);
-		$base->set("count", $count);
-		$base->set("assignment_info", $assignment_info);
-		$base->set("submissions", $submission_info);
-		$this->setView("ajax_assignment.html");
 	}
 	
 	/**
@@ -52,89 +54,70 @@ class Assignment extends \Controller {
 	 * Return JSON object to HTTP client.
 	 */
 	public function submitFile($base) {
-		$user_info = $this->getUserStatus();
-		if ($user_info == null) {
-			die();
-		}
-		
-		$Assignment = \models\Assignment::instance();
-		
-		// verify assignment
-		$assignment_id = $base->get("POST.assignment_id");
-		$assignment_info = null;
-		if (!empty($assignment_id))
-			$assignment_info = $Assignment->findById($assignment_id);
-		if ($assignment_info == null) {
-			header('HTTP/1.0 404 Not Found');
-			return;
-		}
-		
-		// this is very inefficient, needs improving.
-		$submission_info = $Assignment->getAllSubmissionsOf($user_info["user_id"], $assignment_id);
-		$count = $Assignment->countSubmissions($submission_info, $assignment_info);
-		$submission_record = null;
-		if (!$user_info["role"]["permissions"]["submit"]) {
-			$result = "permission_denied";
-		} else if (strtotime($assignment_info["close"]) <= time() && !$user_info["role"]["permissions"]["submit_overdue"]) {
-			$result = "assignment_closed";
-		} else if ($count["remaining"] <= 0 && !$user_info["role"]["permissions"]["manage"]) {
-			$result = "insufficient_quota";
-		} else if (strtotime($assignment_info["start"]) > time() && !$user_info["role"]["permissions"]["submit_prestart"]) {
-			$result = "assignment_unavailable";
-		} else {
+		$user_info = $this->get_user_status();
+		$new_record = null;
+		try {
+			if ($user_info == null)
+				throw new \exceptions\AuthError('not_logged_in', 'You need to log in to perform the request.');
+			
+			$Assignment = \models\Assignment::instance();
+			
+			// the assignment should exist
+			$assignment_id = $base->get('POST.assignment_id');
+			$assignment_info = $Assignment->findById($params['id']);
+			if ($assignment_info == null)
+				throw new \exceptions\ActionError('assignment_not_found', 'The assignment requested does not exist.');
+			
+			// the user should have submit permission
+			if (!$user_info['role_info']['submit'])
+				throw new \exceptions\PermissionError('permission_denied', 'You do not have the permission to submit.');
+			
+			// should be able to submit pastdue if needed
+			if (strtotime($assignment_info["close"]) <= time() && !$user_info["role_info"]["submit_overdue"])
+				throw new \exceptions\PermissionError('permission_denied', 'The assignment has closed.');
+			
+			// should be able to submit prior to start if needed
+			if (strtotime($assignment_info['start']) > time() && !$user_info["role_info"]['submit_prestart']) 
+				throw new \exceptions\PermissionError('permission_denied', 'The assignment is not open.');
+			
+			$submission_info = $Assignment->getAllSubmissionsOf($user_info["user_id"], $assignment_id);
+			$count = $Assignment->countSubmissions($submission_info, $assignment_info);
+			
+			// should have enough quota
+			if ($count["remaining"] <= 0 && !$user_info["role_info"]["override_quota"])
+				throw new \exceptions\PermissionError('insufficient_quota', 'You have used up your submission quota. Please wait for the quota to renew.');
+			
 			// change submission dir temporarily
 			$base->set("UPLOADS", $base->get("UPLOADS") . $assignment_info["id"] . "/" . $user_info["user_id"] . "/");
-			$result = $Assignment->saveSubmission($user_info, $assignment_info);
-			if (is_array($result)) {
-				$submission_record = $result;
-				$result = "success";
-			} else if (empty($result)) {
-				// what if $result is null?
-			}
+			
+			$new_record = $Assignment->saveSubmission($user_info, $assignment_info);
+			
+			if (!is_array($new_record))
+				throw new \exceptions\ActionError('record_not_found', 'The submission record was not created correctly.');
+			
+			// saved successfully, contact grader daemon
+			$Connector = \models\Connector::instance();
+			$queued_id = $Connector->assignTask($new_record, $user_info, $assignment_info);
+			$Assignment->addLog($new_record, "Queued with id " . $queued_id . ".");
+			$Assignment->updateSubmission($new_record);
+			
+			$this->echo_success('The file has been successfully submitted and queued.');
+			
+		} catch (\exceptions\AuthError $e) {
+			$this->echo_json($e->toArray());
+		} catch (\exceptions\ActionError $e) {
+			$this->echo_json($e->toArray());
+		} catch (\exceptions\PermissionError $e) {
+			$this->echo_json($e->toArray());
+		} catch (\exceptions\FileError $e) {
+			$this->echo_json($e->toArray());
+		} catch (\exceptions\ProtocolError $e) {
+			$error_info = $e->toArray();
+			$Assignment->addLog($new_record, "Encountered error: " . $error_info['error'] . ". Description: " . $error_info['error_description']);
+			$Assignment->updateSubmission($new_record);
+			
+			$this->echo_success('The file has been successfully submitted. However, there is some trouble to have the grading work queued. Please contact admin.');
 		}
-		
-		$data = array("error" => $result);
-		switch ($result) {
-			case "success":
-				// call grader daemon
-				$Connector = \models\Connector::instance();
-				$assign_result = $Connector->assignTask($submission_record, $user_info, $assignment_info);
-				if ($assign_result["result"] == "queued") {
-					$data["more_status"] = "queued";
-					$Assignment->addLog($submission_record, "Queued with id " . $assign_result["queued_id"] . ".");
-					$Assignment->updateSubmission($submission_record);
-				}
-				else $data["more_status"] = "error";
-				break;
-			case "permission_denied":
-				$data["error_description"] = "You do not have the permission to submit.";
-				break;
-			case "assignment_closed":
-				$data["error_description"] = "The assignment has closed.";
-				break;
-			case "insufficient_quota":
-				$data["error_description"] = "You have run out of submission chances for this period.";
-				break;
-			case "assignment_unavailable":
-				$data["error_description"] = "The assignment is not available for submission.";
-				break;
-			case "invalid_ext_name":
-				$data["error_description"] = "The submitted file has a wrong extension name.";
-				break;
-			case "empty_ext_name":
-				$data["error_description"] = "The submitted file does not have an extension name.";
-				break;
-			case "file_too_large":
-				$data["error_description"] = "The submitted file is too large.";
-				break;
-			case "upload_error":
-				$data["error_description"] = "An error occurred uploading this file. Please retry or contact admin.";
-				break;
-			default:
-				$data["error_description"] = "An unknown error occured.";
-				break;
-		}
-		$this->json_echo($data);
 	}
 	
 	/**
@@ -142,68 +125,74 @@ class Assignment extends \Controller {
 	 * 
 	 */
 	function getFile($base, $params) {
-		$user_info = $this->getUserStatus();
+		$user_info = $this->get_user_status();
 		try {
-			if ($user_info == null) throw new \exceptions\AssignmentException("not_logged_in", "You need to log in to perform this operation.", 403);
+			if ($user_info == null)
+				throw new \exceptions\AuthError('not_logged_in', 'You need to log in to perform the request.', 403);
 			
 			$submission_id = $params["submission_id"];
-			if (!is_numeric($submission_id)) throw new \exceptions\AssignmentException("invalid_parameter", "Your request is refused because it contains invalid information.", 403);
+			if (!is_numeric($submission_id))
+				throw new \exceptions\ActionError("invalid_request", "Your request is refused because it contains invalid information.", 403);
 			
 			$Assignment = \models\Assignment::instance();
 			
 			$submission_info = $Assignment->findSubmissionById($submission_id);
-			if ($submission_info == null) throw new \exceptions\AssignmentException("submission_not_found", "There is no record for this submission.", 404);
+			if ($submission_info == null)
+				throw new \exceptions\ActionError("submission_not_found", "There is no record for this submission.", 404);
 			
 			// only the submitter and the admin can fetch the src file.
-			if ($submission_info["user_id"] != $user_info["user_id"] && !$user_info["role"]["permissions"]["manage"])
-				throw new \exceptions\AssignmentException("permission_denied", "You are not allowed to fetch this submission.", 403);
+			if ($submission_info["user_id"] != $user_info["user_id"] && !$user_info["role_info"]["manage"])
+				throw new \exceptions\PermissionError("permission_denied", "You are not allowed to fetch this submission.", 403);
 			
 			if (!file_exists($submission_info["file_path"]))
-				throw new \exceptions\AssignmentException("file_not_found", "The file you are requesting is not found in the repository. Please contact admin.", 404);
+				throw new \exceptions\FileError("file_not_found", "The file you are requesting is not found in the repository.", 404);
 			
 			\Web::instance()->send($submission_info["file_path"], "application/octet-stream", self::MAX_DOWNLOAD_SPEED);
 			
-		} catch (\exceptions\AssignmentException $ex) {
-			if ($ex->getCode() == 404) header("HTTP/1.0 404 Not Found");
-			else if ($ex->getCode() == 403) header("HTTP/1.0 403 Forbidden");
+		} catch (\exceptions\Error $e) {
+			if ($e->getCode() == 404) header("HTTP/1.0 404 Not Found");
+			else if ($e->getCode() == 403) header("HTTP/1.0 403 Forbidden");
 			
 			if ($user_info != null) $base->set("me", $user_info);
-			$base->set("error", $ex->toArray());
-			$this->setView("error.html");
+			$base->set("error", $e->toArray());
+			$this->set_view("error.html");
 		}
 	}
 	
 	function getLog($base, $params) {
-		$user_info = $this->getUserStatus();
+		$user_info = $this->get_user_status();
 		try {
-			if ($user_info == null) throw new \exceptions\AssignmentException("not_logged_in", "You need to log in to perform this operation.", 403);
+			if ($user_info == null)
+				throw new \exceptions\AuthError('not_logged_in', 'You need to log in to perform the request.', 403);
 			
 			$submission_id = $params["submission_id"];
-			if (!is_numeric($submission_id)) throw new \exceptions\AssignmentException("invalid_parameter", "Your request is refused because it contains invalid information.", 403);
+			if (!is_numeric($submission_id))
+				throw new \exceptions\ActionError("invalid_request", "Your request is refused because it contains invalid information.", 403);
 			
 			$Assignment = \models\Assignment::instance();
 			
 			$submission_info = $Assignment->findSubmissionById($submission_id);
-			if ($submission_info == null) throw new \exceptions\AssignmentException("submission_not_found", "There is no record for this submission.", 404);
+			if ($submission_info == null)
+				throw new \exceptions\ActionError("submission_not_found", "There is no record for this submission.", 404);
 			
 			$assignment_info = $Assignment->findById($submission_info["assignment_id"]);
 			
-			// only the submitter and the admin can fetch the src file.
-			if ($submission_info["user_id"] != $user_info["user_id"] && !$user_info["role"]["permissions"]["manage"])
-				throw new \exceptions\AssignmentException("permission_denied", "You are not allowed to fetch this submission.", 403);
+			if ($submission_info["user_id"] != $user_info["user_id"] && !$user_info["role_info"]["manage"])
+				throw new \exceptions\PermissionError("permission_denied", "You are not allowed to fetch this submission.", 403);
 			
 			$base->set("me", $user_info);
 			$base->set("assignment_info", $assignment_info);
 			$base->set("submission_info", $submission_info);
-			$this->setView("ajax_log.html");
+			$this->set_view("ajax_log.html");
 			
-		} catch (\exceptions\AssignmentException $ex) {
-			if ($ex->getCode() == 404) header("HTTP/1.0 404 Not Found");
-			else if ($ex->getCode() == 403) header("HTTP/1.0 403 Forbidden");
+		} catch (\exceptions\Error $e) {
+			if ($e->getCode() == 404) header("HTTP/1.0 404 Not Found");
+			else if ($e->getCode() == 403) header("HTTP/1.0 403 Forbidden");
 			
-			if ($user_info != null) $base->set("me", $user_info);
-			$base->set("error", $ex->toArray());
-			$this->setView("ajax_error_modal.html");
+			$error = $e->toArray();
+			$error['error_level'] = 'danger';
+			$base->set("error", $error);
+			$this->set_view("ajax_error_modal.html");
 		}
 	}
 	

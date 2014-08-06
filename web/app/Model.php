@@ -23,4 +23,11 @@ class Model extends \Prefab {
 		return $this->db->exec($cmds, $args, $ttl, $log);
 	}
 	
+	function to_mysql_wildcard($str) {
+		$str = str_replace('*', '%', $str);
+		$str = str_replace('?', '_', $str);
+		$str = str_replace('"', '\"', $str);
+		return $str;
+	}
+	
 }
