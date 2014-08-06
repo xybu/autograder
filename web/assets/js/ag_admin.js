@@ -72,20 +72,9 @@ function load_announcements_panel() {
 	$('.announcement-form').ajaxForm({
 		dataType: 'json',
 		complete: function(xhr) {
-			if (xhr.status == 200) {
-				if (xhr.responseJSON.error) {
-					displayAlert('danger', xhr.responseJSON.error_description + ' <em>(' + xhr.responseJSON.error + ')</em>', function(){
-						$('body .alert-top').addClass('animated');
-						$('body .alert-top').addClass('fadeOut');
-					}, 5000);
-				} else {
-					displayAlert('success', xhr.responseJSON.message, function(){
-						$('body .alert-top').addClass('animated');
-						$('body .alert-top').addClass('fadeOut');
-					}, 5000);
-					load_content_dom('/admin/announcements');
-				}
-			} else {
+			defaultAJAXCompletionHandler(xhr);
+			if (xhr.status == 200 && !xhr.responseJSON.error) {
+				load_content_dom('/admin/announcements');
 			}
 		}
 	});
@@ -211,7 +200,7 @@ function load_assignments_panel() {
 	$('.assignment-item-form').ajaxForm({
 		dataType: 'json',
 		beforeSubmit: function(formData, jqForm) {
-			$('.has-error').each(function(i, item){$(item).removeClass('has-error')});
+			$('.has-error').removeClass('has-error');
 			var id = jqForm.find('[name="id"]');
 			var start = jqForm.find('[name="start"]');
 			var close = jqForm.find('[name="close"]');
@@ -239,6 +228,10 @@ function load_assignments_panel() {
 					r.html("<span class=\"text-danger\">" +  xhr.responseJSON.error_description+ " (error: " + xhr.responseJSON.error + ")</span>");
 					if (xhr.responseJSON.error == 'invalid_script_path') {
 						var s = jqForm.find('[name="grader_script"]');
+						s.parent().parent().addClass('has-error');
+						s.focus();
+					} else if (xhr.responseJSON.error == 'invalid_tar_path') {
+						var s = jqForm.find('[name="grader_tar"]');
 						s.parent().parent().addClass('has-error');
 						s.focus();
 					}

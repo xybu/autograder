@@ -48,21 +48,15 @@ $(document).ready(function() {
 		var init = true, state = window.history.pushState !== undefined;
 		$.address.init(function(event) {
 			// init jQuery address plugin
-			console.log(event);
 		}).change(function(event) {
-			
-			console.log(event);
 			
 			var names = $.map(event.pathNames, function(n) {
 				return n;
 			}).concat(event.parameters.id ? event.parameters.id.split('.') : []);
 			var links = names.slice();
                 	
-                	console.log(names);
-                	console.log(links);
-                	
-                	// process the navigation link
-                	var marked = 0;
+			// process the navigation link
+			var marked = 0;
 			$('#sidebar a').each(function() {
 				if ($(this).attr('href') == event.path) {
 					$(this).addClass('active').focus();
@@ -72,16 +66,14 @@ $(document).ready(function() {
 				}
 			});
                 	
-                	if (marked > 0)
-	                	load_content_dom(event.path);
-	                else {
-	                	// the uri is not loadable
-	                	$('#content').html('<p class="bg-danger notification-bar">The URI requested is not available. Please select one from the sidebar.</p>');
-	                }
+			if (marked > 0) load_content_dom(event.path);
+			else {
+				// the uri is not loadable
+				$('#content').html('<p class="bg-danger notification-bar">The URI requested is not available. Please select one from the sidebar.</p>');
+			}
 		});
 		$('#sidebar a').address();
 	}
-	
 });
 
 function load_content_dom(ajax_url) {
@@ -133,8 +125,11 @@ function init_assignment_detail_page() {
 				$("#action_feedback").html("<span class=\"text-danger\">" + xhr.responseJSON.error_description + "</span>");
 			} else {
 				var str = xhr.responseJSON.message;
-				alert(str + '\nClick "OK" to refresh the page.');
-				load_content_dom(current_path);
+				displayAlert('success', str + '<br />Page will refresh shortly.', function(){
+					$('body .alert-top').addClass('animated');
+					$('body .alert-top').addClass('fadeOut');
+					load_content_dom(current_path);
+				}, 5000);
 			}
 		}
 	});
@@ -142,4 +137,10 @@ function init_assignment_detail_page() {
 	$('body').on('hidden.bs.modal', '.modal', function () {
 		$(this).removeData('bs.modal');
 	});
+}
+
+function displayAlert(level, msg, callback, timer) {
+	$('body .alert-top').remove();
+	$('body').append('<div class="alert alert-top alert-' + level + '"><a href="#" class="close" data-dismiss="alert">&times;</a>' + msg + '</div>');
+	if (callback) setTimeout(callback, timer);
 }
