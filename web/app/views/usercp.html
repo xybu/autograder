@@ -10,7 +10,7 @@ require "header.html";
 			<a href="/" class="list-group-item active"><h4 class="list-group-item-heading">Announcements</h4><p class="list-group-item-text">View all system-wide announcements.</p></a>
 <?php
 foreach ($assignments as $key => $data) {
-	if (strtotime($data["start"]) > time() && !$me["role"]["permissions"]["submit_prestart"]) continue;
+	if (strtotime($data["start"]) > time() && !$me["role_info"]["submit_prestart"]) continue;
 	echo "\t\t\t\t<a class=\"list-group-item\" href=\"/assignment/" . $key . "\"><h4 class=\"list-group-item-heading\">" . $data["display"] . "</h4><p class=\"list-group-item-text\">Due: " . date('D, d M Y H:i:s', strtotime($data["close"])) . "</p></a>";
 }
 ?>

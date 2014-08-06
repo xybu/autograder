@@ -69,7 +69,7 @@ class Connector extends \Model {
 			"protocol_type" => "path",	// assuming path for now
 			"src_file" => $submission_record["file_path"],
 			"user_id" => $user_info["user_id"],
-			"priority" => $user_info["role"]["permissions"]["submit_priority"],
+			"priority" => $user_info["role_info"]["submit_priority"],
 			"assignment" => $assignment_info
 		);
 		fwrite($fp, json_encode($data) . "\r\n");
