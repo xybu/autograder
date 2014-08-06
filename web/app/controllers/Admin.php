@@ -376,7 +376,7 @@ class Admin extends \Controller {
 	function showServerPage($base) {
 		$this->verifyAdminPermission();
 		$base->set('me', $this->user);
-		$this->set_view('admin/ajax_server.html');
+		$this->set_view('admin/ajax_servers.html');
 	}
 	
 	function addServer($base) {

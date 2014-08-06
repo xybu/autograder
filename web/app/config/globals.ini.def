@@ -1,26 +1,22 @@
-; Framework-wide variables
-
 [globals]
 DEBUG=3
 CACHE=true
-
 AUTOLOAD=app/
 UI=app/views/
-LOGS=data/log/
-
+LOGS=../log/
 DATA_PATH="data/"
-UPLOADS="/home/xb/projects/autograder/submissions/"
+UPLOADS="/home/www/autograder/submissions/"
 
+WEB_URL="http://localhost/"
 COURSE_ID="CS240"
 COURSE_ID_DISPLAY="CS240"
-COURSE_HOME_TITLE="Home"
-COURSE_HOME_URI="#"
-COURSE_BBS_TITLE="Piazza"
-COURSE_BBS_URI="#"
-COURSE_TURNIN_TITLE="Assignments"
 COURSE_ADMIN_EMAIL="cs240-noreply@purdue.edu"
-
 USER_EMAIL_DOMAIN="@purdue.edu"
+
+NAVBAR_LINKS[0]["TITLE"] = "Home"
+NAVBAR_LINKS[0]["URL"] = "#"
+NAVBAR_LINKS[1]["TITLE"] = "Piazza"
+NAVBAR_LINKS[1]["URL"] = "#"
 
 ; HTML title suffix
 HTML_TITLE="| CS240 Turn-In"
@@ -31,9 +27,9 @@ MAX_ANNOUNCEMENT_ITEM = 5
 
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_USER=root
-DB_PASS=123456
-DB_NAME=ag_web
+DB_USER="MYSQL DB USERNAME"
+DB_PASS="MYSQL DB PASSWORD"
+DB_NAME="MYSQL DATABASE NAME"
 
 ; API constants
-API_KEY="aaaaaa"
+API_KEY="THE API KEY TO DISTINGUISH THIS WEB CLIENT"
