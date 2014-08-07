@@ -126,7 +126,6 @@ function init_assignment_detail_page() {
 			} else {
 				var str = xhr.responseJSON.message;
 				displayAlert('success', str + '<br />Page will refresh shortly.', function(obj){
-					obj.addClass('animated');
 					obj.addClass('bounceOutRight');
 					setTimeout(function(){obj.alert('close');}, 500);
 					load_content_dom(current_path);
@@ -142,7 +141,7 @@ function init_assignment_detail_page() {
 
 function displayAlert(level, msg, callback, timer) {
 	$('body .alert-top').remove();
-	var alert_dom = $('<div class="alert alert-top alert-' + level + ' fade in"><a href="#" class="close" data-dismiss="alert">&times;</a>' + msg + '</div>');
+	var alert_dom = $('<div class="alert alert-top alert-' + level + ' animated bounceInRight"><a href="#" class="close" data-dismiss="alert">&times;</a>' + msg + '</div>');
 	$('body').append(alert_dom);
 	if (callback) setTimeout(function(){callback(alert_dom);}, timer);
 }

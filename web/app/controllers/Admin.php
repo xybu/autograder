@@ -226,7 +226,7 @@ class Admin extends \Controller {
 		$submission_ids = $base->get('POST.submission_id');
 		
 		try {
-			if (empty($submission_ids)) throw new \exceptions\ActionError('no_user_selected', 'You did not select any users.');
+			if (empty($submission_ids)) throw new \exceptions\ActionError('no_record_selected', 'You did not select any records.');
 		} catch (\exceptions\ActionError $e) {
 			$this->echo_json($e->toArray());
 		}

@@ -107,7 +107,8 @@ function load_users_panel() {
 		dataType: 'json',
 		complete: function(xhr) {
 			if (xhr.responseJSON.error) {
-				$('#users-table-body').html('<tr><td colspan="4"><span class="text-warning text-center">' + xhr.responseJSON.error_description + '</span></td></tr>');
+				$('#users-table-body').html('');
+				displayAlert('warning', xhr.responseJSON.error_description + ' <em>(' + xhr.responseJSON.error + ')</em>', defaultAlertCallback, 9000);
 			} else {
 				$('#users-table-body').html(xhr.responseJSON.message);
 			}
@@ -157,12 +158,13 @@ function load_users_panel() {
 		beforeSubmit: function(formData, jqForm) {
 			var role_selector = $('#add-user-form #role-selector');
 			var role_styler = role_selector.parent().find('button[data-id="role-selector"]');
-			role_styler.removeClass('btn-warning');
+			role_styler.removeClass('btn-danger');
 			if (role_selector.val() == "") {
-				role_styler.addClass('btn-warning');
-				displayAlert('warning', 'Please choose a role from the dropdown list.', null, 0);
+				role_styler.addClass('btn-danger');
+				displayAlert('danger', 'Please choose a role from the dropdown list.', null, 0);
 				return false;
 			}
+			$(jqForm).find(':button[type="submit"]').button('loading');
 		},
 		complete: defaultAJAXCompletionHandler
 	});
@@ -271,28 +273,19 @@ function load_submissions_panel() {
 				// action_selector_styler.addClass('btn-default');
 				return false;
 			}
+			$(jqForm).find(':button[type="submit"]').button('loading');
 		},
-		complete: function(xhr, status, jqForm) {
-			console.log(xhr);
-			if (xhr.status == 200) {
-				if (xhr.responseJSON.error) {
-					$('#submission-record-form #response').html('<span class="text-danger">' + xhr.responseJSON.error_description + '</span>');
-				} else {
-					$('#submission-record-form #response').html('<span class="text-success">' + xhr.responseJSON.message + '</span>');
-				}
-			}
-		}
+		complete: defaultAJAXCompletionHandler
 	});
 	
 }
 
 function defaultAlertCallback(obj) {
-	obj.addClass('animated');
 	obj.addClass('bounceOutRight');
 	setTimeout(function(){obj.alert('close');}, 500);
 }
 
-function defaultAJAXCompletionHandler(xhr) {
+function defaultAJAXCompletionHandler(xhr, status, jqForm) {
 	if (xhr.status == 200) {
 		if (xhr.responseJSON.error) {
 			displayAlert('danger', xhr.responseJSON.error_description + ' <em>(' + xhr.responseJSON.error + ')</em>', null, 0);
@@ -300,11 +293,12 @@ function defaultAJAXCompletionHandler(xhr) {
 			displayAlert('success', xhr.responseJSON.message, defaultAlertCallback, 5000);
 		}
 	} else displayAlert('danger', xhr.responseText, null, 0);
+	$(jqForm).find(':button[type="submit"]').button('reset');
 }
 
 function displayAlert(level, msg, callback, timer) {
 	$('body .alert-top').remove();
-	var alert_dom = $('<div class="alert alert-top alert-' + level + ' fade in"><a href="#" class="close" data-dismiss="alert">&times;</a>' + msg + '</div>');
+	var alert_dom = $('<div class="alert alert-top alert-' + level + ' animated bounceInRight"><a href="#" class="close" data-dismiss="alert">&times;</a>' + msg + '</div>');
 	$('body').append(alert_dom);
 	if (callback) setTimeout(function(){callback(alert_dom);}, timer);
 }

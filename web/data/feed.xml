@@ -3,13 +3,15 @@
 	<channel>
 		<title>AutoGrader Announcements</title>
 		<description>The RSS feed of AutoGrader announcements.</description>
-		<lastBuildDate>2014-08-07T00:35:00+00:00</lastBuildDate>
-		<pubDate>2014-08-07T00:35:00+00:00</pubDate>
+		<lastBuildDate>2014-08-07T01:42:59+00:00</lastBuildDate>
+		<pubDate>2014-08-07T01:42:59+00:00</pubDate>
 		<ttl>7200</ttl>
 		
 		
 		
 		
-	<item><title>Test for HTML &amp;quot;purifications&amp;quot;!</title><description>Umm, this article will contain some malicious data.
-&lt;b&gt;test&lt;/b&gt;</description><link/><pubDate>2014-08-12 01:41:34</pubDate><guid>53e2693e20778-53e2693e207dd-53e2693e2083c</guid></item><item><title>Test Announcement Order</title><description>Newer announcements should be on top of older ones.</description><link/><pubDate>2014-08-18 08:34:58 pm</pubDate><guid>53e2c9b4c5856-53e2c9b4c58ba-53e2c9b4c5918</guid></item></channel>
+	<item><title>Test for HTML &amp;quot;&amp;lt;purifications&amp;gt;&amp;quot;!</title><description>Umm, this article will contain some malicious data.
+&lt;b&gt;test&lt;/b&gt;</description><link/><pubDate>2014-08-12 01:41:34 am</pubDate><guid>53e2693e20778-53e2693e207dd-53e2693e2083c</guid></item><item><title>Test Announcement Order</title><description>Newer announcements should be on top of older ones.
+
+Umm... Let's edit it.</description><link/><pubDate>2014-08-18 08:34:58 pm</pubDate><guid>53e2c9b4c5856-53e2c9b4c58ba-53e2c9b4c5918</guid></item></channel>
 </rss>

@@ -78,7 +78,7 @@ echo "<tr>" .
 	<div class="table-responsive">
 		<table id="users-table" class="table table-hover table-bordered">
 			<thead>
-				<tr><td><input type="checkbox" onclick="selectAll(this, 'users-table-body')" /></td><td>Name</td><td>Role</td><td>Hashed Password</td></tr>
+				<tr><td><input type="checkbox" onclick="selectAll(this, 'users-table-body')" /></td><td>Name</td><td>Role</td></tr>
 			</thead>
 			<tbody id="users-table-body">
 			</tbody>
@@ -137,7 +137,7 @@ echo "<tr>" .
 		<div class="form-group">
 			<div class="col-sm-12 text-right">
 				<input type="button" class="btn btn-default" value="Clear" />
-				<input type="submit" class="btn btn-primary" value="Submit" />
+				<button type="submit" class="btn btn-primary" data-loading-text="Loading">Submit</button>
 			</div>
 		</div>
 	</form>
