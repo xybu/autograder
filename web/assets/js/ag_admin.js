@@ -37,16 +37,12 @@ $(document).ready(function() {
 });
 
 function load_content_dom(ajax_url) {
-	$("#loading").removeClass("fadeOut");
-	// $("#loading").addClass("slideInRight");
 	if (ajax_url == "/") ajax_url = "/admin/status";
 	$.ajax({
 		cache: false,
 		complete: function(event) {
 			$("#content").html(event.responseText);
-			$('body').on('hidden.bs.modal', '.modal', function () {
-				$(this).removeData('bs.modal');
-			});
+			$('body').on('hidden.bs.modal', '.modal', function (){$(this).removeData('bs.modal');});
 			switch (ajax_url) {
 				case '/admin/users':
 					load_users_panel();
@@ -61,7 +57,6 @@ function load_content_dom(ajax_url) {
 					load_announcements_panel();
 					break;
 			}
-			$("#loading").addClass("fadeOut");
 		},
 		url: ajax_url
 	});
@@ -78,7 +73,7 @@ function load_announcements_panel() {
 			}
 		}
 	});
-	$('.announcement-form input[value="Delete"]').click(function(e){
+	$('.announcement-form :button[value="Delete"]').click(function(e){
 		var item = $(e.target);
 		var container = item.closest('form.announcement-form').parent();
 		$.ajax({
@@ -88,15 +83,9 @@ function load_announcements_panel() {
 		}).done(function(data){
 			if (data.status && data.status == 'success') {
 				container.toggle(500);
-				displayAlert('success', data.message, function(){
-					$('body .alert-top').addClass('animated');
-					$('body .alert-top').addClass('fadeOut');
-				}, 5000);
+				displayAlert('success', data.message, defaultAlertCallback, 5000);
 			} else {
-				displayAlert('danger', data.error_description + ' <em>(' + data.error + ')</em>', function(){
-					$('body .alert-top').addClass('animated');
-					$('body .alert-top').addClass('fadeOut');
-				}, 5000);
+				displayAlert('danger', data.error_description + ' <em>(' + data.error + ')</em>', null, 0);
 			}
 		});
 	});
@@ -171,7 +160,7 @@ function load_users_panel() {
 			role_styler.removeClass('btn-warning');
 			if (role_selector.val() == "") {
 				role_styler.addClass('btn-warning');
-				displayAlert('warning', 'Please choose a role from the dropdown list.', function(){}, 0);
+				displayAlert('warning', 'Please choose a role from the dropdown list.', null, 0);
 				return false;
 			}
 		},
@@ -297,26 +286,27 @@ function load_submissions_panel() {
 	
 }
 
+function defaultAlertCallback(obj) {
+	obj.addClass('animated');
+	obj.addClass('bounceOutRight');
+	setTimeout(function(){obj.alert('close');}, 500);
+}
+
 function defaultAJAXCompletionHandler(xhr) {
 	if (xhr.status == 200) {
 		if (xhr.responseJSON.error) {
-			displayAlert('danger', xhr.responseJSON.error_description + ' <em>(' + xhr.responseJSON.error + ')</em>', function(){
-			}, 0);
+			displayAlert('danger', xhr.responseJSON.error_description + ' <em>(' + xhr.responseJSON.error + ')</em>', null, 0);
 		} else {
-			displayAlert('success', xhr.responseJSON.message, function(){
-				$('body .alert-top').addClass('animated');
-				$('body .alert-top').addClass('fadeOut');
-			}, 5000);
+			displayAlert('success', xhr.responseJSON.message, defaultAlertCallback, 5000);
 		}
-	} else {
-		displayAlert('danger', xhr.responseText, function(){}, 0);
-	}
+	} else displayAlert('danger', xhr.responseText, null, 0);
 }
 
 function displayAlert(level, msg, callback, timer) {
 	$('body .alert-top').remove();
-	$('body').append('<div class="alert alert-top alert-' + level + '"><a href="#" class="close" data-dismiss="alert">&times;</a>' + msg + '</div>');
-	if (callback) setTimeout(callback, timer);
+	var alert_dom = $('<div class="alert alert-top alert-' + level + ' fade in"><a href="#" class="close" data-dismiss="alert">&times;</a>' + msg + '</div>');
+	$('body').append(alert_dom);
+	if (callback) setTimeout(function(){callback(alert_dom);}, timer);
 }
 
 function makeToggleable(item) {

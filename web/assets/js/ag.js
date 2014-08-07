@@ -125,9 +125,10 @@ function init_assignment_detail_page() {
 				$("#action_feedback").html("<span class=\"text-danger\">" + xhr.responseJSON.error_description + "</span>");
 			} else {
 				var str = xhr.responseJSON.message;
-				displayAlert('success', str + '<br />Page will refresh shortly.', function(){
-					$('body .alert-top').addClass('animated');
-					$('body .alert-top').addClass('fadeOut');
+				displayAlert('success', str + '<br />Page will refresh shortly.', function(obj){
+					obj.addClass('animated');
+					obj.addClass('bounceOutRight');
+					setTimeout(function(){obj.alert('close');}, 500);
 					load_content_dom(current_path);
 				}, 5000);
 			}
@@ -141,6 +142,7 @@ function init_assignment_detail_page() {
 
 function displayAlert(level, msg, callback, timer) {
 	$('body .alert-top').remove();
-	$('body').append('<div class="alert alert-top alert-' + level + '"><a href="#" class="close" data-dismiss="alert">&times;</a>' + msg + '</div>');
-	if (callback) setTimeout(callback, timer);
+	var alert_dom = $('<div class="alert alert-top alert-' + level + ' fade in"><a href="#" class="close" data-dismiss="alert">&times;</a>' + msg + '</div>');
+	$('body').append(alert_dom);
+	if (callback) setTimeout(function(){callback(alert_dom);}, timer);
 }
