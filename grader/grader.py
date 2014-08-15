@@ -4,42 +4,33 @@ import os, sys, time, json
 import unittest
 import subprocess
 
-DEFAULT_RAM_LIMIT = "48m"
+DEFAULT_MAX_RAM = "48m"
 DEFAULT_TIMEOUT = 30
 GRADEBOOK_FILE_NAME = "grades.json"
 
 """
 The arguments used to initiate the sandbox.
 """
-SandboxArguments = []
+SandboxArguments = ['umlbox', '-B', '-fw', '.']
 
-def SandboxedArgs(cmd_args, ram_limit = DEFAULT_RAM_LIMIT, timeout = DEFAULT_TIMEOUT, sb_args = None):
+def SandboxedArgs(cmd_args, max_ram = DEFAULT_MAX_RAM, timeout = DEFAULT_TIMEOUT, sb_args = [], ulimit = True):
 	"""
 	Modify the command-line args so that it will run inside the sandbox.
 	
-	@param ram_limit: the maximum amount of memory that the sandboxed process can use.
+	@param max_ram: the maximum amount of memory that the process can use. E.g., '48m'
 	@param timeout: the sandboxed process will be killed if it does not exit after the specified number of seconds.
 	@param sb_args: the additional args to append to the sandbox command.
 	"""
-	if ram_limit != None:
-		pass
-	if timeout != None:
-		pass
-	if sb_args != None:
-		return SandboxArguments + sb_args + cmd_args
-	return SandboxArguments + cmd_args
 	
-def execvp(cmd_args, input_data = None):
-	"""
-	An execvp-like function to execute a command.
-	Returns a 3-tuple of return value, stdout data, stderr data, of the command.
-	"""
-	try:
-		subp = subprocess.Popen(args = cmd_args, bufsize = 0, executable = None, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-		oe = subp.communicate(input_data)
-		return (subp.wait(), oe[0], oe[1])
-	except (OSError, IOError) as e:
-		assert False, "System Error: {1} ({0}).".format(e.errno, e.strerror)
+	if sb_args == None: sb_args = []
+	
+	if max_ram != None:
+		sb_args.extend(['-m', max_ram])
+	if timeout != None:
+		sb_args.extend(['-T', str(timeout)])
+	if ulimit:
+		sb_args.extend(['umlbox-limits', '/usr/bin/nice', '-n10'])
+	return SandboxArguments + sb_args + cmd_args
 
 def WriteFormalLog(s):
 	"""
@@ -54,7 +45,20 @@ def WriteInternalLog(s):
 	Write the string s to the internal log (held by stdout).
 	Internal log is the log that only admin can read (and understand).
 	"""
-	sys.stdout.write(s + "\n")
+	sys.stdout.write(str(s) + "\n")
+
+def execute(cmd_args, input_data = None):
+	"""
+	An execvp-like function to execute a command.
+	Returns a 3-tuple of return value, stdout data, stderr data, of the command.
+	"""
+	try:
+		WriteInternalLog(cmd_args)
+		subp = subprocess.Popen(cmd_args, 0, None, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		oe = subp.communicate(input_data)
+		return (subp.wait(), oe[0], oe[1])
+	except (OSError, IOError) as e:
+		assert False, "System Error: {1} ({0}).".format(e.errno, e.strerror)
 
 class Grade:
 	
@@ -82,13 +86,13 @@ class GraderTestCase(unittest.TestCase):
 	This class should be seen as abstract; each assignment will need its own grading script.
 	"""
 	
-	def make(self, makefile_name = "", sandboxed = True, file_target = [], handler = lambda r,o,e,t:r, ram_limit = None, timeout = None, sb_args = None):
+	def make(self, makefile_name = "", sandboxed = True, file_target = [], handler = lambda r,o,e,t:r, max_ram = None, timeout = None, sb_args = None):
 		"""
 		A shortcut function for executing Makefile to make target `all`.
 		
 		@param	makefile_name (optional): Use the default Makefile name (aka. "Makefile") if not set; otherwise execute the specific Makefile.
 		@param	sandboxed (optional): If set True, `make` will run inside the sandbox.
-		@param	ram_limit: the RAM limit for the sandbox; only effective when sandboxed is set True.
+		@param	max_ram: the RAM limit for the sandbox; only effective when sandboxed is set True.
 		@param	timeout: the timeout limit for the sandbox; only effective when sandbox is set True.
 		@param	sb_args: the additional args for the sandbox.
 		@param	file_target (optional): A list of files that will be removed before running `make`, and whose existence will be checked after running `make`. All relative paths.
@@ -110,20 +114,20 @@ class GraderTestCase(unittest.TestCase):
 		
 		# execute `make` command with arguments
 		if sandboxed:
-			make_args = SandboxedArgs(make_args)
+			make_args = SandboxedArgs(make_args, max_ram = max_ram, timeout = timeout, sb_args = sb_args)
 		
-		roe = execvp(make_args)
+		roe = execute(make_args)
 		
 		# pass the result to handler
 		handler(roe[0], roe[1], roe[2], file_target)
 	
-	def clean(self, makefile_name = "", sandboxed = True, ram_limit = None, timeout = None, sb_args = None):
+	def clean(self, makefile_name = "", sandboxed = True, max_ram = None, timeout = None, sb_args = None):
 		"""
 		A shortcut function for executing `make clean`.
 		
 		@param	makefile_name (optional): Use the default Makefile name (aka. "Makefile") if not set; otherwise execute the specific Makefile.
 		@param	sandboxed (optional): If set True, `make clean` will run inside the sandbox.
-		@param	ram_limit: the RAM limit for the sandbox; only effective when sandboxed is set True.
+		@param	max_ram: the RAM limit for the sandbox; only effective when sandboxed is set True.
 		@param	timeout: the timeout limit for the sandbox; only effective when sandbox is set True.
 		@param	sb_args: the additional args for the sandbox.
 		"""
@@ -134,11 +138,11 @@ class GraderTestCase(unittest.TestCase):
 		
 		# execute `make` command with arguments
 		if sandboxed:
-			make_args = SandboxedArgs(make_args)
+			make_args = SandboxedArgs(make_args, max_ram = max_ram, timeout = timeout, sb_args = sb_args)
 		
-		roe = execvp(make_args)
+		roe = execute(make_args)
 	
-	def execvp(self, cmd = [], sandboxed = True, stdin = None, handler = lambda r,o,e,a:r, handler_args = None, ram_limit = None, timeout = None, sb_args = None):
+	def execvp(self, cmd = [], sandboxed = True, stdin = None, handler = lambda r,o,e,a:r, handler_args = None, max_ram = DEFAULT_MAX_RAM, timeout = DEFAULT_TIMEOUT, ulimit = True, sb_args = None):
 		"""
 		An execvp-like function to execute commands.
 		
@@ -147,7 +151,7 @@ class GraderTestCase(unittest.TestCase):
 		@param stdin: the data to feed to cmd process's stdin
 		@param handler (required): the handler to process the output of cmd
 		@param handler_args: the additional args for the handler function
-		@param ram_limit: the RAM limit for the sandbox; only effective when sandboxed is set True
+		@param max_ram: the RAM limit for the sandbox; only effective when sandboxed is set True
 		@param timeout: the timeout limit for the sandbox; only effective when sandbox is set True
 		@param sb_args: the additional args for the sandbox
 		"""
@@ -159,22 +163,28 @@ class GraderTestCase(unittest.TestCase):
 			assert os.path.exists(cmd[0]), "Executable \"{0}\" not found.".format(cmd[0])
 		
 		if sandboxed:
-			if ram_limit == None: ram_limit = DEFAULT_RAM_LIMIT
-			if timeout == None: timeout = DEFAULT_TIMEOUT
-			cmd = SandboxedArgs(cmd, ram_limit, timeout, sb_args)
+			cmd = SandboxedArgs(cmd, max_ram = max_ram, timeout = timeout, ulimit = ulimit, sb_args = sb_args)
 		
-		roe = execvp(cmd, stdin)
+		roe = execute(cmd, stdin)
 		handler(roe[0], roe[1], roe[2], handler_args)
 	
-	def abort_test(self):
-		"""
-		Discard all pending (un-executed) test cases but do the post-work.
-		
-		But this will make the overall gradebooks have items of various length; different
-		submissions may run different number of test cases.
-		"""
-		self._test_runner.stop()
+	# API abort_test(self) was abandoned for its uselessness.
+	# To control the flow use an internal boolean variable as flags, and 
+	# check if the flag is set before executing commands.
 	
+class UtilFactory:
+	'''
+	Some handy utility functions for standardized test
+	'''
+	
+	@staticmethod
+	def has_segfault(str):
+		'''
+		@param str: the string to test whether to contain segfault keywords or not.
+		'''
+		str = str.lower()
+		return 'segmentation fault' in str or 'core dump' in str
+
 class HandlerFactory:
 	@staticmethod
 	def DefaultMakeHandler(r, o, e, t = []):
@@ -187,14 +197,23 @@ class HandlerFactory:
 		@param t: the file targets to check for existence.
 		"""
 		WriteFormalLog(o)	# print make commands to stdout
-		if r != 0:		# if return value of `make` is not 0
-			assert False, "Makefile did not build target `all` successfully.\nstderr data: \n" + e
+		
+		ne = ''
+		if e != '':
+			e.replace("\r", "")
+			el = e.split("\n")
+			for line in el:
+				if line.startswith(' '): line = '|-' + line
+				if line != '': ne = ne + line + "\n"
 		
 		if t != []:
 			f_t = []
 			for name in t:
 				if not os.path.exists("./" + name): f_t.append(name)
-			assert f_t == [], "Makefile did not build the following files: " + ", ".join(f_t)	
+			assert f_t == [], "Makefile did not build the following files: " + ", ".join(f_t) + "\n" + ne
+		
+		if r != 0:		# if return value of `make` is not 0
+			assert False, "Target `all` was not built successfully.\nstderr data: \n" + ne
 	
 	@staticmethod
 	def SimpleMakeHandler(r, o, e, t = []):
@@ -207,14 +226,15 @@ class HandlerFactory:
 		@param t: the file targets to check for existence.
 		"""
 		WriteFormalLog(o)	# print make commands to stdout
-		if r != 0:		# if return value of `make` is not 0
-			assert False, "Makefile did not build target `all` successfully."
 		
 		if t != []:
 			f_t = []
 			for name in t:
 				if not os.path.exists("./" + name): f_t.append(name)
 			assert f_t == [], "Makefile did not build the following files: " + ", ".join(f_t)
+		
+		if r != 0:		# if return value of `make` is not 0
+			assert False, "Target `all` was not built successfully."
 
 class GraderResult(unittest.TextTestResult):
 	"""
@@ -272,7 +292,6 @@ def main(testSuiteClass):
 	runner = GraderResult()
 	global grade
 	runner._grade = grade
-	GraderTestCase._test_runner = runner
 	
 	start_time = time.time()
 	suite.run(runner)	

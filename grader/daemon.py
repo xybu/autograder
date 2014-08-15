@@ -168,8 +168,8 @@ class GraderWorker(threading.Thread):
 				return
 		
 		try:
-			print task_file_path
-			print submission_temp_path + Settings['SUBMISSION_FILE_NAME']
+			Logger.info(task_file_path)
+			Logger.info(submission_temp_path + Settings['SUBMISSION_FILE_NAME'])
 			shutil.copyfile(task_file_path, submission_temp_path + Settings['SUBMISSION_FILE_NAME'])
 		except IOError as e:
 			Logger.critical('Failed to copy the submission file for task {0} ({1}).'.format(task_id, e))
@@ -350,7 +350,6 @@ class DaemonTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
 if __name__ == "__main__":
 	
 	gc.enable()
-	print Settings
 	
 	# test database connection
 	try: 

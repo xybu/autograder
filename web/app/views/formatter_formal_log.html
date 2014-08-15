@@ -19,9 +19,10 @@ $formal_log = preg_replace("/\n[ ]+[^\n]+/i", "", $formal_log);
 
 // change EOL chars to html break
 $formal_log = str_replace(array("\r", "\n"), "<br />", $formal_log);
+$formal_log = preg_replace("/(<br \/>){2,}/", "<br />", $formal_log);
 
-// change chunks of line breaks to a horizontal line
-$formal_log = preg_replace("/(<br \/>){2,}/", "<hr />", $formal_log);
+// add a horizontal line
+$formal_log = preg_replace("/[=]{4,}/", "<hr />", $formal_log);
 
 // remove the horizontal line at the end of the string
 $formal_log = preg_replace("/<hr \/>$/", "", $formal_log);

@@ -1,7 +1,7 @@
 <?php
 
 echo "<tr>" .
-	"<td><input type=\"checkbox\" name=\"submission_id[]\" value=\"" . $row["id"] . "\" /></td>" .
+	"<td><label><input type=\"checkbox\" name=\"submission_id[]\" value=\"" . $row["id"] . "\" /> " . $row['id'] . "</label></td>" .
 	"<td>" . $row['user_id'] . "</td>" .
 	"<td>" . $row['assignment_id'] . "</td>" .
 	"<td>" . $row['status'] . " <small>at " . $row['date_updated'] . "</small></td>" .
