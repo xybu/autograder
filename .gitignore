@@ -46,9 +46,10 @@ test
 
 # file to save creds
 credentials.txt
+*.json
+*.xml
 
 # Grader credentials file
-grader.json
 globals.ini
 
 # Log files
