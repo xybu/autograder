@@ -184,6 +184,21 @@ class UtilFactory:
 		'''
 		str = str.lower()
 		return 'segmentation fault' in str or 'core dump' in str
+	
+	@staticmethod
+	def prepend_empty_lines(str):
+		'''
+		prepend some beautiful chars to lines starting with whitespaces
+		so that the log formatter will not ignore them.
+		
+		@param str: the string to be beautified.
+		'''
+		ne = ''
+		s = str.split("\n")
+		for line in s:
+			if line.startswith(' '): line = '|-' + line
+			if line != '': ne = ne + line + "\n"
+		return ne
 
 class HandlerFactory:
 	@staticmethod
@@ -198,22 +213,16 @@ class HandlerFactory:
 		"""
 		WriteFormalLog(o)	# print make commands to stdout
 		
-		ne = ''
-		if e != '':
-			e.replace("\r", "")
-			el = e.split("\n")
-			for line in el:
-				if line.startswith(' '): line = '|-' + line
-				if line != '': ne = ne + line + "\n"
+		e = UtilFactory.prepend_empty_lines(e)
 		
 		if t != []:
 			f_t = []
 			for name in t:
 				if not os.path.exists("./" + name): f_t.append(name)
-			assert f_t == [], "Makefile did not build the following files: " + ", ".join(f_t) + "\n" + ne
+			assert f_t == [], "Makefile did not build the following files: " + ", ".join(f_t) + "\n" + e
 		
 		if r != 0:		# if return value of `make` is not 0
-			assert False, "Target `all` was not built successfully.\nstderr data: \n" + ne
+			assert False, "Target `all` was not built successfully.\nstderr data: \n" + e
 	
 	@staticmethod
 	def SimpleMakeHandler(r, o, e, t = []):
