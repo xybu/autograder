@@ -4,17 +4,13 @@
     padding: 0.4em 0.8em;
 }
 
-body.modal-open, .modal-open .navbar-fixed-top, .modal-open .navbar-fixed-bottom {
-    margin-right: 0;
+.modal-open .navbar-fixed-top, .modal-open .navbar-fixed-bottom {
+	padding-right: 17px;
 }
 
-/* Modal extensions */
-.modal {
-    overflow-y: auto;
-}
 .modal-xl {width: 90%;}
 .modal-adaptive {width:70%; min-width: 400px;}
-.modal-open {overflow: auto;}
+
 .modal-content {margin-top: 10%;}
 .modal-title .close{line-height: 1.43;}
 
