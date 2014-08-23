@@ -1,0 +1,54 @@
+#!/bin/bash
+
+MAX_PROC_NUM=12
+MAX_VMEM_MB=36
+MAX_RMEM_MB=24
+MAX_TIME_SEC=30
+
+i=0
+
+while getopts ":m:v:t:u" o ; do
+	case "${o}" in
+		m)
+			MAX_RMEM_MB=${OPTARG}
+			((i=i+2))
+			;;
+		v)
+			MAX_VMEM_MB=${OPTARG}
+			((i=i+2))
+			;;
+		t)
+			MAX_TIME_SEC=${OPTARG}
+			((i=i+2))
+			;;
+		u)
+			MAX_PROC_NUM=${OPTARG}
+			((i=i+2))
+			;;
+	esac
+done
+
+# maximum size of files created by the shell
+ulimit -f 10240
+
+# maxsize that may be locked into mem
+ulimit -l 0
+
+# max size of vmem available to the process
+ulimit -v $(( MAX_VMEM_MB * 1024 ))
+
+# max amount of CPU time in seconds
+ulimit -t $(( MAX_TIME_SEC ))
+
+# max number of processes available
+ulimit -u $(( MAX_PROC_NUM ))
+
+# max resident memory
+ulimit -m $(( MAX_RMEM_MB * 1024 ))
+
+while [ $i -gt 0 ] ; do
+	shift
+	((i=i-1))
+done
+
+exec $@

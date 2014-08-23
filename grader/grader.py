@@ -4,33 +4,26 @@ import os, sys, time, json
 import unittest
 import subprocess
 
-DEFAULT_MAX_RAM = "48m"
-DEFAULT_TIMEOUT = 30
+DEFAULT_MAX_RAM = "24"	# in MiB
+DEFAULT_TIMEOUT = 20
 GRADEBOOK_FILE_NAME = "grades.json"
 
-"""
-The arguments used to initiate the sandbox.
-"""
-SandboxArguments = ['umlbox', '-B', '-fw', '.']
-
-def SandboxedArgs(cmd_args, max_ram = DEFAULT_MAX_RAM, timeout = DEFAULT_TIMEOUT, sb_args = [], ulimit = True):
+def SandboxedArgs(cmd, max_ram = DEFAULT_MAX_RAM, timeout = DEFAULT_TIMEOUT, sb_args = None):
 	"""
 	Modify the command-line args so that it will run inside the sandbox.
 	
-	@param max_ram: the maximum amount of memory that the process can use. E.g., '48m'
+	@param max_ram: the maximum amount of memory that the process can use. E.g., '24m'
 	@param timeout: the sandboxed process will be killed if it does not exit after the specified number of seconds.
 	@param sb_args: the additional args to append to the sandbox command.
 	"""
 	
-	if sb_args == None: sb_args = []
+	argv = ['/usr/bin/mbox', '-i', '-p', '/home/public/mbox/mbox.prof', '-n']
 	
-	if max_ram != None:
-		sb_args.extend(['-m', max_ram])
-	if timeout != None:
-		sb_args.extend(['-T', str(timeout)])
-	if ulimit:
-		sb_args.extend(['umlbox-limits', '/usr/bin/nice', '-n10'])
-	return SandboxArguments + sb_args + cmd_args
+	if sb_args != None: argv = argv + sb_args
+	if timeout != None: argv = ['timeout', str(timeout)] + argv
+	if max_ram != None: cmd = ['-m', str(max_ram)] + cmd
+	
+	return argv + ['/usr/bin/setulimits'] + cmd
 
 def WriteFormalLog(s):
 	"""
@@ -142,7 +135,7 @@ class GraderTestCase(unittest.TestCase):
 		
 		roe = execute(make_args)
 	
-	def execvp(self, cmd = [], sandboxed = True, stdin = None, handler = lambda r,o,e,a:r, handler_args = None, max_ram = DEFAULT_MAX_RAM, timeout = DEFAULT_TIMEOUT, ulimit = True, sb_args = None):
+	def execvp(self, cmd = [], sandboxed = True, stdin = None, handler = lambda r,o,e,a:r, handler_args = None, max_ram = DEFAULT_MAX_RAM, timeout = DEFAULT_TIMEOUT, sb_args = None):
 		"""
 		An execvp-like function to execute commands.
 		
@@ -163,7 +156,7 @@ class GraderTestCase(unittest.TestCase):
 			assert os.path.exists(cmd[0]), "Executable \"{0}\" not found.".format(cmd[0])
 		
 		if sandboxed:
-			cmd = SandboxedArgs(cmd, max_ram = max_ram, timeout = timeout, ulimit = ulimit, sb_args = sb_args)
+			cmd = SandboxedArgs(cmd, max_ram = max_ram, timeout = timeout, sb_args = sb_args)
 		
 		roe = execute(cmd, stdin)
 		handler(roe[0], roe[1], roe[2], handler_args)
@@ -183,7 +176,7 @@ class UtilFactory:
 		@param str: the string to test whether to contain segfault keywords or not.
 		'''
 		str = str.lower()
-		return 'segmentation fault' in str or 'core dump' in str
+		return 'segmentation fault' in str or ('core' in str and 'dumped' in str)
 	
 	@staticmethod
 	def prepend_empty_lines(str):

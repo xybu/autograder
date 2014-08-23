@@ -311,7 +311,11 @@ class Assignment extends \Model {
 			if ($status) {
 				// 'history' is safe because $name must have a '.' in the file name
 				$path = dirname($name) . "/history/";
-				if (!file_exists($path)) mkdir($path, 0777);
+				if (!file_exists($path)) {
+					$oldmask = umask(0);
+					mkdir($path, 0777);
+					umask($oldmask);
+				}
 				
 				$file_ext = pathinfo($name, PATHINFO_EXTENSION);
 				$file_name_new = "archive." . date('c') . "." . $file_ext;

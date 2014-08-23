@@ -1,10 +1,10 @@
 CREATE DATABASE  IF NOT EXISTS `ag_web` /*!40100 DEFAULT CHARACTER SET utf8 */;
 USE `ag_web`;
--- MySQL dump 10.13  Distrib 5.5.37, for debian-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.6.17, for Win32 (x86)
 --
--- Host: 127.0.0.1    Database: ag_web
+-- Host: localhost    Database: ag_web
 -- ------------------------------------------------------
--- Server version	5.5.37-0ubuntu0.14.04.1
+-- Server version	5.5.38-0ubuntu0.14.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -33,7 +33,7 @@ CREATE TABLE `submissions` (
   `date_created` datetime NOT NULL,
   `date_updated` datetime NOT NULL,
   `grade` int(11) DEFAULT NULL,
-  `grade_adjustment` int(11) DEFAULT NULL,
+  `grade_adjustment` int(11) DEFAULT '0',
   `grade_detail` text,
   `grader_formal_log` text,
   `grader_internal_log` text,
@@ -42,6 +42,29 @@ CREATE TABLE `submissions` (
   UNIQUE KEY `id_UNIQUE` (`id`),
   KEY `file_path` (`file_path`(255))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `users`
+--
+
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `users` (
+  `user_id` varchar(63) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `role_id` varchar(64) NOT NULL,
+  PRIMARY KEY (`user_id`,`role_id`),
+  UNIQUE KEY `user_id_UNIQUE` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES ('xb','$2y$10$skfZhy/Gf1BOxItlIHf4/ujdXM0nYqCyRxwz7mv3UyC4bYvACJqne','admin');
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
+
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -53,4 +76,4 @@ CREATE TABLE `submissions` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-07-06 23:53:06
+-- Dump completed on 2014-08-23 15:44:34

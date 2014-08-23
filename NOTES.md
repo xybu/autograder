@@ -15,4 +15,4 @@ all submiitted files are *required* to have an extension name
 
 ajax quota update when submitting
 
-Test with submitting tar file AND c src file
+ONE MUST ASSUME STUDENT CODE MALICIOUS.

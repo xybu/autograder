@@ -23,7 +23,7 @@ class Logger:
 	ERROR = 40
 	CRITICAL = 50
 	
-	def __init__(self, filepath = None, min_level = NOTSET):
+	def __init__(self, filepath = None, min_level = INFO):
 		"""
 		Initiate the logger object.
 		
