@@ -17,10 +17,10 @@ def SandboxedArgs(cmd, max_ram = DEFAULT_MAX_RAM, timeout = DEFAULT_TIMEOUT, sb_
 	@param sb_args: the additional args to append to the sandbox command.
 	"""
 	
-	argv = ['/usr/bin/mbox', '-i', '-p', '/home/public/mbox/mbox.prof', '-n']
+	argv = ['mbox', '-i', '-p', '/home/public/mbox/mbox.prof', '-n']
 	
 	if sb_args != None: argv = argv + sb_args
-	if timeout != None: argv = ['timeout', str(timeout)] + argv
+	if timeout != None: argv = ['timeout', '--signal=9', str(timeout)] + argv
 	if max_ram != None: cmd = ['-m', str(max_ram)] + cmd
 	
 	return argv + ['/usr/bin/setulimits'] + cmd
