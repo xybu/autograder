@@ -46,9 +46,9 @@ test
 
 # file to save creds
 credentials.txt
-*.json
-*.xml
-
+web/data/*.xml
+web/data/*.json
+grader/*.json
 # Grader credentials file
 globals.ini
 

@@ -11,7 +11,7 @@ else {
 		if ($i++ == $MAX_ANNOUNCEMENT_ITEM) break;
 		$title = $item->title;
 		if (strlen($item->link) > 0) $title = '<a href="' . $item->link . '" target="_blank">' . $title . '</a>';
-		$buf = " <article class=\"announcement-post\"><h3>" . $title . "</h3><p class=\"announcement-post-meta\">" . date('D, d M Y H:i:s', strtotime($item->pubDate)) . "</p><p class=\"announcement-post-body\">" . $item->description . "</p></article> $buf";
+		$buf = " <article class=\"announcement-post\"><h3>" . $title . "</h3><p class=\"announcement-post-meta\">" . date('D, d M Y H:i:s', strtotime($item->pubDate)) . "</p><p class=\"announcement-post-body\">" . nl2br($item->description) . "</p></article> $buf";
 	}
 	echo $buf;
 }
