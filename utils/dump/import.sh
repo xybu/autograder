@@ -37,7 +37,7 @@ cp_replace_seeds useradd_agdaemon.def ag_daemon
 
 for dumpfile in *.sql
 do
-	# mysql --user=$MYSQL_ROOT_USERNAME --password=$MYSQL_ROOT_PASSWORD -h 127.0.0.1 < $dumpfile
+	mysql --user=$MYSQL_ROOT_USERNAME --password=$MYSQL_ROOT_PASSWORD -h 127.0.0.1 < $dumpfile
 	if [ $? -eq 0 ] ; then
 		rm $dumpfile
 	fi
