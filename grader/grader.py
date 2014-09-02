@@ -8,6 +8,8 @@ DEFAULT_MAX_RAM = "24"	# in MiB
 DEFAULT_TIMEOUT = 20
 GRADEBOOK_FILE_NAME = "grades.json"
 
+container_name = None
+
 def SandboxedArgs(cmd, max_ram = DEFAULT_MAX_RAM, timeout = DEFAULT_TIMEOUT, sb_args = None):
 	"""
 	Modify the command-line args so that it will run inside the sandbox.
@@ -17,7 +19,10 @@ def SandboxedArgs(cmd, max_ram = DEFAULT_MAX_RAM, timeout = DEFAULT_TIMEOUT, sb_
 	@param sb_args: the additional args to append to the sandbox command.
 	"""
 	
-	argv = ['mbox', '-i', '-p', '/home/public/mbox/mbox.prof', '-n']
+	global container_name
+	argv = ['mbox', '-i', '-p', '/home/public/settings/mbox.conf', '-n']
+	if container_name != None:
+		argv = ['cgexec', '-g', container_name, '--sticky'] + argv
 	
 	if sb_args != None: argv = argv + sb_args
 	if timeout != None: argv = ['timeout', '--signal=9', str(timeout)] + argv
@@ -289,6 +294,9 @@ def main(testSuiteClass):
 	
 	@param	testSuiteClass: the specific test case class, whose test_* functions will form a test suite.
 	"""
+	global container_name
+	if len(sys.argv) == 2:
+		container_name = sys.argv[1]
 	
 	suite = unittest.makeSuite(testSuiteClass, "test_")
 	runner = GraderResult()

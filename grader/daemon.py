@@ -32,6 +32,9 @@ import datetime
 import urllib
 import threading
 import subprocess
+import Queue
+import pwd
+import ConfigParser
 import SocketServer
 import mysql.connector
 
@@ -46,6 +49,12 @@ ConnectionLock = threading.RLock()
 
 # used to hold the daemon log
 Logger = logger.Logger()
+
+# list of container names
+ContainerList = Queue.Queue()
+
+# CGroup Config Holder
+CGroupConfig = ConfigParser.ConfigParser()
 
 class Connector:
 	
@@ -206,14 +215,16 @@ class GraderWorker(threading.Thread):
 			Connector.task_done_error_callback(task_api_key, task_cli_addr, task_submission_id, "undefined_grader_script", "The grader script is not defined.")
 			return
 		
+		container_name = ContainerList.get()
 		try:
-			subp = subprocess.Popen([task_assignment['grader_script']], stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd = submission_temp_path)
+			subp = subprocess.Popen([task_assignment['grader_script'], container_name], stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd = submission_temp_path)
 			result = subp.communicate()
 			Logger.debug("Execution result:\nstdout:\n{0}\nstderr:\n{1}\n".format(result[0], result[1]))
 		except OSError as e:
 			Logger.critical('Error executing the grading script. Permission denied.')
 			Connector.task_done_error_callback(task_api_key, task_cli_addr, task_submission_id, "permission_denied", "The grading script file is not set executable.")
 			return
+		ContainerList.put(container_name)
 		
 		# assemble the grading result and send it to callback function
 		if os.path.isfile(submission_temp_path + Settings['GRADEBOOK_FILE_NAME']):
@@ -347,6 +358,26 @@ class DaemonTCPHandler(SocketServer.StreamRequestHandler):
 class DaemonTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
 	pass
 
+def cgroup_create(controllers, path, t_user = 'root', a_user = 'root'):
+	name = ','.join(controllers) + ':' + path
+	cmd = ['cgcreate', '-t', t_user + ':root', '-a', a_user + ':' + a_user, '-g', name]
+	ret = subprocess.call(cmd)
+	if ret == 0:
+		ContainerList.put(name)
+		Logger.info('Created a new cgroup called "' + name + '"')
+	return ret
+
+def cgroup_set(controllers, path, config):
+	args = []
+	for c in controllers:
+		for (k, v) in config.items(section = c):
+			args = args + ['-r', c + '.' + k + '=' + str(v)]
+	args = ['cgset'] + args + [path]
+	return subprocess.call(args)
+
+def cgroup_delete(controllers, path):
+	return subprocess.call(['cgdelete', '-r', '-g', ','.join(controllers) + ':' + path + ''])
+
 if __name__ == "__main__":
 	
 	gc.enable()
@@ -358,6 +389,23 @@ if __name__ == "__main__":
 	except mysql.connector.Error as err:
 		Logger.critical('mysql error {}.'.format(err))
 		sys.exit(1)
+	
+	try:
+		CGroupConfig.read('cgroups.ini')
+	except OSError as e:
+		Logger.critical('Failed to read cgroups.ini. {}.'.format(e))
+	
+	# initialize cgroups before creating the workers
+	controllers = CGroupConfig.sections()
+	cgroup_delete(controllers, Settings['CGROUP_PREFIX'])
+	for x in range(Settings['NUM_OF_WORKERS']):
+		name = Settings['CGROUP_PREFIX'] + '/' + 'instance' + str(x)
+		assert cgroup_create(controllers, name, t_user = Settings['SLAVE_USERNAME'], a_user = Settings['SLAVE_USERNAME']) == 0, 'Something went wrong with cgcreate.'
+		assert cgroup_set(controllers, name, CGroupConfig) == 0, 'Something went wrong with cgset.'
+	assert ContainerList.qsize() == Settings['NUM_OF_WORKERS'], 'The num of containers is less than required.'
+	
+	# give up root permission
+	os.setuid(pwd.getpwnam(Settings['SLAVE_USERNAME']).pw_uid)
 	
 	for x in range(Settings['NUM_OF_WORKERS']):
 		GraderWorker().start()
