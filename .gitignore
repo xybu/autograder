@@ -48,6 +48,7 @@ test
 credentials.txt
 web/data/*.xml
 web/data/*.json
+*.json
 grader/*.json
 # Grader credentials file
 globals.ini
