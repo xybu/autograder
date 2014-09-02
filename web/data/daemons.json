@@ -5,6 +5,6 @@
 		"type": "passive",
 		"protocol": "path",
 		"accept_roles": ["admin", "user"],
-		"private_key": "abcdef"
+		"private_key": "ThisisnotAkey2"
 	}
 }

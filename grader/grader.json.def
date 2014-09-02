@@ -17,6 +17,7 @@
 		"password": "123456",
 		"database": "ag_daemon"
 	},
+	"SLAVE_USERNAME": "slave",
 	"NUM_OF_WORKERS": 2,
 	"LOG_FILE_PATH": null,
 	"TEMP_PATH": "/tmp/autograder/",
